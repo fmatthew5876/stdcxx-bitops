@@ -11,3 +11,16 @@
 *.lai
 *.la
 *.a
+
+# Pre compiled headers
+*.gch
+
+# Dependency files
+*.d
+
+# Binaries
+byteorder/test
+
+# Editor Junk
+*~
+*.swp
