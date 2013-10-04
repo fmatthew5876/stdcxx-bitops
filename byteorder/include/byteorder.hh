@@ -21,14 +21,15 @@ struct byte_order {
 //Most compilers already do this as shown below.
 template <typename T> constexpr T bswap(T v);
 #if defined(__GNUC__)
-#if 0
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR >= 7)
 constexpr uint16_t bswap(uint16_t v) {
   return __builtin_bswap16(v);
 }
-#endif
+#else
 constexpr uint16_t bswap(uint16_t v) {
   return (v >> 8) | (v << 8);
 }
+#endif
 constexpr uint32_t bswap(uint32_t v) {
   return __builtin_bswap32(v);
 }
