@@ -9,7 +9,9 @@ namespace std {
 struct byte_order {
   enum order {
     little_endian = 1234,
-    big_endian = 4321
+    big_endian = 4321,
+    //Optional: pdp endian? Linux defines this.
+    pdp_endian = 3412,
   };
   constexpr static order value = little_endian; //Implementation defined value little_endian or big_endian.
 };
