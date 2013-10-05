@@ -21,13 +21,13 @@ template <typename T>
 
 //Returns true if t == 0 or t is a power of 2
 template <typename T>
-  constexpr T is_pow2_or_zero(T t) {
+  constexpr bool is_pow2_or_zero(T t) {
     return t & (t-1);
   }
 
 //Returns true if t is a power of 2
 template <typename T>
-  constexpr T is_pow2(T t) {
+  constexpr bool is_pow2(T t) {
     return (t != 0) && is_pow2_or_zero(t);
   }
 
