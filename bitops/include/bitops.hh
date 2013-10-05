@@ -32,18 +32,21 @@ template <typename T>
   }
 
 //Returns the smallest number n when n >= val && is_aligned(n, align). align must be a power of 2!
+//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
 template <typename T, typename A>
   constexpr T align_up(T val, A align) {
     return ((val + (align -1)) & -align);
   }
 
 //Returns the largest number n when n <= val && is_aligned(n, align). align must be a power of 2!
+//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
 template <typename T, typename A>
   constexpr T align_down(T val, A align) {
     return val & -align;
   }
 
 //Returns true if t is aligned to a
+//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
 template <typename T, typename A>
   constexpr bool is_aligned(T t, A a) {
     return ((t & (a-1)) == 0);
@@ -129,14 +132,6 @@ template <typename T, typename S>
 template <typename T, typename S>
   constexpr T shc(T t, S shift);
 
-//Return most significant bit set in t
-template <typename T>
-  constexpr T msb(T t);
-
-//Return least significant bit set in t
-template <typename T>
-  constexpr T lsb(T t);
-
 //Sets bit b of t, no effect if b >= number of bits in t
 template <typename T, typename B>
   constexpr T set_bit(T t, B b) {
@@ -192,6 +187,14 @@ template <typename T>
 //Returns a value whos even bits are set to the even bits of even, and odd bits set to the odd bits of odd.
 template <typename T>
   constexpr T interleave_bits(T even, T odd);
+
+//Saturated addition, like normal addition except on overflow the result will be the maximum value for decltype(L + R).
+template <typename L, typename R>
+  constexpr auto sat_add(L l, R r) -> decltype(l+r);
+
+//Saturated subtraction, like normal subtraction except on overflow the result will be the minimum value for decltype(L - R).
+template <typename L, typename R>
+  constexpr auto sat_sub(L l, R r) -> decltype(l-r);
 
 
 } //namespace std
