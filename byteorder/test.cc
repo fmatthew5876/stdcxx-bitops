@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
   uint32_t val = atoi(argv[1]);
 
   printf("v = %08Xu (%u)\n", val, val);
-  printf("bswap(v) = %08Xu (%u)\n", bswap(val), bswap(val));
+  printf("byte_swap(v) = %08Xu (%u)\n", byte_swap(val), byte_swap(val));
   printf("host_to_le(v) = %08Xu (%u)\n", host_to_le(val), host_to_le(val));
   printf("host_to_be(v) = %08Xu (%u)\n", host_to_be(val), host_to_be(val));
 
