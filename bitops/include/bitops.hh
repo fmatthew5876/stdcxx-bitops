@@ -22,7 +22,7 @@ template <typename T>
 //Returns true if t == 0 or t is a power of 2
 template <typename T>
   constexpr bool is_pow2_or_zero(T t) {
-    return t & (t-1);
+    return (t & (t-1)) == 0;
   }
 
 //Returns true if t is a power of 2
