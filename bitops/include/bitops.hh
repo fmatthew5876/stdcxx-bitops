@@ -101,6 +101,10 @@ template <typename T, typename S>
 template <typename T, typename S>
   constexpr T rshl(T t, S shift);
 
+//shift logical, shifts left if shift < 0, right if shift > 0
+template <typename T, typename S>
+  constexpr T shl(T t, S shift);
+
 //left shift arithmetic
 template <typename T, typename S>
   constexpr T lsha(T t, S shift);
@@ -109,6 +113,10 @@ template <typename T, typename S>
 template <typename T, typename S>
   constexpr T rsha(T t, S shift);
 
+//shift arithmetic, shifts left if shift < 0, right if shift > 0
+template <typename T, typename S>
+  constexpr T sha(T t, S shift);
+
 //left shift circular
 template <typename T, typename S>
   constexpr T lshc(T t, S shift);
@@ -116,6 +124,10 @@ template <typename T, typename S>
 //right shift circular
 template <typename T, typename S>
   constexpr T rshc(T t, S shift);
+
+//shift logical, shifts left if shift < 0, right if shift > 0
+template <typename T, typename S>
+  constexpr T shc(T t, S shift);
 
 //Return most significant bit set in t
 template <typename T>

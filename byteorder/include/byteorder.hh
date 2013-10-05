@@ -52,21 +52,21 @@ constexpr long double bswap(long double v) { return *reinterpret_cast<long doubl
 //Palindromes anyone?
 //How to implement this efficiently (iterative loop)  but maintain constexpr (recursion)?
 constexpr void bswap(void* v, size_t nbytes);
-constexpr void cpu_to_le(void* v, size_t nbytes);
-constexpr void cpu_to_be(void* v, size_t nbytes);
+constexpr void host_to_le(void* v, size_t nbytes);
+constexpr void host_to_be(void* v, size_t nbytes);
 
 //Convert to/from host order to big endian or little endian in a cross platform manner.
-template <typename T> constexpr T cpu_to_le(T v) {
+template <typename T> constexpr T host_to_le(T v) {
   return byte_order::little == byte_order::native ? v : bswap(v);
 }
-template <typename T> constexpr T cpu_to_be(T v) {
+template <typename T> constexpr T host_to_be(T v) {
   return byte_order::little == byte_order:: native ? bswap(v) : v;
 }
-template <typename T> constexpr T le_to_cpu(T v) {
-  return cpu_to_le(v);
+template <typename T> constexpr T le_to_host(T v) {
+  return host_to_le(v);
 }
-template <typename T> constexpr T be_to_cpu(T v) {
-  return cpu_to_be(v);
+template <typename T> constexpr T be_to_host(T v) {
+  return host_to_be(v);
 }
 
 //More explicit version for template meta-programming
@@ -83,7 +83,7 @@ constexpr T bconvert(T t, byte_order in, byte_order out) {
 
 //Short hand for probably most common runtime swap.
 template <typename T>
-constexpr T cpu_to(T t, byte_order out) {
+constexpr T host_to(T t, byte_order out) {
   return byte_order::native == out ? t : bwap(t);
 }
 

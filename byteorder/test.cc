@@ -16,8 +16,8 @@ int main(int argc, char** argv) {
 
   printf("v = %08Xu (%u)\n", val, val);
   printf("bswap(v) = %08Xu (%u)\n", bswap(val), bswap(val));
-  printf("cpu_to_le(v) = %08Xu (%u)\n", cpu_to_le(val), cpu_to_le(val));
-  printf("cpu_to_be(v) = %08Xu (%u)\n", cpu_to_be(val), cpu_to_be(val));
+  printf("host_to_le(v) = %08Xu (%u)\n", host_to_le(val), host_to_le(val));
+  printf("host_to_be(v) = %08Xu (%u)\n", host_to_be(val), host_to_be(val));
 
   return 0;
 }
