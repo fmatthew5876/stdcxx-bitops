@@ -2,60 +2,138 @@
 #define STDCXX_BYTEORDER_HH
 
 #include <cstdint>
+#include <cstddef>
 
 namespace std {
 
-//Required: a compile time variable telling us the endianness of the machine.
-struct byte_order {
-  enum order {
-    little_endian = 1234,
-    big_endian = 4321,
-    //Optional: pdp endian? Linux defines this.
-    pdp_endian = 3412,
-  };
-  constexpr static order value = little_endian; //Implementation defined value little_endian or big_endian.
+//enum class for compile-time byte-order.
+enum class byte_order {
+  little,
+  big,
+  native = little //Implementation defined
 };
 
-//Required: an efficient byte swapping routine bswap() for integral types.
-//This can and should be optimized for each cpu with compiler intrinsics.
+//Macro interface. What naming convention to use for macros?
+#define STD_LITTLE_ENDIAN 0
+#define STD_BIG_ENDIAN 1
+#define STD_BYTEORDER STD_LITTLE_ENDIAN //Implementation defined
+
+//An efficient byte swapping routine bswap() for integral types.
+//Implementation can and should be optimized for each cpu with compiler intrinsics.
 //Most compilers already do this as shown below.
 template <typename T> constexpr T bswap(T v);
+
+//Specializations for integral types (see below).
+template <> constexpr uint8_t bswap(uint8_t v) { return v; }
+template <> constexpr uint16_t bswap(uint16_t v);
+template <> constexpr uint32_t bswap(uint32_t v);
+template <> constexpr uint64_t bswap(uint64_t v);
+template <> constexpr uint32_t bswap(uint32_t v);
+
+//Signed integer versions
+template <> constexpr int8_t bswap(int8_t v) { return v; }
+template <> constexpr int16_t bswap(int16_t v) { return int16_t(bswap(uint16_t(v))); }
+template <> constexpr int32_t bswap(int32_t v) { return int32_t(bswap(uint32_t(v))); }
+template <> constexpr int64_t bswap(int64_t v) { return int64_t(bswap(uint64_t(v))); }
+
+//Char is a separate type fron signed char and unsigned char.
+template <> constexpr char bswap(char v) { return v; }
+
+//Byteswap routines for floating point.
+//Side question: Does this implementation conflict with strict aliasing? Is it standard compliant?
+template <>
+constexpr float bswap(float v) { return *reinterpret_cast<float*>(bswap(*reinterpret_cast<uint32_t*>(&v))); }
+template <>
+constexpr double bswap(double v) { return *reinterpret_cast<double*>(bswap(*reinterpret_cast<uint64_t*>(&v))); }
+template <>
+constexpr long double bswap(long double v) { return *reinterpret_cast<long double*>(bswap(*reinterpret_cast<uint64_t*>(&v))); }
+
+//Byteswap routines for raw buffers? Is this useful?
+//Palindromes anyone?
+//How to implement this efficiently (iterative loop)  but maintain constexpr (recursion)?
+constexpr void bswap(void* v, size_t nbytes);
+constexpr void cpu_to_le(void* v, size_t nbytes);
+constexpr void cpu_to_be(void* v, size_t nbytes);
+
+//Convert to/from host order to big endian or little endian in a cross platform manner.
+template <typename T> constexpr T cpu_to_le(T v) {
+  return byte_order::little == byte_order::native ? v : bswap(v);
+}
+template <typename T> constexpr T cpu_to_be(T v) {
+  return byte_order::little == byte_order:: native ? bswap(v) : v;
+}
+template <typename T> constexpr T le_to_cpu(T v) {
+  return cpu_to_le(v);
+}
+template <typename T> constexpr T be_to_cpu(T v) {
+  return cpu_to_be(v);
+}
+
+//More explicit version for template meta-programming
+template <typename T, byte_order in, byte_order out>
+constexpr T bconvert(T t) {
+  return in == out ? t : bswap(t);
+}
+
+//Runtime endian swapping
+template <typename T>
+constexpr T bconvert(T t, byte_order in, byte_order out) {
+  return in == out ? t : bswap(t);
+}
+
+//Short hand for probably most common runtime swap.
+template <typename T>
+constexpr T cpu_to(T t, byte_order out) {
+  return byte_order::native == out ? t : bwap(t);
+}
+
+//Modern implementation of bswap, taking advantage of compiler intrinsics available today.
 #if defined(__GNUC__)
 #if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR >= 7)
+template <>
 constexpr uint16_t bswap(uint16_t v) {
   return __builtin_bswap16(v);
 }
 #else
+template <>
 constexpr uint16_t bswap(uint16_t v) {
   return (v >> 8) | (v << 8);
 }
 #endif
+template <>
 constexpr uint32_t bswap(uint32_t v) {
   return __builtin_bswap32(v);
 }
+template <>
 constexpr uint64_t bswap(uint64_t v) {
   return __builtin_bswap64(v);
 }
 #elif defined(_MSC_VER) 
+template <>
 constexpr uint16_t bswap(uint16_t v) {
   return _byteswap_ushort(v);
 }
+template <>
 constexpr uint32_t bswap(uint32_t v) {
   return _byteswap_ulong(v);
 }
+template <>
 constexpr uint64_t bswap(uint64_t v) {
   return _byteswap_uint64(v);
 }
 #else
+template <>
 constexpr uint16_t bswap(uint16_t v) {
   return (v >> 8) | (v << 8);
 }
+template <>
 constexpr uint32_t bswap(uint32_t x)
 {
   return
     ((((v) & 0xff000000) >> 24) | (((v) & 0x00ff0000) >>  8) |
      (((v) & 0x0000ff00) <<  8) | (((v) & 0x000000ff) << 24));
 }
+template <>
 constexpr uint64_t bswap(uint64_t x)
 {
   return
@@ -69,59 +147,6 @@ constexpr uint64_t bswap(uint64_t x)
      (((v) & 0x00000000000000ffULL) << 56));
 }
 #endif
-//Optional: Suggest implementations provide byteswapping routines for 128 and larger
-//implementation defined data types like simd vector types.
-
-//Required: Convert to/from host order to big endian or little endian in a cross platform manner.
-template <typename T>
-constexpr T cpu_to_le(T t) { return byte_order::value == byte_order::little_endian ? t : bswap(t); }
-
-template <typename T>
-constexpr T cpu_to_be(T t) { return byte_order::value == byte_order::little_endian ? bswap(t) : t; }
-
-//Optional: Do we want XX_to_cpu as well for symmetry?
-template <typename T>
-constexpr T le_to_cpu(T t) { return cpu_to_le(t); }
-template <typename T>
-constexpr T be_to_cpu(T t) { return cpu_to_be(t); }
-
-//Optional: Specifically sized conversion methods? Is this useful? Maybe for templates?
-//Why not just cast if you want to change the size?
-//bswap(static_cast<uint32_t>(t)); vs bswap32(t);
-constexpr uint16_t bswap16(uint16_t t) { return bswap(t); }
-constexpr uint32_t bswap32(uint32_t t) { return bswap(t); }
-constexpr uint64_t bswap64(uint64_t t) { return bswap(t); }
-//Optional: Implementation may define bswap128(), bswap(256), etc..
-
-//Optional: Similar to bswap
-constexpr uint16_t cpu_to_le16(uint16_t t) { return cpu_to_le(t); }
-constexpr uint32_t cpu_to_le32(uint32_t t) { return cpu_to_le(t); }
-constexpr uint64_t cpu_to_le64(uint64_t t) { return cpu_to_le(t); }
-
-constexpr uint16_t cpu_to_be16(uint16_t t) { return cpu_to_le(t); }
-constexpr uint32_t cpu_to_be32(uint32_t t) { return cpu_to_le(t); }
-constexpr uint64_t cpu_to_be64(uint64_t t) { return cpu_to_le(t); }
-
-//Optional: Should we support signed integers as well?
-constexpr int16_t bswap(int16_t t) { return int16_t(bswap(uint16_t(t))); }
-constexpr int32_t bswap(int32_t t) { return int32_t(bswap(uint32_t(t))); }
-constexpr int64_t bswap(int64_t t) { return int64_t(bswap(uint64_t(t))); }
-
-//Optional: Should we support floating point types? Do binary formats or hardware devices need this?
-constexpr float bswap(float f);
-constexpr double bswap(double f);
-constexpr long double bswap(long double f);
-
-//Optional: Byte Swapping an arbitrary sized buffer? Is this at all useful?
-constexpr void bswap(void* v, size_t nbytes);
-constexpr void cpu_to_le(void* v, size_t nbytes);
-constexpr void cpu_to_be(void* v, size_t nbytes);
-
-//Optional: Do we need/want a macro interface?
-//I think its worth having. How does it hurt?
-#define STD_LITTLE_ENDIAN 1234
-#define STD_BIG_ENDIAN 4321
-#define STD_BYTEORDER STD_LITTLE_ENDIAN /* Implementation defined */
 
 } //namespace std
 

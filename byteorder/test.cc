@@ -2,22 +2,22 @@
 
 #include <cstdlib>
 #include <cstdint>
-#include <iostream>
+#include <cstdio>
 
 using namespace std;
 
 int main(int argc, char** argv) {
   if(argc < 2) {
-    cerr << "Please specify an integer!" << std::endl;
+    fprintf(stderr, "Please specify an integer!\n");
     return 1;
   }
 
   uint32_t val = atoi(argv[1]);
 
-  cout << "v = " << val << std::endl;
-  cout << "bswap(v) = " << bswap(val) << std::endl;
-  cout << "cpu_to_le(v) = " << cpu_to_le(val) << std::endl;
-  cout << "cpu_to_be(v) = " << cpu_to_be(val) << std::endl;
+  printf("v = %08Xu (%u)\n", val, val);
+  printf("bswap(v) = %08Xu (%u)\n", bswap(val), bswap(val));
+  printf("cpu_to_le(v) = %08Xu (%u)\n", cpu_to_le(val), cpu_to_le(val));
+  printf("cpu_to_be(v) = %08Xu (%u)\n", cpu_to_be(val), cpu_to_be(val));
 
   return 0;
 }
