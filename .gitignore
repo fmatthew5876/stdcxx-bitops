@@ -19,7 +19,7 @@
 *.d
 
 # Binaries
-byteorder/test
+*/test
 
 # Editor Junk
 *~
