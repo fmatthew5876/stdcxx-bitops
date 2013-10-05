@@ -6,7 +6,7 @@
 
 #define PRINT(X) printf(#X "(v) = %08Xu %u\n", X(val), X(val))
 #define PRINTB(X) printf(#X "(v) = %d\n", X(val))
-#define PRINT2(X, A) printf(#X "(v,%d) = %08Xu %u\n", X(val, A), X(val, A), A)
+#define PRINT2(X, A) printf(#X "(v,%d) = %08Xu %u\n", A, X(val, A), X(val, A))
 #define PRINTB2(X, A) printf(#X "(v,%d) = %d\n", A, X(val, A))
 
 using namespace std;
