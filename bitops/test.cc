@@ -11,11 +11,17 @@
 
 using namespace std;
 
+void foo(int x) {
+  printf("X %d\n", x);
+}
+
 int main(int argc, char** argv) {
   if(argc < 2) {
     fprintf(stderr, "Please specify an integer!\n");
     return 1;
   }
+
+  foo(sizeof(int));
 
   uint32_t val = atoi(argv[1]);
 

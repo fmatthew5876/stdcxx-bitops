@@ -4,24 +4,31 @@
 #include <cstdint>
 #include <cstddef>
 
-namespace std {
-
-//enum class for compile-time byte-order.
-enum class byte_order {
-  little,
-  big,
-  host = little //Implementation defined
-};
-
 //Macro interface. What naming convention to use for macros?
 #define STD_LITTLE_ENDIAN 0
 #define STD_BIG_ENDIAN 1
 #define STD_BYTEORDER STD_LITTLE_ENDIAN //Implementation defined
 
+namespace std {
+
+//List of possible byte orders
+enum class endian {
+  little,
+  big
+};
+
+//The byte order on this system. This can be specialized
+//for different types if the system uses different byte
+//orders for those types.
+template <typename T>
+struct byte_order {
+  static constexpr endian value = endian::little; //Implementation defined value
+};
+
 //An efficient byte swapping routine swap_bytes() for integral types.
 //Implementation can and should be optimized for each cpu with compiler intrinsics.
 //Most compilers already do this as shown below.
-template <typename T> constexpr T swap_bytes(T v);
+template <typename T> constexpr T swap_bytes(T v) = delete;
 
 //Specializations for integral types (see below).
 template <> constexpr uint8_t swap_bytes(uint8_t v) { return v; }
@@ -46,21 +53,14 @@ constexpr float swap_bytes(float v) { return *reinterpret_cast<float*>(swap_byte
 template <>
 constexpr double swap_bytes(double v) { return *reinterpret_cast<double*>(swap_bytes(*reinterpret_cast<uint64_t*>(&v))); }
 template <>
-constexpr long double swap_bytes(long double v) { return *reinterpret_cast<long double*>(swap_bytes(*reinterpret_cast<uint64_t*>(&v))); }
-
-//Byteswap routines for raw buffers? Is this useful?
-//Palindromes anyone?
-//How to implement this efficiently (iterative loop)  but maintain constexpr (recursion)?
-constexpr void swap_bytes(void* v, size_t nbytes);
-constexpr void host_to_le(void* v, size_t nbytes);
-constexpr void host_to_be(void* v, size_t nbytes);
+constexpr long double swap_bytes(long double v);
 
 //Convert to/from host order to big endian or little endian in a cross platform manner.
 template <typename T> constexpr T host_to_le(T v) {
-  return byte_order::little == byte_order::host ? v : swap_bytes(v);
+  return byte_order<T>::value == endian::little ? v : swap_bytes(v);
 }
 template <typename T> constexpr T host_to_be(T v) {
-  return byte_order::little == byte_order::host ? swap_bytes(v) : v;
+  return byte_order<T>::value == endian::big ? v : swap_bytes(v);
 }
 template <typename T> constexpr T le_to_host(T v) {
   return host_to_le(v);
@@ -70,21 +70,15 @@ template <typename T> constexpr T be_to_host(T v) {
 }
 
 //More explicit version for template meta-programming
-template <typename T, byte_order in, byte_order out>
+template <typename T, endian in, endian out>
 constexpr T reorder_bytes(T t) {
   return in == out ? t : swap_bytes(t);
 }
 
-//Runtime endian swapping
+//Runtime endian swapping, with a sensible default
 template <typename T>
-constexpr T reorder_bytes(T t, byte_order in, byte_order out) {
+constexpr T reorder_bytes(T t, endian in, endian out=byte_order<T>::value) {
   return in == out ? t : swap_bytes(t);
-}
-
-//Short hand for probably most common runtime swap.
-template <typename T>
-constexpr T host_to(T t, byte_order out) {
-  return byte_order::host == out ? t : bwap(t);
 }
 
 //Modern implementation of swap_bytes, taking advantage of compiler intrinsics available today.
