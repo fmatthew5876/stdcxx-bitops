@@ -54,15 +54,11 @@ int main(int argc, char** argv) {
 
   //PRINT(reverse_bits);
 
-  PRINT2(lshl, 8);
-  //PRINT2(rshl, 8);
-  //PRINT2(shl, -16);
-  //PRINT2(shl, 16);
+  PRINT2(shl, 8);
+  PRINT2(shr, 8);
 
-  PRINT2(lsha, 8);
-  //PRINT2(rsha, 8);
-  //PRINT2(sha, -16);
-  //PRINT2(sha, 16);
+  PRINT2(sal, 8);
+  PRINT2(sar, 8);
 
   //PRINT2(rotl, 8);
   //PRINT2(rotr, 8);
@@ -85,8 +81,8 @@ int main(int argc, char** argv) {
   //PRINT(reset_msb);
   //PRINT2(interleave_bits, 0xFF);
 
-  //PRINT2(sat_add, 0xFFFFFF00);
-  //PRINT2(sat_sub, 0xFFFFFF00);
+  PRINT2(sat_add, 0xFFFFFF00);
+  PRINT2(sat_sub, 0xFFFFFF00);
 
   PRINT(swap_nibbles);
 
