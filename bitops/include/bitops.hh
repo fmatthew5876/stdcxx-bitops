@@ -133,71 +133,65 @@ template <> constexpr int parity(unsigned short t) noexcept {
 //logical shift left
 template <typename T>
 constexpr auto shl(T t, unsigned int s)
-  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     return t << s;
   }
 
 //logical shift right
 template <typename T>
-constexpr auto shr(T t, unsigned int s) {
+constexpr auto shr(T t, unsigned int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     //For unsigned types, built in right shift is guaranteed to be logical
     return t >> s;
   }
-template <typename T> {
-constexpr auto shr(T t, unsigned int s) {
-  noexcept -> typename std::enable_if<std::is_signed<T>::value,T>::type {
-    //For signed types, built in right shift is implementation defined. Cast to unsigned and shift.
-    return static_cast<T>(shr(typename make_unsigned<T>::type(t), s));
-  }
+//logical shift, left if s < 0, otherwise right
 template <typename T>
-constexpr auto shift(T t, int s)
-  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
+constexpr auto sh(T t, int s)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     return s < 0 ? shl(t, -s) : shr(t, s);
-}
+  }
 
 //left shift arithmetic
 template <typename T>
-constexpr T sal(T t, unsigned int s) noexcept {
-  return shl(t, s);
-}
-
-//right shift arithmetic. This implementation assumes right shift on signed types is arithmetic.
-template <typename T>
-constexpr auto sar(T t, unsigned int s)
-  noexcept -> typename std::enable_if<std::is_signed<T>::value,T>::type {
-    return t >> s;
+constexpr auto sal(T t, unsigned int s)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    //Same as logical shift
+    return shl(t, s);
   }
+
+//right shift arithmetic. This implementation assumes right shift on signed types is arithmetic but this cannot be assumed in general
 template <typename T>
 constexpr auto sar(T t, unsigned int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
-    return sar(typename make_signed<T>::type(t), s);
+    return static_cast<typename make_signed<T>::type>(t) >> s;
   }
+//arithmetic shift, left if s < 0, otherwise right
 template <typename T>
 constexpr auto sa(T t, int s)
-  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     return s < 0 ? sal(t, -s) : sar(t, s);
-}
+  }
 
 //Left rotate shift
 template <typename T>
-constexpr T rotl(T t, unsigned int s)
-  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
-  return shl(t, s) | shr(t, (sizeof(t) * CHAR_BIT) - s);
-}
+constexpr auto rotl(T t, unsigned int s)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return shl(t, s) | shr(t, (sizeof(t) * CHAR_BIT) - s);
+  }
 
 //Right rotate shift
 template <typename T>
-constexpr T rotr(T t, unsigned int s)
-  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
-  return shr(t, s) | shl(t, (sizeof(t) * CHAR_BIT) - s);
-}
+constexpr auto rotr(T t, unsigned int s)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return shr(t, s) | shl(t, (sizeof(t) * CHAR_BIT) - s);
+  }
 
+//rotate shift, left if s < 0, otherwise right
 template <typename T>
-constexpr T rot(T t, int s)
-  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
-  return s < 0 ? rotl(t, -s) : rotr(t, s);
-}
+constexpr auto rot(T t, int s)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return s < 0 ? rotl(t, -s) : rotr(t, s);
+  }
 
 ///////////////////////////
 //Alignment manipulation
@@ -266,56 +260,56 @@ constexpr T pow2_lt(T t) noexcept;
 ///////////////////////////
 
 //Sets bit b of t, no effect if b >= number of bits in t
-template <typename T, typename B>
-constexpr T set_bit(T t, B b) noexcept {
+template <typename T>
+constexpr T set_bit(T t, unsigned int b) noexcept {
   return t | (1 << b);
 }
 
 //Set all bits in t >= b
-template <typename T, typename B>
-constexpr T set_bits_gt(T t, B b) noexcept {
+template <typename T>
+constexpr T set_bits_gt(T t, unsigned int b) noexcept {
   return t | ~((1 << (b+1)) -1);
 }
 
 //Set all bits in t > b
-template <typename T, typename B>
-constexpr T set_bits_ge(T t, B b) noexcept {
+template <typename T>
+constexpr T set_bits_ge(T t, unsigned int b) noexcept {
   return t | ~((1 << b) -1);
 }
 
 //Set all bits in t <= b
-template <typename T, typename B>
-constexpr T set_bits_le(T t, B b) noexcept {
+template <typename T>
+constexpr T set_bits_le(T t, unsigned int b) noexcept {
   return t | ((1 << (b+1)) -1);
 }
 
 //Set all bits in t < b
-template <typename T, typename B>
-constexpr T set_bits_lt(T t, B b) noexcept {
+template <typename T>
+constexpr T set_bits_lt(T t, unsigned int b) noexcept {
   return t | ((1 << b) -1);
 }
 
 //Resets bit b of t, no effect if b >= number of bits in t
-template <typename T, typename B>
-constexpr T reset_bit(T t, B b) noexcept {
+template <typename T>
+constexpr T reset_bit(T t, unsigned int b) noexcept {
   return t & ~(1 << b);
 }
 
 //Reset all bits in t >= b
-template <typename T, typename B>
-constexpr T reset_bits_gt(T t, B b) noexcept ;
+template <typename T>
+constexpr T reset_bits_gt(T t, unsigned int b) noexcept ;
 
 //Reset all bits in t > b
-template <typename T, typename B>
-constexpr T reset_bits_ge(T t, B b) noexcept ;
+template <typename T>
+constexpr T reset_bits_ge(T t, unsigned int b) noexcept ;
 
 //Reset all bits in t <= b
-template <typename T, typename B>
-constexpr T reset_bits_le(T t, B b) noexcept ;
+template <typename T>
+constexpr T reset_bits_le(T t, unsigned int b) noexcept ;
 
 //Reset all bits in t < b
-template <typename T, typename B>
-constexpr T reset_bits_lt(T t, B b) noexcept ;
+template <typename T>
+constexpr T reset_bits_lt(T t, unsigned int b) noexcept ;
 
 //Resets the least significant bit set
 template <typename T>
