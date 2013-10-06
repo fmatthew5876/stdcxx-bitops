@@ -18,8 +18,16 @@ int main(int argc, char** argv) {
   }
 
   uint32_t val = atoi(argv[1]);
-  PRINT(is_pow2_or_zero);
-  PRINT(is_pow2);
+
+  printf("v = %08X %u\n", val, val);
+
+  //PRINT(pow2_ge);
+  //PRINT(pow2_gt);
+  //PRINT(pow2_le);
+  //PRINT(pow2_lt);
+
+  PRINTB(is_pow2_or_zero);
+  PRINTB(is_pow2);
 
   PRINT2(align_up, 2);
   PRINT2(align_up, 4);
@@ -36,11 +44,50 @@ int main(int argc, char** argv) {
   PRINTB2(is_aligned, 8);
   PRINTB2(is_aligned, 16);
 
+  //PRINT(reverse_bits);
   PRINT(ctz);
   PRINT(clz);
   PRINT(ffs);
+  //PRINT(fls);
+  PRINT(clrsb);
   PRINT(popcount);
   PRINT(parity);
+
+  PRINT2(lshl, 8);
+  //PRINT2(rshl, 8);
+  //PRINT2(shl, -16);
+  //PRINT2(shl, 16);
+
+  PRINT2(lsha, 8);
+  //PRINT2(rsha, 8);
+  //PRINT2(sha, -16);
+  //PRINT2(sha, 16);
+
+  //PRINT2(rotl, 8);
+  //PRINT2(rotr, 8);
+  //PRINT2(rot, -16);
+  //PRINT2(rot, 16);
+
+  PRINT2(set_bit, 4);
+  //PRINT2(set_bits_ge, 4);
+  //PRINT2(set_bits_gt, 4);
+  //PRINT2(set_bits_le, 4);
+  //PRINT2(set_bits_lt, 4);
+
+  PRINT2(reset_bit, 4);
+  //PRINT2(reset_bits_ge, 4);
+  //PRINT2(reset_bits_gt, 4);
+  //PRINT2(reset_bits_le, 4);
+  //PRINT2(reset_bits_lt, 4);
+
+  PRINT(reset_lsb);
+  //PRINT(reset_msb);
+  //PRINT2(interleave_bits, 0xFF);
+
+  //PRINT2(sat_add, 0xFFFFFF00);
+  //PRINT2(sat_sub, 0xFFFFFF00);
+
+  PRINT(swap_nibbles);
 
   return 0;
 }

@@ -1,11 +1,16 @@
 #ifndef BITOPS_HH
 #define BITOPS_HH
 
+#include <cstdint>
+#include <climits>
+
 namespace std {
 
 //Return smallest power of 2 >= t
 template <typename T>
-  constexpr T pow2_ge(T t);
+  constexpr T pow2_ge(T t) {
+    return is_pow2(t) ? t : pow2_gt(t);
+  }
 
 //Return smallest power of 2 > t
 template <typename T>
@@ -13,7 +18,9 @@ template <typename T>
 
 //Return smallest power of 2 <= t
 template <typename T>
-  constexpr T pow2_le(T t);
+  constexpr T pow2_le(T t) {
+    return is_pow2(t) ? t : pow2_lt(t);
+  }
 
 //Return smallest power of 2 < t
 template <typename T>
@@ -68,11 +75,15 @@ template <typename T>
     return __builtin_clz(t);
   }
 
-//Returns one plus the index of the least significant 1-bit of x, or if x is zero, returns zero.
+//Returns position of the first bit set in t
 template <typename T>
   constexpr T ffs(T t) {
     return __builtin_ffs(t);
   }
+
+//Returns position of the last bit set in t
+template <typename T>
+  constexpr T fls(T t);
 
 //Returns the number of leading redundant sign bits in x, i.e. the number of bits following the most significant bit that are identical to it. There are no special cases for 0 or other values
 template <typename T>
@@ -92,45 +103,55 @@ template <typename T>
     return __builtin_parity(t);
   }
 
-//Compute the log base 2 of t.
-template <typename T>
-  constexpr T lg(T t);
-
 //left shift logical
 template <typename T, typename S>
-  constexpr T lshl(T t, S shift);
+  constexpr T lshl(T t, S s) {
+    return t << s;
+  }
 
 //right shift logical
 template <typename T, typename S>
-  constexpr T rshl(T t, S shift);
+  constexpr T rshl(T t, S s);
 
-//shift logical, shifts left if shift < 0, right if shift > 0
+//shift logical, shifts left if s < 0, right if s > 0
 template <typename T, typename S>
-  constexpr T shl(T t, S shift);
+  constexpr T shl(T t, S s) {
+    return s < 0 ? lshl(-s) : rshl(s);
+  }
 
 //left shift arithmetic
 template <typename T, typename S>
-  constexpr T lsha(T t, S shift);
+  constexpr T lsha(T t, S s) {
+    return lshl(t, s);
+  }
 
 //right shift arithmetic
 template <typename T, typename S>
-  constexpr T rsha(T t, S shift);
+  constexpr T rsha(T t, S s);
 
-//shift arithmetic, shifts left if shift < 0, right if shift > 0
+//shift arithmetic, shifts left if s < 0, right if s > 0
 template <typename T, typename S>
-  constexpr T sha(T t, S shift);
+  constexpr T sha(T t, S s) {
+    return s < 0 ? lsha(-s) : rsha(s);
+  }
 
-//left shift circular
+//Left rotate shift
 template <typename T, typename S>
-  constexpr T lshc(T t, S shift);
+  constexpr T rotl(T t, S s) {
+    return lshl(t, s) | rshl(t, (sizeof(t) * CHAR_BIT) - s);
+  }
 
-//right shift circular
+//Right rotate shift
 template <typename T, typename S>
-  constexpr T rshc(T t, S shift);
+  constexpr T rotr(T t, S s) {
+    return rshl(t, s) | lshl(t, (sizeof(t) * CHAR_BIT) - s);
+  }
 
-//shift logical, shifts left if shift < 0, right if shift > 0
+//Rotate shift, shifts left if s < 0, right if s > 0
 template <typename T, typename S>
-  constexpr T shc(T t, S shift);
+  constexpr T rot(T t, S s) {
+    return s < 0 ? rotl(t, s) : rotr(t, s);
+  }
 
 //Sets bit b of t, no effect if b >= number of bits in t
 template <typename T, typename B>
@@ -140,19 +161,27 @@ template <typename T, typename B>
 
 //Set all bits in t >= b
 template <typename T, typename B>
-  constexpr T set_bits_gt(T t, B b);
+  constexpr T set_bits_gt(T t, B b) {
+    return t | ~((1 << (b+1)) -1);
+  }
 
 //Set all bits in t > b
 template <typename T, typename B>
-  constexpr T set_bits_ge(T t, B b);
+  constexpr T set_bits_ge(T t, B b) {
+    return t | ~((1 << b) -1);
+  }
 
 //Set all bits in t <= b
 template <typename T, typename B>
-  constexpr T set_bits_le(T t, B b);
+  constexpr T set_bits_le(T t, B b) {
+    return t | ((1 << (b+1)) -1);
+  }
 
 //Set all bits in t < b
 template <typename T, typename B>
-  constexpr T set_bits_lt(T t, B b);
+  constexpr T set_bits_lt(T t, B b) {
+    return t | ((1 << b) -1);
+  }
 
 //Resets bit b of t, no effect if b >= number of bits in t
 template <typename T, typename B>
@@ -178,7 +207,9 @@ template <typename T, typename B>
 
 //Resets the least significant bit set
 template <typename T>
-  constexpr T reset_lsb(T t);
+  constexpr T reset_lsb(T t) {
+    return t & (t -1);
+  }
 
 //Resets the most significant bit set
 template <typename T>
@@ -196,6 +227,10 @@ template <typename L, typename R>
 template <typename L, typename R>
   constexpr auto sat_sub(L l, R r) -> decltype(l-r);
 
+//Swaps the nibbles (4 bits) of the given byte
+constexpr uint8_t swap_nibbles(uint8_t byte) {
+  return (byte >> 4) | (byte << 4);
+}
 
 } //namespace std
 
