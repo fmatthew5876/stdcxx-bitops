@@ -35,7 +35,6 @@ template <> constexpr uint8_t swap_bytes(uint8_t v) { return v; }
 template <> constexpr uint16_t swap_bytes(uint16_t v);
 template <> constexpr uint32_t swap_bytes(uint32_t v);
 template <> constexpr uint64_t swap_bytes(uint64_t v);
-template <> constexpr uint32_t swap_bytes(uint32_t v);
 
 //Signed integer versions
 template <> constexpr int8_t swap_bytes(int8_t v) { return v; }
