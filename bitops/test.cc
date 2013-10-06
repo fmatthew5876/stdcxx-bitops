@@ -21,6 +21,14 @@ int main(int argc, char** argv) {
 
   printf("v = %08X %u\n", val, val);
 
+  PRINT(ctz);
+  PRINT(clz);
+  PRINT(ffs);
+  PRINT(fls);
+  PRINT(clrsb);
+  PRINT(popcount);
+  PRINT(parity);
+
   //PRINT(pow2_ge);
   //PRINT(pow2_gt);
   //PRINT(pow2_le);
@@ -45,13 +53,6 @@ int main(int argc, char** argv) {
   PRINTB2(is_aligned, 16);
 
   //PRINT(reverse_bits);
-  PRINT(ctz);
-  PRINT(clz);
-  PRINT(ffs);
-  //PRINT(fls);
-  PRINT(clrsb);
-  PRINT(popcount);
-  PRINT(parity);
 
   PRINT2(lshl, 8);
   //PRINT2(rshl, 8);

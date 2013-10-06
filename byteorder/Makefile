@@ -5,7 +5,7 @@ test: test.o
 	$(CXX) $(LDFLAGS) -o $@ $^
 
 %.o: %.cc
-	$(CXX) -MMD $(CXXFLAGS) $(CPPFLAGS) $^ -c
+	$(CXX) -MMD $(CXXFLAGS) $(CPPFLAGS) $< -c
 
 clean:
 	-rm test *.o *.d
