@@ -12,7 +12,7 @@ namespace std {
 //Basic bitwise operations
 ///////////////////////////
 
-//Count trailing zeroes
+//Returns the number of trailing 0-bits in x, starting at the least significant bit position. If x is 0, the result is undefined.
 template <typename T> constexpr int ctz(T t) noexcept = delete;
 template <> constexpr int ctz(unsigned int t) noexcept {
   return __builtin_ctz(t);
@@ -23,8 +23,14 @@ template <> constexpr int ctz(unsigned long t) noexcept {
 template <> constexpr int ctz(unsigned long long t) noexcept {
   return __builtin_ctzll(t);
 }
+template <> constexpr int ctz(unsigned char t) noexcept {
+  return ctz<unsigned int>(t);
+}
+template <> constexpr int ctz(unsigned short t) noexcept {
+  return ctz<unsigned int>(t);
+}
 
-//Count leading zeroes
+//Returns the number of leading 0-bits in x, starting at the most significant bit position. If x is 0, the result is undefined.
 template <typename T> constexpr int clz(T t) noexcept = delete;
 template <> constexpr int clz(unsigned int t) noexcept {
   return __builtin_clz(t);
@@ -35,8 +41,14 @@ template <> constexpr int clz(unsigned long t) noexcept {
 template <> constexpr int clz(unsigned long long t) noexcept {
   return __builtin_clzll(t);
 }
+template <> constexpr int clz(unsigned char t) noexcept {
+  return clz<unsigned int>(t) - ((sizeof(unsigned int) - sizeof(t)) * CHAR_BIT);
+}
+template <> constexpr int clz(unsigned short t) noexcept {
+  return clz<unsigned int>(t) - ((sizeof(unsigned int) - sizeof(t)) * CHAR_BIT);
+}
 
-//Returns position of the first bit set in t
+//Return position of the first bit set in t.
 template <typename T> constexpr int ffs(T t) noexcept = delete;
 template <> constexpr int ffs(unsigned int t) noexcept {
   return __builtin_ffs(t);
@@ -47,16 +59,16 @@ template <> constexpr int ffs(unsigned long t) noexcept {
 template <> constexpr int ffs(unsigned long long t) noexcept {
   return __builtin_ffsll(t);
 }
+template <> constexpr int ffs(unsigned char t) noexcept {
+  return ffs<unsigned int>(t);
+}
+template <> constexpr int ffs(unsigned short t) noexcept {
+  return ffs<unsigned int>(t);
+}
 
 //Returns position of the last bit set in t
-template <typename T> constexpr int fls(T t) noexcept = delete;
-template <> constexpr int fls(unsigned int t) noexcept {
-  return (sizeof(t) * CHAR_BIT) - clz(t);
-}
-template <> constexpr int fls(unsigned long t) noexcept {
-  return (sizeof(t) * CHAR_BIT) - clz(t);
-}
-template <> constexpr int fls(unsigned long long t) noexcept {
+template <typename T> constexpr int fls(T t) noexcept {
+  static_assert(std::is_unsigned<T>::value, "T must be unsigned!");
   return (sizeof(t) * CHAR_BIT) - clz(t);
 }
 
@@ -71,6 +83,12 @@ template <> constexpr int clrsb(unsigned long t) noexcept {
 template <> constexpr int clrsb(unsigned long long t) noexcept {
   return __builtin_clrsbll(t);
 }
+template <> constexpr int clrsb(unsigned char t) noexcept {
+  return clrsb<unsigned int>(t) - ((sizeof(unsigned int) - sizeof(t)) * CHAR_BIT);
+}
+template <> constexpr int clrsb(unsigned short t) noexcept {
+  return clrsb<unsigned int>(t) - ((sizeof(unsigned int) - sizeof(t)) * CHAR_BIT);
+}
 
 //Returns the number of 1-bits in x.
 template <typename T> constexpr int popcount(T t) noexcept = delete;
@@ -82,6 +100,12 @@ template <> constexpr int popcount(unsigned long t) noexcept {
 }
 template <> constexpr int popcount(unsigned long long t) noexcept {
   return __builtin_popcount(t);
+}
+template <> constexpr int popcount(unsigned char t) noexcept {
+  return popcount<unsigned int>(t);
+}
+template <> constexpr int popcount(unsigned short t) noexcept {
+  return popcount<unsigned int>(t);
 }
 
 //Returns the parity of x, i.e. the number of 1-bits in x modulo 2.
@@ -95,6 +119,12 @@ template <> constexpr int parity(unsigned long t) noexcept {
 template <> constexpr int parity(unsigned long long t) noexcept {
   return __builtin_parityll(t);
 }
+template <> constexpr int parity(unsigned char t) noexcept {
+  return parity<unsigned int>(t);
+}
+template <> constexpr int parity(unsigned short t) noexcept {
+  return parity<unsigned int>(t);
+}
 
 ///////////////////////////
 //Logical, Arithmetic, and Rotate shift
@@ -104,6 +134,7 @@ template <> constexpr int parity(unsigned long long t) noexcept {
 template <typename T, typename S>
 constexpr auto shl(T t, S s)
   noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
+    static_assert(std::is_unsigned<S>::value, "s must be unsigned!");
     return t << s;
   }
 
@@ -111,17 +142,28 @@ constexpr auto shl(T t, S s)
 template <typename T, typename S>
 constexpr auto shr(T t, S s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    //For unsigned types, built in right shift is guaranteed to be logical
+    static_assert(std::is_unsigned<S>::value, "s must be unsigned!");
     return t >> s;
   }
 template <typename T, typename S>
 constexpr auto shr(T t, S s)
   noexcept -> typename std::enable_if<std::is_signed<T>::value,T>::type {
-    return shr(typename make_unsigned<T>::type(t), s);
+    //For signed types, built in right shift is implementation defined. Cast to unsigned and shift.
+    static_assert(std::is_unsigned<S>::value, "s must be unsigned!");
+    return static_cast<T>(shr(typename make_unsigned<T>::type(t), s));
   }
+template <typename T, typename S>
+constexpr auto shift(T t, S s)
+  noexcept -> typename std::enable_if<std::is_signed<T>::value,T>::type {
+    static_assert(std::is_integral<S>::value, "s must be integral!");
+    return s < 0 ? shl(t, -s) : shr(t, s);
+}
 
 //left shift arithmetic
 template <typename T, typename S>
 constexpr T sal(T t, S s) noexcept {
+  static_assert(std::is_unsigned<S>::value, "s must be unsigned!");
   return shl(t, s);
 }
 
@@ -281,7 +323,7 @@ template <typename L, typename R>
 constexpr auto sat_add(L l, R r) -> decltype(l+r) {
   typedef decltype(l+r) LR;
   return static_cast<LR>(l) > numeric_limits<LR>::max() - static_cast<LR>(r) ?
-      numeric_limits<LR>::max() : l + r;
+    numeric_limits<LR>::max() : l + r;
 }
 
 //Saturated subtraction, like normal subtraction except on overflow the result will be the minimum value for decltype(L - R).
@@ -289,7 +331,7 @@ template <typename L, typename R>
 constexpr auto sat_sub(L l, R r) -> decltype(l-r) {
   typedef decltype(l-r) LR;
   return static_cast<LR>(l) < numeric_limits<LR>::min() + static_cast<LR>(r) ?
-      numeric_limits<LR>::min() : l - r;
+    numeric_limits<LR>::min() : l - r;
 }
 
 //Swaps the nibbles (4 bits) of the given byte

@@ -54,11 +54,11 @@ int main(int argc, char** argv) {
 
   //PRINT(reverse_bits);
 
-  PRINT2(shl, 8);
-  PRINT2(shr, 8);
+  PRINT2(shl, 8U);
+  PRINT2(shr, 8U);
 
-  PRINT2(sal, 8);
-  PRINT2(sar, 8);
+  PRINT2(sal, 8U);
+  PRINT2(sar, 8U);
 
   //PRINT2(rotl, 8);
   //PRINT2(rotr, 8);
