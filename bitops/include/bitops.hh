@@ -127,7 +127,7 @@ template <> constexpr int parity(unsigned short t) noexcept {
 }
 
 ///////////////////////////
-//Logical, Arithmetic, and Rotate shift
+//Explicit bit shifts
 ///////////////////////////
 
 //logical shift left
@@ -192,6 +192,31 @@ constexpr T rotr(T t, S s) noexcept {
 }
 
 ///////////////////////////
+//Alignment manipulation
+///////////////////////////
+
+//Returns the smallest number n when n >= val && is_aligned(n, align). align must be a power of 2!
+//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
+template <typename T, typename A>
+constexpr T align_up(T val, A align) noexcept {
+  return ((val + (align -1)) & -align);
+}
+
+//Returns the largest number n when n <= val && is_aligned(n, align). align must be a power of 2!
+//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
+template <typename T, typename A>
+constexpr T align_down(T val, A align) noexcept {
+  return val & -align;
+}
+
+//Returns true if t is aligned to a
+//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
+template <typename T, typename A>
+constexpr bool is_aligned(T t, A a) noexcept {
+  return ((t & (a-1)) == 0);
+}
+
+///////////////////////////
 //Power of 2 manipulation
 ///////////////////////////
 
@@ -227,30 +252,10 @@ constexpr T pow2_le(T t) noexcept {
 template <typename T>
 constexpr T pow2_lt(T t) noexcept;
 
-//Returns the smallest number n when n >= val && is_aligned(n, align). align must be a power of 2!
-//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
-template <typename T, typename A>
-constexpr T align_up(T val, A align) noexcept {
-  return ((val + (align -1)) & -align);
-}
 
-//Returns the largest number n when n <= val && is_aligned(n, align). align must be a power of 2!
-//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
-template <typename T, typename A>
-constexpr T align_down(T val, A align) noexcept {
-  return val & -align;
-}
-
-//Returns true if t is aligned to a
-//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
-template <typename T, typename A>
-constexpr bool is_aligned(T t, A a) noexcept {
-  return ((t & (a-1)) == 0);
-}
-
-//Reverses all of the bits in t
-template <typename T>
-constexpr T reverse_bits(T t) noexcept ;
+///////////////////////////
+//Setting/Resetting bits
+///////////////////////////
 
 //Sets bit b of t, no effect if b >= number of bits in t
 template <typename T, typename B>
@@ -314,9 +319,9 @@ constexpr T reset_lsb(T t) noexcept {
 template <typename T>
 constexpr T reset_msb(T t);
 
-//Returns a value whos even bits are set to the even bits of even, and odd bits set to the odd bits of odd.
-template <typename T>
-constexpr T interleave_bits(T even, T odd);
+////////////////////////
+//Saturated Arithmetic
+////////////////////////
 
 //Saturated addition, like normal addition except on overflow the result will be the maximum value for decltype(L + R).
 template <typename L, typename R>
@@ -333,6 +338,19 @@ constexpr auto sat_sub(L l, R r) -> decltype(l-r) {
   return static_cast<LR>(l) < numeric_limits<LR>::min() + static_cast<LR>(r) ?
     numeric_limits<LR>::min() : l - r;
 }
+
+////////////////////////
+//Misc
+////////////////////////
+
+//Reverses all of the bits in t
+template <typename T>
+constexpr T reverse_bits(T t) noexcept ;
+
+//Returns a value whos even bits are set to the even bits of even, and odd bits set to the odd bits of odd.
+template <typename T>
+constexpr T interleave_bits(T even, T odd);
+
 
 //Swaps the nibbles (4 bits) of the given byte
 constexpr uint8_t swap_nibbles(uint8_t byte) {
