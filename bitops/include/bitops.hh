@@ -131,64 +131,72 @@ template <> constexpr int parity(unsigned short t) noexcept {
 ///////////////////////////
 
 //logical shift left
-template <typename T, typename S>
-constexpr auto shl(T t, S s)
+template <typename T>
+constexpr auto shl(T t, unsigned int s)
   noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
-    static_assert(std::is_unsigned<S>::value, "s must be unsigned!");
     return t << s;
   }
 
 //logical shift right
-template <typename T, typename S>
-constexpr auto shr(T t, S s)
+template <typename T>
+constexpr auto shr(T t, unsigned int s) {
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     //For unsigned types, built in right shift is guaranteed to be logical
-    static_assert(std::is_unsigned<S>::value, "s must be unsigned!");
     return t >> s;
   }
-template <typename T, typename S>
-constexpr auto shr(T t, S s)
+template <typename T> {
+constexpr auto shr(T t, unsigned int s) {
   noexcept -> typename std::enable_if<std::is_signed<T>::value,T>::type {
     //For signed types, built in right shift is implementation defined. Cast to unsigned and shift.
-    static_assert(std::is_unsigned<S>::value, "s must be unsigned!");
     return static_cast<T>(shr(typename make_unsigned<T>::type(t), s));
   }
-template <typename T, typename S>
-constexpr auto shift(T t, S s)
-  noexcept -> typename std::enable_if<std::is_signed<T>::value,T>::type {
-    static_assert(std::is_integral<S>::value, "s must be integral!");
+template <typename T>
+constexpr auto shift(T t, int s)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
     return s < 0 ? shl(t, -s) : shr(t, s);
 }
 
 //left shift arithmetic
-template <typename T, typename S>
-constexpr T sal(T t, S s) noexcept {
-  static_assert(std::is_unsigned<S>::value, "s must be unsigned!");
+template <typename T>
+constexpr T sal(T t, unsigned int s) noexcept {
   return shl(t, s);
 }
 
-//right shift arithmetic. This implementation assumes right shift on signed types in arithmetic.
-template <typename T, typename S>
-constexpr auto sar(T t, S s)
+//right shift arithmetic. This implementation assumes right shift on signed types is arithmetic.
+template <typename T>
+constexpr auto sar(T t, unsigned int s)
   noexcept -> typename std::enable_if<std::is_signed<T>::value,T>::type {
     return t >> s;
   }
-template <typename T, typename S>
-constexpr auto sar(T t, S s)
+template <typename T>
+constexpr auto sar(T t, unsigned int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     return sar(typename make_signed<T>::type(t), s);
   }
+template <typename T>
+constexpr auto sa(T t, int s)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
+    return s < 0 ? sal(t, -s) : sar(t, s);
+}
 
 //Left rotate shift
-template <typename T, typename S>
-constexpr T rotl(T t, S s) noexcept {
+template <typename T>
+constexpr T rotl(T t, unsigned int s)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
   return shl(t, s) | shr(t, (sizeof(t) * CHAR_BIT) - s);
 }
 
 //Right rotate shift
-template <typename T, typename S>
-constexpr T rotr(T t, S s) noexcept {
+template <typename T>
+constexpr T rotr(T t, unsigned int s)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
   return shr(t, s) | shl(t, (sizeof(t) * CHAR_BIT) - s);
+}
+
+template <typename T>
+constexpr T rot(T t, int s)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
+  return s < 0 ? rotl(t, -s) : rotr(t, s);
 }
 
 ///////////////////////////
@@ -197,22 +205,22 @@ constexpr T rotr(T t, S s) noexcept {
 
 //Returns the smallest number n when n >= val && is_aligned(n, align). align must be a power of 2!
 //Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
-template <typename T, typename A>
-constexpr T align_up(T val, A align) noexcept {
-  return ((val + (align -1)) & -align);
+template <typename T>
+constexpr T align_up(T val, size_t a) noexcept {
+  return ((val + (a -1)) & -a);
 }
 
 //Returns the largest number n when n <= val && is_aligned(n, align). align must be a power of 2!
 //Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
-template <typename T, typename A>
-constexpr T align_down(T val, A align) noexcept {
-  return val & -align;
+template <typename T>
+constexpr T align_down(T val, size_t a) noexcept {
+  return val & -a;
 }
 
 //Returns true if t is aligned to a
 //Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
-template <typename T, typename A>
-constexpr bool is_aligned(T t, A a) noexcept {
+template <typename T>
+constexpr bool is_aligned(T t, size_t a) noexcept {
   return ((t & (a-1)) == 0);
 }
 
