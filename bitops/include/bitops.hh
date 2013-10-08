@@ -132,14 +132,14 @@ template <> constexpr int parity(unsigned short t) noexcept {
 
 //logical shift left
 template <typename T>
-constexpr auto shl(T t, unsigned int s)
+constexpr auto shl(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     return t << s;
   }
 
 //logical shift right
 template <typename T>
-constexpr auto shr(T t, unsigned int s)
+constexpr auto shr(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     //For unsigned types, built in right shift is guaranteed to be logical
     return t >> s;
@@ -153,16 +153,17 @@ constexpr auto sh(T t, int s)
 
 //left shift arithmetic
 template <typename T>
-constexpr auto sal(T t, unsigned int s)
+constexpr auto sal(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     //Same as logical shift
     return shl(t, s);
   }
 
-//right shift arithmetic. This implementation assumes right shift on signed types is arithmetic but this cannot be assumed in general
+//right shift arithmetic. 
 template <typename T>
-constexpr auto sar(T t, unsigned int s)
+constexpr auto sar(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    //This implementation assumes right shift on signed types is arithmetic but this cannot be assumed in general
     return static_cast<typename make_signed<T>::type>(t) >> s;
   }
 //arithmetic shift, left if s < 0, otherwise right
@@ -174,14 +175,14 @@ constexpr auto sa(T t, int s)
 
 //Left rotate shift
 template <typename T>
-constexpr auto rotl(T t, unsigned int s)
+constexpr auto rotl(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     return shl(t, s) | shr(t, (sizeof(t) * CHAR_BIT) - s);
   }
 
 //Right rotate shift
 template <typename T>
-constexpr auto rotr(T t, unsigned int s)
+constexpr auto rotr(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
     return shr(t, s) | shl(t, (sizeof(t) * CHAR_BIT) - s);
   }
@@ -198,24 +199,33 @@ constexpr auto rot(T t, int s)
 ///////////////////////////
 
 //Returns the smallest number n when n >= val && is_aligned(n, align). align must be a power of 2!
-//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
 template <typename T>
-constexpr T align_up(T val, size_t a) noexcept {
+constexpr auto align_up(T val, size_t a)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
   return ((val + (a -1)) & -a);
+}
+constexpr void* align_up(void* val, size_t a) noexcept {
+  return (void*)align_up(uintptr_t(val), a);
 }
 
 //Returns the largest number n when n <= val && is_aligned(n, align). align must be a power of 2!
-//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
 template <typename T>
-constexpr T align_down(T val, size_t a) noexcept {
+constexpr auto align_down(T val, size_t a)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
   return val & -a;
+}
+constexpr void* align_down(void* val, size_t a) noexcept {
+  return (void*)align_down(uintptr_t(val), a);
 }
 
 //Returns true if t is aligned to a
-//Question: Provide a version of this for char* pointers? Or require user to cast to uint_ptr_t?
 template <typename T>
-constexpr bool is_aligned(T t, size_t a) noexcept {
+constexpr auto is_aligned(T t, size_t a)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,bool>::type {
   return ((t & (a-1)) == 0);
+}
+constexpr bool is_aligned(void* t, size_t a) noexcept {
+  return is_aligned(uintptr_t(t), a);
 }
 
 ///////////////////////////
@@ -223,37 +233,46 @@ constexpr bool is_aligned(T t, size_t a) noexcept {
 ///////////////////////////
 
 //Returns true if t == 0 or t is a power of 2
-template <typename T> constexpr bool is_pow2_or_zero(T t) noexcept {
-  static_assert(is_unsigned<T>::value, "T must be an unsigned type!");
+template <typename T>
+constexpr auto is_pow2_or_zero(T t)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,bool>::type {
   return (t & (t-1)) == 0;
 }
 
 //Returns true if t is a power of 2
-template <typename T> constexpr bool is_pow2(T t) noexcept {
-  static_assert(is_unsigned<T>::value, "T must be an unsigned type!");
+template <typename T>
+constexpr auto is_pow2(T t)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,bool>::type {
   return (t != 0) && is_pow2_or_zero(t);
 }
 
 //Return smallest power of 2 >= t
 template <typename T>
-constexpr T pow2_ge(T t) noexcept {
-  static_assert(is_unsigned<T>::value, "T must be an unsigned type!");
+constexpr auto pow2_ge(T t)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
   return is_pow2(t) ? t : pow2_gt(t);
 }
 
 //Return smallest power of 2 > t
-template <typename T> constexpr T pow2_gt(T t) noexcept;
+template <typename T>
+constexpr auto pow2_gt(T t)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
+    return (T(1) << (fls(make_unsigned<T>::type(t)) +1));
+  }
 
 //Return smallest power of 2 <= t
 template <typename T>
-constexpr T pow2_le(T t) noexcept {
+constexpr auto pow2_le(T t)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
   return is_pow2(t) ? t : pow2_lt(t);
 }
 
 //Return smallest power of 2 < t
 template <typename T>
-constexpr T pow2_lt(T t) noexcept;
-
+constexpr auto pow2_lt(T t)
+  noexcept -> typename std::enable_if<std::is_integral<T>::value,T>::type {
+    return T(1) << fls(make_unsigned<T>::type(t-1));
+}
 
 ///////////////////////////
 //Setting/Resetting bits
@@ -261,65 +280,87 @@ constexpr T pow2_lt(T t) noexcept;
 
 //Sets bit b of t, no effect if b >= number of bits in t
 template <typename T>
-constexpr T set_bit(T t, unsigned int b) noexcept {
+constexpr auto set_bit(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
   return t | (1 << b);
 }
 
 //Set all bits in t >= b
 template <typename T>
-constexpr T set_bits_gt(T t, unsigned int b) noexcept {
+constexpr auto set_bits_gt(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
   return t | ~((1 << (b+1)) -1);
 }
 
 //Set all bits in t > b
 template <typename T>
-constexpr T set_bits_ge(T t, unsigned int b) noexcept {
+constexpr auto set_bits_ge(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
   return t | ~((1 << b) -1);
 }
 
 //Set all bits in t <= b
 template <typename T>
-constexpr T set_bits_le(T t, unsigned int b) noexcept {
+constexpr auto set_bits_le(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
   return t | ((1 << (b+1)) -1);
 }
 
 //Set all bits in t < b
 template <typename T>
-constexpr T set_bits_lt(T t, unsigned int b) noexcept {
+constexpr auto set_bits_lt(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
   return t | ((1 << b) -1);
 }
 
 //Resets bit b of t, no effect if b >= number of bits in t
 template <typename T>
-constexpr T reset_bit(T t, unsigned int b) noexcept {
+constexpr auto reset_bit(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
   return t & ~(1 << b);
 }
 
 //Reset all bits in t >= b
 template <typename T>
-constexpr T reset_bits_gt(T t, unsigned int b) noexcept ;
+constexpr auto reset_bits_gt(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return t & ~((T(1) << (b+1))-1);
+  }
 
 //Reset all bits in t > b
 template <typename T>
-constexpr T reset_bits_ge(T t, unsigned int b) noexcept ;
+constexpr auto reset_bits_ge(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return t & ~((T(1) << b)-1);
+  }
 
 //Reset all bits in t <= b
 template <typename T>
-constexpr T reset_bits_le(T t, unsigned int b) noexcept ;
+constexpr auto reset_bits_le(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return t & ((T(1) << (b+1))-1);
+  }
 
 //Reset all bits in t < b
 template <typename T>
-constexpr T reset_bits_lt(T t, unsigned int b) noexcept ;
+constexpr auto reset_bits_lt(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return t & ((T(1) << b)-1);
+  }
 
 //Resets the least significant bit set
 template <typename T>
-constexpr T reset_lsb(T t) noexcept {
+constexpr auto reset_lsb(T t)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
   return t & (t -1);
 }
 
 //Resets the most significant bit set
 template <typename T>
-constexpr T reset_msb(T t);
+constexpr auto reset_msb(T t)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+  return t & ~(T(1) << ((sizeof(t)*8) - clz(t)-1));
+}
 
 ////////////////////////
 //Saturated Arithmetic
@@ -327,7 +368,8 @@ constexpr T reset_msb(T t);
 
 //Saturated addition, like normal addition except on overflow the result will be the maximum value for decltype(L + R).
 template <typename L, typename R>
-constexpr auto sat_add(L l, R r) -> decltype(l+r) {
+constexpr auto sat_add(L l, R r)
+  noexcept -> typename std::enable_if<std::is_integral<L>::value && std::is_integral<R>::value,decltype(l+r)>::type {
   typedef decltype(l+r) LR;
   return static_cast<LR>(l) > numeric_limits<LR>::max() - static_cast<LR>(r) ?
     numeric_limits<LR>::max() : l + r;
@@ -335,7 +377,8 @@ constexpr auto sat_add(L l, R r) -> decltype(l+r) {
 
 //Saturated subtraction, like normal subtraction except on overflow the result will be the minimum value for decltype(L - R).
 template <typename L, typename R>
-constexpr auto sat_sub(L l, R r) -> decltype(l-r) {
+constexpr auto sat_sub(L l, R r)
+  noexcept -> typename std::enable_if<std::is_integral<L>::value && std::is_integral<R>::value,decltype(l-r)>::type {
   typedef decltype(l-r) LR;
   return static_cast<LR>(l) < numeric_limits<LR>::min() + static_cast<LR>(r) ?
     numeric_limits<LR>::min() : l - r;
@@ -347,11 +390,13 @@ constexpr auto sat_sub(L l, R r) -> decltype(l-r) {
 
 //Reverses all of the bits in t
 template <typename T>
-constexpr T reverse_bits(T t) noexcept ;
+constexpr auto reverse_bits(T t)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type;
 
 //Returns a value whos even bits are set to the even bits of even, and odd bits set to the odd bits of odd.
 template <typename T>
-constexpr T interleave_bits(T even, T odd);
+constexpr auto interleave_bits(T even, T odd)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type;
 
 
 //Swaps the nibbles (4 bits) of the given byte
