@@ -13,117 +13,136 @@ namespace std {
 ///////////////////////////
 
 //Returns the number of trailing 0-bits in x, starting at the least significant bit position. If x is 0, the result is undefined.
-template <typename T> constexpr int ctz(T t) noexcept = delete;
-template <> constexpr int ctz(unsigned int t) noexcept {
+//x86: bsf
+//alpha: cttz
+//powerpc: 
+constexpr int ctz(unsigned int t) noexcept {
   return __builtin_ctz(t);
 }
-template <> constexpr int ctz(unsigned long t) noexcept {
+constexpr int ctz(unsigned long t) noexcept {
   return __builtin_ctzl(t);
 }
-template <> constexpr int ctz(unsigned long long t) noexcept {
+constexpr int ctz(unsigned long long t) noexcept {
   return __builtin_ctzll(t);
 }
-template <> constexpr int ctz(unsigned char t) noexcept {
-  return ctz<unsigned int>(t);
+constexpr int ctz(unsigned char t) noexcept {
+  return ctz(unsigned int(t));
 }
-template <> constexpr int ctz(unsigned short t) noexcept {
-  return ctz<unsigned int>(t);
+constexpr int ctz(unsigned short t) noexcept {
+  return ctz(unsigned int(t));
 }
 
 //Returns the number of leading 0-bits in x, starting at the most significant bit position. If x is 0, the result is undefined.
-template <typename T> constexpr int clz(T t) noexcept = delete;
-template <> constexpr int clz(unsigned int t) noexcept {
+//x86: bsr
+//alpha: ctlz
+//power: cntlz[wd]
+constexpr int clz(unsigned int t) noexcept {
   return __builtin_clz(t);
 }
-template <> constexpr int clz(unsigned long t) noexcept {
+constexpr int clz(unsigned long t) noexcept {
   return __builtin_clzl(t);
 }
-template <> constexpr int clz(unsigned long long t) noexcept {
+constexpr int clz(unsigned long long t) noexcept {
   return __builtin_clzll(t);
 }
-template <> constexpr int clz(unsigned char t) noexcept {
+constexpr int clz(unsigned char t) noexcept {
   return clz<unsigned int>(t) - ((sizeof(unsigned int) - sizeof(t)) * CHAR_BIT);
 }
-template <> constexpr int clz(unsigned short t) noexcept {
+constexpr int clz(unsigned short t) noexcept {
   return clz<unsigned int>(t) - ((sizeof(unsigned int) - sizeof(t)) * CHAR_BIT);
 }
 
-//Return position of the first bit set in t.
-template <typename T> constexpr int ffs(T t) noexcept = delete;
-template <> constexpr int ffs(unsigned int t) noexcept {
+//Return position of the first bit set in t, starting at 1 for the least significant bit, or 0 if t is 0.
+//x86: bsf
+//alpha: cttz
+constexpr int ffs(unsigned int t) noexcept {
   return __builtin_ffs(t);
 }
-template <> constexpr int ffs(unsigned long t) noexcept {
+constexpr int ffs(unsigned long t) noexcept {
   return __builtin_ffsl(t);
 }
-template <> constexpr int ffs(unsigned long long t) noexcept {
+constexpr int ffs(unsigned long long t) noexcept {
   return __builtin_ffsll(t);
 }
-template <> constexpr int ffs(unsigned char t) noexcept {
+constexpr int ffs(unsigned char t) noexcept {
   return ffs<unsigned int>(t);
 }
-template <> constexpr int ffs(unsigned short t) noexcept {
+constexpr int ffs(unsigned short t) noexcept {
   return ffs<unsigned int>(t);
 }
 
-//Returns position of the last bit set in t
-template <typename T> constexpr int fls(T t) noexcept {
-  static_assert(std::is_unsigned<T>::value, "T must be unsigned!");
-  return (sizeof(t) * CHAR_BIT) - clz(t);
+//Returns position of the last bit set in t, starting at 1 for the least significant bit, or 0 if t is 0.
+//x86: bsf, sub
+//alpha: ctlz, sub
+constexpr int fls(unsigned int t) noexcept {
+  return t == 0U ? 0 : (sizeof(t) * CHAR_BIT) - clz(t)+1U;
+}
+constexpr int fls(unsigned long t) noexcept {
+  return t == 0UL ? 0 : (sizeof(t) * CHAR_BIT) - clz(t)+1UL;
+}
+constexpr int fls(unsigned long long t) noexcept {
+  return t == 0ULL ? 0 : (sizeof(t) * CHAR_BIT) - clz(t)+1ULL;
+}
+constexpr int fls(unsigned char t) noexcept {
+  return fls(unsigned int(t));
+}
+constexpr int fls(unsigned short t) noexcept {
+  return fls(unsigned int(t));
 }
 
 //Returns the number of leading redundant sign bits in x, i.e. the number of bits following the most significant bit that are identical to it. There are no special cases for 0 or other values
-template <typename T> constexpr int clrsb(T t) noexcept = delete;
-template <> constexpr int clrsb(unsigned int t) noexcept {
+//x86: 
+constexpr int clrsb(unsigned int t) noexcept {
   return __builtin_clrsb(t);
 }
-template <> constexpr int clrsb(unsigned long t) noexcept {
+constexpr int clrsb(unsigned long t) noexcept {
   return __builtin_clrsbl(t);
 }
-template <> constexpr int clrsb(unsigned long long t) noexcept {
+constexpr int clrsb(unsigned long long t) noexcept {
   return __builtin_clrsbll(t);
 }
-template <> constexpr int clrsb(unsigned char t) noexcept {
-  return clrsb<unsigned int>(t) - ((sizeof(unsigned int) - sizeof(t)) * CHAR_BIT);
+constexpr int clrsb(unsigned char t) noexcept {
+  return clrsb(unsigned int(t)) - ((sizeof(unsigned int) - sizeof(t)) * CHAR_BIT);
 }
-template <> constexpr int clrsb(unsigned short t) noexcept {
-  return clrsb<unsigned int>(t) - ((sizeof(unsigned int) - sizeof(t)) * CHAR_BIT);
+constexpr int clrsb(unsigned short t) noexcept {
+  return clrsb(unsigned int(t)) - ((sizeof(unsigned int) - sizeof(t)) * CHAR_BIT);
 }
 
 //Returns the number of 1-bits in x.
-template <typename T> constexpr int popcount(T t) noexcept = delete;
-template <> constexpr int popcount(unsigned int t) noexcept {
+//x86: popcnt
+//alpha: ctpop
+constexpr int popcount(unsigned int t) noexcept {
   return __builtin_popcount(t);
 }
-template <> constexpr int popcount(unsigned long t) noexcept {
+constexpr int popcount(unsigned long t) noexcept {
   return __builtin_popcount(t);
 }
-template <> constexpr int popcount(unsigned long long t) noexcept {
+constexpr int popcount(unsigned long long t) noexcept {
   return __builtin_popcount(t);
 }
-template <> constexpr int popcount(unsigned char t) noexcept {
-  return popcount<unsigned int>(t);
+constexpr int popcount(unsigned char t) noexcept {
+  return popcount(unsigned int(t));
 }
-template <> constexpr int popcount(unsigned short t) noexcept {
-  return popcount<unsigned int>(t);
+constexpr int popcount(unsigned short t) noexcept {
+  return popcount(unsigned int(t));
 }
 
 //Returns the parity of x, i.e. the number of 1-bits in x modulo 2.
-template <typename T> constexpr int parity(T t) noexcept = delete;
-template <> constexpr int parity(unsigned int t) noexcept {
+//x86: shrl, xorl, xorb, setnp, movzbl
+constexpr int parity(unsigned int t) noexcept {
   return __builtin_parity(t);
 }
-template <> constexpr int parity(unsigned long t) noexcept {
+constexpr int parity(unsigned long t) noexcept {
   return __builtin_parityl(t);
 }
-template <> constexpr int parity(unsigned long long t) noexcept {
+constexpr int parity(unsigned long long t) noexcept {
   return __builtin_parityll(t);
 }
-template <> constexpr int parity(unsigned char t) noexcept {
-  return parity<unsigned int>(t);
+constexpr int parity(unsigned char t) noexcept {
+  return parity(unsigned int(t));
 }
-template <> constexpr int parity(unsigned short t) noexcept {
-  return parity<unsigned int>(t);
+constexpr int parity(unsigned short t) noexcept {
+  return parity(unsigned int(t));
 }
 
 ///////////////////////////
@@ -131,6 +150,8 @@ template <> constexpr int parity(unsigned short t) noexcept {
 ///////////////////////////
 
 //logical shift left
+//x86: shl
+//alpha: sll
 template <typename T>
 constexpr auto shl(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
@@ -138,6 +159,8 @@ constexpr auto shl(T t, int s)
   }
 
 //logical shift right
+//x86: shr
+//alpha: srl
 template <typename T>
 constexpr auto shr(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
@@ -152,6 +175,8 @@ constexpr auto sh(T t, int s)
   }
 
 //left shift arithmetic
+//x86: sal
+//alpha: sll
 template <typename T>
 constexpr auto sal(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
@@ -160,6 +185,8 @@ constexpr auto sal(T t, int s)
   }
 
 //right shift arithmetic. 
+//x86: sar
+//alpha: srl
 template <typename T>
 constexpr auto sar(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
@@ -174,6 +201,7 @@ constexpr auto sa(T t, int s)
   }
 
 //Left rotate shift
+//x86: rol
 template <typename T>
 constexpr auto rotl(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
@@ -181,6 +209,7 @@ constexpr auto rotl(T t, int s)
   }
 
 //Right rotate shift
+//x86: ror
 template <typename T>
 constexpr auto rotr(T t, int s)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
@@ -278,7 +307,7 @@ constexpr auto pow2_lt(T t)
 //Setting/Resetting bits
 ///////////////////////////
 
-//Sets bit b of t, no effect if b >= number of bits in t
+//Sets bit b of t, undefined if b >= number of bits in t
 template <typename T>
 constexpr auto set_bit(T t, int b)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
@@ -313,7 +342,7 @@ constexpr auto set_bits_lt(T t, int b)
   return t | ((1 << b) -1);
 }
 
-//Resets bit b of t, no effect if b >= number of bits in t
+//Resets bit b of t, undefined if b >= number of bits in t
 template <typename T>
 constexpr auto reset_bit(T t, int b)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
@@ -348,14 +377,53 @@ constexpr auto reset_bits_lt(T t, int b)
     return t & ((T(1) << b)-1);
   }
 
-//Resets the least significant bit set
+//Flips bit b of t, undefined if b >= number of bits in t
+template <typename T>
+constexpr auto flip_bit(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+  return t ^ ~(1 << b);
+}
+
+//Flips all bits in t >= b
+template <typename T>
+constexpr auto flip_bits_gt(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return t ^ ~((T(1) << (b+1))-1);
+  }
+
+//Flips all bits in t > b
+template <typename T>
+constexpr auto flip_bits_ge(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return t ^ ~((T(1) << b)-1);
+  }
+
+//Flips all bits in t <= b
+template <typename T>
+constexpr auto flip_bits_le(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return t ^ ((T(1) << (b+1))-1);
+  }
+
+//Flips all bits in t < b
+template <typename T>
+constexpr auto flip_bits_lt(T t, int b)
+  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
+    return t ^ ((T(1) << b)-1);
+  }
+
+/////////////////////
+//MSB and LSB
+/////////////////////
+
+//Resets the least significant bit set, or returns 0 if t is 0.
 template <typename T>
 constexpr auto reset_lsb(T t)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
   return t & (t -1);
 }
 
-//Resets the most significant bit set
+//Resets the most significant bit set, or returns 0 if t is 0
 template <typename T>
 constexpr auto reset_msb(T t)
   noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type {
@@ -385,22 +453,13 @@ constexpr auto sat_sub(L l, R r)
 }
 
 ////////////////////////
-//Misc
+//Nibble Swap
 ////////////////////////
 
-//Reverses all of the bits in t
-template <typename T>
-constexpr auto reverse_bits(T t)
-  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type;
 
-//Returns a value whos even bits are set to the even bits of even, and odd bits set to the odd bits of odd.
-template <typename T>
-constexpr auto interleave_bits(T even, T odd)
-  noexcept -> typename std::enable_if<std::is_unsigned<T>::value,T>::type;
-
-
-//Swaps the nibbles (4 bits) of the given byte
-constexpr uint8_t swap_nibbles(uint8_t byte) {
+//Swaps the nibbles (4 bits) of the given byte. 
+template <typename T> constexpr T swap_nibbles(T t) noexcept = delete;
+template <> constexpr uint8_t swap_nibbles(uint8_t byte) {
   return (byte >> 4) | (byte << 4);
 }
 
