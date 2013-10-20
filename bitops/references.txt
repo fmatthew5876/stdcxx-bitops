@@ -1,0 +1,4 @@
+http://chessprogramming.wikispaces.com
+http://fgiesen.wordpress.com/2013/10/18/bit-scanning-equivalencies/
+http://gcc.1065356.n5.nabble.com/Add-builtin-clrsb-similar-to-clz-ctz-td521264.html
+

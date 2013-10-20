@@ -1,0 +1,119 @@
+Intel x86_64:
+bswap(x) Swaps bytes
+bsf(x) finds first set bit, undefined if 0
+bsr(x) finds last set bit, undefined if 0
+popcnt(x) return number of bits set
+rol(x) rotate left
+ror(x) rotate right1
+
+Intel x86_64 with SSE4
+lzcnt(x) returns last set bit, or sizeof(x) * CHAR_BIT on 0
+
+Intel x86_64 with AVX/BMI1
+blsi(x) clear lowest bit set and return the bit
+blsmsk(x) returns a mask where all bits <= ctz(x) are seto
+blsr(x) clear lowest bit set
+bzhi(x, n) zero bits >= n
+tzcnt(x) returns first set bit, or sizeof(x) * CHAR_BIT on 0
+
+ARMv5
+CLZ - count leading zeroes, sizeof on 0
+REV - does a byte swap
+
+ARMv6
+REV
+
+ARMv7
+QADD - saturated add
+QSUB - saturated sub
+CLZ
+RBIT
+TEV
+REV16
+
+ARMv8
+CLS - count leading sign bits
+CLZ - count leading zeroes, sizeof on 0
+RBIT - reverse bits
+REV - reverse bytes
+REV16 - reverses each pair of 2 bytes
+REV32 - reverses each pair of 4 bytes
+
+IA64
+clz - count leading 0, 0 ok
+popcnt - population count
+
+Alpha
+CTLZ - count leading zero, 0 ok
+CTPOP - pop count
+CTTZ - count trailing zero, 0 ok
+
+PowerPC
+cntlz[dw] - count leading zeros, sizeof on 0
+popcntb - pop count
+
+SparcV9
+POPC - pop count
+
+MIPS
+CLO - count leading 1s, 0 ok
+CLZ - count leading 0s, 0 ok
+
+AVR
+SWAP - swap nibbles
+
+EPIPHANY
+BITR - bit reverse
+ASR - arithmetic shift right
+
+H8/300 //x[b] is reference to bth bit of x
+BCLR(x, b) - x[b] = 0
+BSET(x, b) - x[b] = 1
+BTST(x, b) - x[b] == 1
+BILD(x, b) - ~x[b]
+BNOT(x, b) - x[b] = x[b] = ~x[b]
+BAND(x, b, a) - x[b] & bool(a)
+BIAND(x, b, a) - (~x[b]) & bool(a)
+BOR(x, b, a) - x[b] | bool(a)
+BXOR(x, b, a) - x[b] ^ bool(a)
+BIOR(x, b, a) - ~x[b] | bool(a)
+BIST(x, b, a) - x[b] = !bool(a)
+BIXOR(x, b, a) = ~x[b] ^ bool(a)
+ROTL - rotate left
+ROTR - rotate righto
+RTOXL - rotate left with carry
+ROTXR - rotate right with carry
+SHAL - shift arithmetic left
+SHAR - shift arithmetic right
+SHLL - shift logical left
+SHLR - shift logical right
+
+HC12
+ASL - shift arithmetic left
+ASR - shift arithmetic right
+BCLR - clear bits in mask
+LSL - shift logical left
+LSR - shift logical right
+ROL - rotate left
+ROR - rotate right
+
+Motorola 68000
+ASL - arithmetic shift left
+ASR - airthmatic shift right
+LSL - logical shift left
+LSR - logical shift right
+ROL - rotate left
+ROR - rotate right
+ROXL - rotate left carry
+ROXR - rotate right carry
+
+MC68020
+BFFFO - Find first one bit in bitfield
+SWAP - Swap the 16-bit words of a register
+
+PDP-11
+ROR - Rotate right
+ROL - rotate left
+ASR - arithmetic shift right
+ASL - arithmetic shift left
+SWAB - swap bytes of a 16 bit word
