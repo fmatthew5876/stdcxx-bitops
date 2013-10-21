@@ -1,4 +1,16 @@
+#ifndef BITOPS_HH
+#define BITOPS_HH
+
+#include <cstdint>
+#include <cstddef>
+#include <climits>
+#include <type_traits>
+
 namespace std {
+
+////////////////////////////////////
+//Zero and One Counting algorithms
+////////////////////////////////////
 
 //Returns the number of trailing zeros in x, or sizeof(x) * CHAR_BIT if x is 0
 //x86_64 w/ BMI1: tzcnt
@@ -58,6 +70,17 @@ template <typename Integral>
 template <typename Integral>
   constexpr int popcount(Integral x) noexcept;
 
+//Returns the number of 1 bits in x mod 2
+//gcc: __builtin_parity(x)
+template <typename Integral>
+  constexpr int parity(Integral x) noexcept {
+    return popcount(x) & 1;
+  }
+
+////////////////////////////////////
+//Bit and Byte reversal algorithms
+////////////////////////////////////
+
 //Returns the value when each group of packets has it's packets reversed.
 //A packet is a contiguous set of bits, a nibble is a packet of size 4, a byte is a packet of size 8 (or CHAR_BIT).
 //This is the generic function which drives all of the bit and byte reversal helpers.
@@ -104,39 +127,53 @@ template <typename Integral, size_t groupby=0>
 //static_assert(grouby == 0 || sizeof(x/wordsz) % groupby == 0);
 //if wordsz == 1, then call revbytes<Integral, groupby>(x);
 //wordsz = 2, groupby=0: MC68020 SWAP
-template <typenme Integral, size_t wordsz, size_t groupby=0>
+template <typename Integral, size_t wordsz, size_t groupby=0>
   constexpr Integral revwords(Integral x) noexcept {
     static_assert(wordsz > 0, "Cannot have a word of size 0!");
     return binary_reverse<Integral, wordsz * CHAR_BIT, groupby>(x);
   }
 
+////////////////////////////////////
+//Saturated Arithmetic
+////////////////////////////////////
+
 //Perform saturated addition on l and r.
 //ARMv7 DSP extensions: QADD
-template <typename IntegralL, typename integralR>
+template <typename IntegralL, typename IntegralR>
   constexpr auto satadd(IntegralL l, IntegralR r) noexcept -> decltype(l + r);
 
 //Perform saturated subtraction on l and r.
 //ARMv7 DSP extensions: QSUB
-template <typename IntegralL, typename integralR>
+template <typename IntegralL, typename IntegralR>
   constexpr auto satsub(IntegralL l, IntegralR r) noexcept -> decltype(l - r);
+
+////////////////////////////////////
+//Explicit shifts
+////////////////////////////////////
 
 //Logical left shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
 //Just about every processor in existance has this
 //Included for symmetry
 template <typename Integral>
-  constexpr Integral shll(Integral x, int s) noexcept;
+  constexpr Integral shll(Integral x, int s) noexcept {
+    return Integral(std::make_unsigned<Intregral>::type(x) << s);
+  }
 
 //Logical right shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
 //Just about every processor in existance has this
 //Included for symmetry, also can right shift a signed number easily without a cast to unsigned
 template <typename Integral>
-  constexpr Integral shlr(Integral x, int s) noexcept;
+  constexpr Integral shlr(Integral x, int s) noexcept {
+    return Integral(std::make_unsigned<Intregral>::type(x) << s);
+  }
 
 //Arithmetic left shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
 //Just about every processor in existance has this
 //Included for symmetry
 template <typename Integral>
-  constexpr Integral shal(Integral x, int s) noexcept;
+  constexpr Integral shal(Integral x, int s) noexcept {
+    return shll(x, s);
+  }
 
 //Arithmetic right shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
 //Just about every processor in existance has this, signed right shift is implementation defined. There is no standards compliant alternative to shar().
@@ -152,6 +189,10 @@ template <typename Integral>
 //Just about every processor in existance has this, including the PDP-11 (1969) and yet C or C++ never included a way to get at this instruction.
 template <typename Integral>
   constexpr Integral rotr(Integral x, int s) noexcept;
+
+////////////////////////////////////
+//Set/Reset/Flip specific bits
+////////////////////////////////////
 
 //Sets bit b in x
 template <typename Integral>
@@ -223,10 +264,14 @@ template <typename Integral>
     return x ^ ((Integral(1) << (b+1))-1);
   }
 
+////////////////////////////////////
+//Power of 2 manipulation
+////////////////////////////////////
+
 //Returns true if x is a power of 2 or zero
 template <typename Integral>
   constexpr bool is_pow2_or_zero(Integral x) noexcept {
-    return x & (x-1);
+    return x & (x-1) == 0;
     //return popcount(x) <= 1
   }
 
@@ -237,16 +282,29 @@ template <typename Integral>
     //return popcount(x) == 1;
   }
 
-//Returns the number of 1 bits in x mod 2
-//gcc: __builtin_parity(x)
+//Return smallest power of 2 >= x
 template <typename Integral>
-  constexpr int parity(Integral x) noexcept {
-    return popcount(x) & 1;
-  }
+constexpr Integral pow2ge(Integral x) noexcept;
+
+//Return smallest power of 2 > x
+template <typename Integral>
+constexpr Integral pow2gt(Integral x) noexcept;
+
+//Return smallest power of 2 <= x
+template <typename Integral>
+constexpr Integral pow2le(Integral x) noexcept;
+
+//Return smallest power of 2 < x
+template <typename Integral>
+constexpr Integral pow2lt(Integral x) noexcept;
+
+////////////////////////////////////
+//Pointer and size alignment helpers
+////////////////////////////////////
 
 //Returns the smallest number n when n >= val && is_aligned(n, align). align must be a power of 2!
 template <typename Integral>
-constexpr auto align_up(Integral val, size_t a) noexcept {
+constexpr Integral align_up(Integral val, size_t a) noexcept {
   return ((val + (a -1)) & -a);
 }
 constexpr void* align_up(void* val, size_t a) noexcept {
@@ -255,7 +313,7 @@ constexpr void* align_up(void* val, size_t a) noexcept {
 
 //Returns the largest number n when n <= val && is_aligned(n, align). align must be a power of 2!
 template <typename Integral>
-constexpr auto align_down(Integral val, size_t a) noexcept {
+constexpr Integral align_down(Integral val, size_t a) noexcept {
   return val & -a;
 }
 constexpr void* align_down(void* val, size_t a) noexcept {
@@ -264,28 +322,15 @@ constexpr void* align_down(void* val, size_t a) noexcept {
 
 //Returns true if t is aligned to a
 template <typename Integral>
-constexpr auto is_aligned(Integral t, size_t a) noexcept {
+constexpr bool is_aligned(Integral t, size_t a) noexcept {
   return ((t & (a-1)) == 0);
 }
 constexpr bool is_aligned(void* t, size_t a) noexcept {
   return is_aligned(uintptr_t(t), a);
 }
 
-//Return smallest power of 2 >= x
-template <typename Integral>
-constexpr auto pow2ge(Integral x) noexcept;
-
-//Return smallest power of 2 > x
-template <typename Integral>
-constexpr auto pow2gt(Integral x) noexcept;
-
-//Return smallest power of 2 <= x
-template <typename Integral>
-constexpr auto pow2le(Integral x) noexcept;
-
-//Return smallest power of 2 < x
-template <typename Integral>
-constexpr auto pow2lt(Integral x) noexcept;
 
 
 } //namespace std
+
+#endif

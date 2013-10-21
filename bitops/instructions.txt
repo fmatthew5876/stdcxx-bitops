@@ -1,4 +1,4 @@
-Intel x86_64:
+Intel i386
 bswap(x) Swaps bytes
 bsf(x) finds first set bit, undefined if 0
 bsr(x) finds last set bit, undefined if 0

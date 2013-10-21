@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
 
   printf("v = %08X %u\n", val, val);
 
+#if 0
   PRINT(ctz);
   PRINT(clz);
   PRINT(ffs);
@@ -91,6 +92,7 @@ int main(int argc, char** argv) {
   PRINT2(sat_sub, 0xFFFFFF00);
 
   PRINT(swap_nibbles);
+#endif
 
   return 0;
 }
