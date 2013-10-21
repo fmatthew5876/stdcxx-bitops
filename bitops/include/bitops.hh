@@ -239,7 +239,6 @@ template <typename Integral>
   }
 
 //Set all bits >= position b, nop if b > sizeof(x) * CHAR_BIT
-//x86_64 w/ BMI2: BZHI
 template <typename Integral>
   constexpr Integral set_bits_ge(Integral x, int b) noexcept {
     return x | ~((Integral(1) << b)-1);
@@ -252,7 +251,6 @@ template <typename Integral>
   }
 
 //Flip all bits >= position b, nop if b > sizeof(x) * CHAR_BIT
-//x86_64 w/ BMI2: BZHI
 template <typename Integral>
   constexpr Integral flip_bits_ge(Integral x, int b) noexcept {
     return x ^ ~((Integral(1) << b)-1);
