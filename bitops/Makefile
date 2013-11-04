@@ -1,5 +1,6 @@
+CXX=clang++
 CPPFLAGS=-std=c++11 -Iinclude
-CXXFLAGS=-Wall -Wextra
+CXXFLAGS=-Wall -Wextra -Werror -Wno-shift-count-overflow
 
 test: test.o
 	$(CXX) $(LDFLAGS) -o $@ $^

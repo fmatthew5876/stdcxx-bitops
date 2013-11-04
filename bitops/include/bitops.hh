@@ -1,35 +1,110 @@
 #ifndef BITOPS_HH
 #define BITOPS_HH
 
+#ifndef HAS_CXX14_CONSTEXPR
+#define HAS_CXX14_CONSTEXPR 0
+#endif
+
+#if HAS_CXX14_CONSTEXPR
+#define constexpr14 constexpr
+#else
+#define constexpr14
+#endif
+
 #include <cstdint>
 #include <cstddef>
 #include <climits>
+#include <limits>
 #include <type_traits>
 
 namespace std {
+
+//This implementation makes the following platform assumptions:
+//signed right shift is an arithmetic shift
+//CHAR_BIT == 8
+//Native integer types are exactly 8, 16, 32, and 64 bits wide. No support is added for larger types.
+
+////////////////////////////////////
+//Explicit shifts
+////////////////////////////////////
+
+//Logical left shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
+//Just about every processor in existance has this
+//Included for symmetry
+template <typename Integral>
+  constexpr Integral lshl(Integral x, int s) noexcept {
+    return Integral(typename std::make_unsigned<Integral>::type(x) << s);
+  }
+
+//Logical right shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
+//Just about every processor in existance has this
+//Included for symmetry, also can right shift a signed number easily without a cast to unsigned
+template <typename Integral>
+  constexpr Integral rshl(Integral x, int s) noexcept {
+    return Integral(typename std::make_unsigned<Integral>::type(x) << s);
+  }
+
+//Arithmetic left shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
+//Just about every processor in existance has this
+//Included for symmetry
+template <typename Integral>
+  constexpr Integral lsha(Integral x, int s) noexcept {
+    return lshl(x, s);
+  }
+
+//Arithmetic right shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
+//Just about every processor in existance has this, signed right shift is implementation defined. There is no standards compliant alternative to shar().
+template <typename Integral>
+  constexpr Integral rsha(Integral x, int s) noexcept {
+    //Assumes signed right shift is arithmetic. If it is not the platform will need to implement this another way.
+    return Integral(typename std::make_signed<Integral>::type(x) >> s);
+  }
+
+//Circular left shift (rotate), undefined if s < 0 or x > sizeof(x) * CHAR_BIT
+//Just about every processor in existance has this, including the PDP-11 (1969) and yet C or C++ never included a way to get at this instruction.
+template <typename Integral>
+  constexpr Integral lrot(Integral x, int s) noexcept {
+    return (x << s) | rshl(x, (sizeof(x)*CHAR_BIT-s));
+  }
+
+//Circular right shift (rotate), undefined if s < 0 or x > sizeof(x) * CHAR_BIT
+//Just about every processor in existance has this, including the PDP-11 (1969) and yet C or C++ never included a way to get at this instruction.
+template <typename Integral>
+  constexpr Integral rrot(Integral x, int s) noexcept {
+    return rshl(x, s) | ( x << (sizeof(x)*CHAR_BIT-s));
+  }
 
 ////////////////////////////////////
 //Zero and One Counting algorithms
 ////////////////////////////////////
 
 //Returns the number of trailing zeros in x, or sizeof(x) * CHAR_BIT if x is 0
+//i386 bsf, cmov
 //x86_64 w/ BMI1: tzcnt
 //Alpha: cttz
 //MIPS: CLZ
 //gcc: x == 0 ? sizeof(x) * CHAR_BIT :__builtin_ctz(x)
 template <typename Integral>
-  constexpr int ctz(Integral x) noexcept;
-
-//Returns the number of trailing zeroes in x, result is undefined if x is 0
-//i386: bsf
-//x86_64 w/ BMI1: tzcnt
-//Alpha: cttz
-//MIPS: CLZ
-//gcc: __builtin_ctz()
-template <typename Integral>
-  constexpr int ctznz(Integral x) noexcept;
+  constexpr14 int ctzb(Integral x) noexcept {
+    constexpr int nbits = int(sizeof(x) * CHAR_BIT);
+    if(x == 0) { return nbits; }
+    Integral n = 0;
+    if(sizeof(x) > 1) {
+      if(sizeof(x) > 2) {
+        if(sizeof(x) > 4) {
+          if((x & Integral(0xFFFFFFFFUL)) == 0) { n = n + 32; x = rshl(x, 32); }
+        }
+        if((x & Integral(0xFFFFUL)) == 0) { n = n + 16; x = rshl(x, 16); }
+      }
+      if((x & Integral(0xFFUL)) == 0) { n = n + 8; x = rshl(x, 8); }
+    }
+    if((x & Integral(0xFUL)) == 0) { n = n + 4; x = rshl(x, 4); }
+    if((x & Integral(0x3UL)) == 0) { n = n + 2; x = rshl(x, 2); }
+    return n - (x & 1);
+  }
 
 //Returns the number of leading zeroes in x, or sizeof(x) * CHAR_BIT if x is 0
+//i386 bsr, cmov
 //x86_64 w/ SSE4: lzcnt 
 //ARMv5: CLZ
 //IA64: clz
@@ -37,27 +112,36 @@ template <typename Integral>
 //PowerPC: cntlz[dw]
 //gcc: x == 0 ? sizeof(x) * CHAR_BIT :__builtin_clz(x)
 template <typename Integral>
-  constexpr int clz(Integral x) noexcept;
-
-//Returns the number of leading zeroes in x, result is undefined if x is 0
-//i386: bsr
-//x86_64 w/ SSE4: lzcnt 
-//ARMv5: CLZ
-//IA64: clz
-//Alpha: CTLZ
-//PowerPC: cntlz[dw]
-//gcc: __builtin_clz(x)
-template <typename Integral>
-  constexpr int clznz(Integral x) noexcept;
+  constexpr14 int clzb(Integral x) noexcept {
+    constexpr int nbits = int(sizeof(x) * CHAR_BIT);
+    if(x == 0) { return nbits; }
+    Integral n = 1;
+    if(sizeof(x) > 1) {
+      if(sizeof(x) > 2) {
+        if(sizeof(x) > 4) {
+          if((rshl(x, nbits-32)) == 0) { n = n + 32; x = x << 32; }
+        }
+        if((rshl(x, nbits-16)) == 0) { n = n + 16; x = x << 16; }
+      }
+      if((rshl(x, nbits-8)) == 0) { n = n + 8; x = x << 8; }
+    }
+    if((rshl(x, nbits-4)) == 0) { n = n + 4; x = x << 4; }
+    if((rshl(x, nbits-2)) == 0) { n = n + 2; x = x << 2; }
+    n = n - (rshl(x, 31));
+    return n;
+  }
 
 //Returns the number of leading redundant sign bits in x
 //ARMv8: CLS
 //Blackfin: SIGNBITS
 //C6X: NORM
 //Picochip: SBC
+//MIPS: CTO
 //gcc: __builtin_clrsb(x)
 template <typename Integral>
-  constexpr int clrsb(Integral x) noexcept;
+  constexpr14 int clrsb(Integral x) noexcept {
+    return clzb(~x);
+  }
 
 //Returns the number of 1 bits in x.
 //i386: popcnt
@@ -68,69 +152,129 @@ template <typename Integral>
 //Blackfin: ONES
 //gcc: __builtin_popcount(x)
 template <typename Integral>
-  constexpr int popcount(Integral x) noexcept;
+  constexpr14 int popcount(Integral x) noexcept {
+    x = (x & Integral(0x5555555555555555UL)) + (rshl(x, 1) & Integral(0x5555555555555555UL));
+    x = (x & Integral(0x3333333333333333UL)) + (rshl(x, 2) & Integral(0x3333333333333333UL));
+    x = (x & Integral(0x0F0F0F0F0F0F0F0FUL)) + (rshl(x, 4) & Integral(0x0F0F0F0F0F0F0F0FUL));
+    if(sizeof(x) > 1) {
+      x = (x & Integral(0x00FF00FF00FF00FFUL)) + (rshl(x, 8) & Integral(0x00FF00FF00FF00FFUL));
+      if(sizeof(x) > 2) {
+        x = (x & Integral(0x0000FFFF0000FFFFUL)) + (rshl(x, 16) & Integral(0x0000FFFF0000FFFFUL));
+        if(sizeof(x) > 4) {
+          x = (x & Integral(0x00000000FFFFFFFFUL)) + (rshl(x, 32) & Integral(0x00000000FFFFFFFFUL));
+        }
+      }
+    }
+    return x;
+  }
 
 //Returns the number of 1 bits in x mod 2
 //gcc: __builtin_parity(x)
 template <typename Integral>
-  constexpr int parity(Integral x) noexcept {
-    return popcount(x) & 1;
+  constexpr14 int parity(Integral x) noexcept {
+    x = x ^ (x >> 1);
+    x = x ^ (x >> 2);
+    x = x ^ (x >> 4);
+    if(sizeof(x) > 1) {
+      x = x ^ (x >> 8);
+      if(sizeof(x) > 2) {
+        x = x ^ (x >> 16);
+        if(sizeof(x) > 4) {
+          x = x ^ (x >> 32);
+        }
+      }
+    }
+    return x;
   }
 
+////////////////////////////////////
+//Rightmost bit manipulation
+////////////////////////////////////
+
+//Reset least siginificant 1 bit
+//Resets the least siginificant 1 bit of x. Returns 0 if x is 0.
+//x86_64 BMI1: BLSR
+template <typename Integral>
+  constexpr Integral resetls1b(Integral x) {
+    return x & (x-1);
+  }
+
+//Isolate least siginificant 1 bit
+//Isolates the least significant 1 bit of x and returns it. Returns 0 if x is 0.
+//x86_64 BMI1: BLSI
+template <typename Integral>
+  constexpr Integral isolatels1b(Integral x) {
+    return x & -x;
+  }
+
+//Mask least siginificant 1 bit
+//Returns a mask with all bits before the ls1b set. Returns a mask with all bits set if x is 0.
+//x86_64 BMI1: BLSMSK
+template <typename Integral>
+  constexpr Integral maskls1b(Integral x) {
+    return (x-1) ^ x;
+  }
+
+//Set the least significant 0 bit
+//x86_64 AMD TBM: BLCS
+template <typename Integral>
+  constexpr Integral setlszb(Integral x) {
+    return x | (x + 1);
+  }
 ////////////////////////////////////
 //Bit and Byte reversal algorithms
 ////////////////////////////////////
 
-//Returns the value when each group of packets has it's packets reversed.
-//A packet is a contiguous set of bits, a nibble is a packet of size 4, a byte is a packet of size 8 (or CHAR_BIT).
-//This is the generic function which drives all of the bit and byte reversal helpers.
-template <typename Integral, size_t packet_size, size_t groupby>
-  constexpr Integral binary_reverse(Integral x);
-
-//Reverse the bits in x
-//static_assert(ispow2oz(groupby) && (groupby == 0 || (sizeof(x) * CHAR_BIT) % groupby == 0))
-//groupby=0, reverses all of the bits in x, same as groupby == sizeof(x) * CHAR_BIT
-//groupby=1, return x, do nothing
-//groupby>1, reverses the bits in each 
+//Reverse each group of blocks of bits in x.
+//
+//blksz == 1: reverses the bits of x 
 //ARMv7: RBIT
 //EPIPHANY: BITR
-template <typename Integral, size_t groupby=0>
-  constexpr Integral revbits(Integral x) noexcept {
-    return binary_reverse<Integral, 1, groupby>(x);
-  }
-
-//Reverse the nibbles in x
+//blksz == 2: reverses each pair of bits in x
+//blksz == 4: reverses the nibbles in x
 //AVR: SWAP
-template <typename Integral, size_t groupby=0>
-  constexpr Integral revnibbles(Integral x) noexcept {
-    return binary_reverse<Integral, 4, groupby>(x);
-  }
-
-//Reverse the bytes in x (byte swap). Can be used to implement an endian library.
-//static_assert(grouby == 0 || sizeof(x) % groupby == 0);
-//groupby=0, reverses all of the bytes in x, same as groupby==sizeof(x)
-//groupby=1, return x, do nothing
-//groupby>1, reverses the bytes in each n byte word in x
-//0: i386: bswap
-//0: ARMv5: REV
-//0: PDP-11: SWAB
-//2: ARMv6: REV16
-//4: ARMv8: REV32
+//blksz == 8: reverses the bytes in x (assuming CHAR_BIT == 8). This is the traditional byte swap.
+//i386: bswap
+//ARMv5: REV
+//PDP-11: SWAB
 //gcc: __builtin_bswap[16|32|64](x)
-template <typename Integral, size_t groupby=0>
-  constexpr Integral revbytes(Integral x) noexcept {
-    return binary_reverse<Integral, CHAR_BIT, groupby>(x);
+//(grpsz == 2) ARMv6: REV16
+//(grpsz == 4) ARMv8: REV32
+//blksz == 16,32,etc.. reverses the words in x.
+//(blksz == 16) MC68020: SWAP
+template <typename Integral>
+  constexpr14 Integral revbits(Integral x,
+      int bits_per_block = 1,
+      int blocks_per_group = INT_MAX) noexcept
+  {
+    if(bits_per_block >= int(sizeof(x) * CHAR_BIT)) { return x; }
+    constexpr size_t nbits = sizeof(Integral) * CHAR_BIT;
+    int nbits_per_group = nbits / blocks_per_group;
+
+    //Create a mask for the first block of bits in each group
+    Integral lmask = maskls1b(1 << bits_per_block);
+    for(int i = 1; i < blocks_per_group; ++i) {
+      lmask <<= nbits_per_group;
+    }
+    //Another mask for the last block of bits in each group
+    Integral rmask = lmask << (nbits_per_group - bits_per_block);
+
+    Integral r = 0;
+    for(int boff = 0; boff < nbits_per_group/2; boff += bits_per_block) {
+      //Move the rightmost block left
+      r |= (lmask << (nbits_per_group-boff)) & (x << (nbits_per_group-boff));
+      //Move the leftmost block right
+      r |= rshl(rmask, boff) & rshl(x, boff);
+    }
+    return r;
   }
 
-//Reverses the words in x, where each word wordsz bytes long
-//static_assert(wordsz > 0 && sizeof(x) % wordsz == 0);
-//static_assert(grouby == 0 || sizeof(x/wordsz) % groupby == 0);
-//if wordsz == 1, then call revbytes<Integral, groupby>(x);
-//wordsz = 2, groupby=0: MC68020 SWAP
-template <typename Integral, size_t wordsz, size_t groupby=0>
-  constexpr Integral revwords(Integral x) noexcept {
-    static_assert(wordsz > 0, "Cannot have a word of size 0!");
-    return binary_reverse<Integral, wordsz * CHAR_BIT, groupby>(x);
+//Byte reversal, simple wrapper around revbits
+template <typename Integral>
+  constexpr14 Integral revbytes(Integral x,
+      int bytes_per_block=1,
+      int blocks_per_group = INT_MAX) noexcept {
+    return revbits(x, CHAR_BIT * bytes_per_block, blocks_per_group);
   }
 
 ////////////////////////////////////
@@ -140,126 +284,103 @@ template <typename Integral, size_t wordsz, size_t groupby=0>
 //Perform saturated addition on l and r.
 //ARMv7 DSP extensions: QADD
 template <typename IntegralL, typename IntegralR>
-  constexpr auto satadd(IntegralL l, IntegralR r) noexcept -> decltype(l + r);
+  constexpr auto satadd(IntegralL l, IntegralR r) noexcept -> decltype(l + r) {
+    typedef decltype(l + r) LR;
+    return LR(l) > std::numeric_limits<LR>::max() - LR(r) ? std::numeric_limits<LR>::max() : l + r;
+  }
 
 //Perform saturated subtraction on l and r.
 //ARMv7 DSP extensions: QSUB
 template <typename IntegralL, typename IntegralR>
-  constexpr auto satsub(IntegralL l, IntegralR r) noexcept -> decltype(l - r);
-
-////////////////////////////////////
-//Explicit shifts
-////////////////////////////////////
-
-//Logical left shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
-//Just about every processor in existance has this
-//Included for symmetry
-template <typename Integral>
-  constexpr Integral shll(Integral x, int s) noexcept {
-    return Integral(std::make_unsigned<Intregral>::type(x) << s);
+  constexpr auto satsub(IntegralL l, IntegralR r) noexcept -> decltype(l - r) {
+    typedef decltype(l + r) LR;
+    return LR(l) < std::numeric_limits<LR>::min() + LR(r) ? std::numeric_limits<LR>::min() : l - r;
   }
 
-//Logical right shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
-//Just about every processor in existance has this
-//Included for symmetry, also can right shift a signed number easily without a cast to unsigned
-template <typename Integral>
-  constexpr Integral shlr(Integral x, int s) noexcept {
-    return Integral(std::make_unsigned<Intregral>::type(x) << s);
-  }
-
-//Arithmetic left shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
-//Just about every processor in existance has this
-//Included for symmetry
-template <typename Integral>
-  constexpr Integral shal(Integral x, int s) noexcept {
-    return shll(x, s);
-  }
-
-//Arithmetic right shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
-//Just about every processor in existance has this, signed right shift is implementation defined. There is no standards compliant alternative to shar().
-template <typename Integral>
-  constexpr Integral shar(Integral x, int s) noexcept;
-
-//Circular left shift (rotate), undefined if s < 0 or x > sizeof(x) * CHAR_BIT
-//Just about every processor in existance has this, including the PDP-11 (1969) and yet C or C++ never included a way to get at this instruction.
-template <typename Integral>
-  constexpr Integral rotl(Integral x, int s) noexcept;
-
-//Circular right shift (rotate), undefined if s < 0 or x > sizeof(x) * CHAR_BIT
-//Just about every processor in existance has this, including the PDP-11 (1969) and yet C or C++ never included a way to get at this instruction.
-template <typename Integral>
-  constexpr Integral rotr(Integral x, int s) noexcept;
-
 ////////////////////////////////////
-//Set/Reset/Flip specific bits
+//Single bit manipulation
 ////////////////////////////////////
 
-//Sets bit b in x
+
+//Sets bit b in x, undefined behavior if b < 0 or b >= sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral set_bit(Integral x, int b) noexcept {
+  constexpr Integral setbit(Integral x, int b) noexcept {
     return x | (Integral(1) << b);
   }
 
-//Resets bit b in x
+//Resets bit b in x, undefined behavior if b < 0 or b >= sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral reset_bit(Integral x, int b) noexcept {
+  constexpr Integral resetbit(Integral x, int b) noexcept {
     return x & ~(Integral(1) << b);
   }
 
-//Flips bit b in x
+//Flips bit b in x, undefined behavior if b < 0 or b >= sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral flip_bit(Integral x, int b) noexcept {
+  constexpr Integral flipbit(Integral x, int b) noexcept {
     return x ^ (Integral(1) << b);
   }
 
-//Resets the least significant bit, or nop if x is 0.
-//x86_64 w/ BMI1: BLSR
+//Return whether or not bit b is set in x, undefined behavior if b < 0 or b >= sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral reset_lsb(Integral x) noexcept {
-    return x & (x-1);
+  constexpr bool testbit(Integral x, int b) noexcept {
+    return x & (Integral(1) << b);
   }
 
-//Resets the most significant bit, or nop if x is 0.
-template <typename Integral>
-  constexpr Integral reset_msb(Integral x) noexcept {
-    return x & ~(Integral(1) << ((sizeof(x) *CHAR_BIT) - clz(x)-1));
-  }
+////////////////////////////////////
+//Range of bits manipulation
+////////////////////////////////////
 
 //Resets all bits >= position b, nop if b > sizeof(x) * CHAR_BIT
 //x86_64 w/ BMI2: BZHI
 template <typename Integral>
-  constexpr Integral reset_bits_ge(Integral x, int b) noexcept {
+  constexpr Integral resetbitsge(Integral x, int b) noexcept {
     return x & ((Integral(1) << b)-1);
   }
 
 //Resets all bits < position b, nop if b > sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral reset_bits_le(Integral x, int b) noexcept {
+  constexpr Integral resetbitsle(Integral x, int b) noexcept {
     return x & ~((Integral(1) << (b+1))-1);
   }
 
 //Set all bits >= position b, nop if b > sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral set_bits_ge(Integral x, int b) noexcept {
+  constexpr Integral setbitsge(Integral x, int b) noexcept {
     return x | ~((Integral(1) << b)-1);
   }
 
 //Sets all bits < position b, nop if b > sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral set_bits_le(Integral x, int b) noexcept {
+  constexpr Integral setbitsle(Integral x, int b) noexcept {
     return x | ((Integral(1) << (b+1))-1);
   }
 
 //Flip all bits >= position b, nop if b > sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral flip_bits_ge(Integral x, int b) noexcept {
+  constexpr Integral flipbitsge(Integral x, int b) noexcept {
     return x ^ ~((Integral(1) << b)-1);
   }
 
 //Flip all bits < position b, nop if b > sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral flip_bits_le(Integral x, int b) noexcept {
+  constexpr Integral flipbitsle(Integral x, int b) noexcept {
     return x ^ ((Integral(1) << (b+1))-1);
+  }
+
+////////////////////////////////////
+//Trailing bits manipulation
+////////////////////////////////////
+
+//Reset the trailing 1's in x
+template <typename Integral>
+  constexpr Integral resett1b(Integral x) {
+    return x & (x + 1);
+  }
+
+//Set the trailing 0's in x
+template <typename Integral>
+  constexpr Integral settzb(Integral x) {
+    return x | (x - 1);
   }
 
 ////////////////////////////////////
@@ -268,33 +389,54 @@ template <typename Integral>
 
 //Returns true if x is a power of 2 or zero
 template <typename Integral>
-  constexpr bool is_pow2_or_zero(Integral x) noexcept {
-    return x & (x-1) == 0;
+  constexpr bool ispow2oz(Integral x) noexcept {
+    return (x & (x-1)) == 0;
     //return popcount(x) <= 1
   }
 
 //Returns true if x is a power of 2
 template <typename Integral>
-  constexpr bool is_pow2(Integral x) noexcept {
-    return x != 0 && is_pow2_or_zero(x);
+  constexpr bool ispow2(Integral x) noexcept {
+    return x != 0 && ispow2oz(x);
     //return popcount(x) == 1;
   }
 
-//Return smallest power of 2 >= x
+//Round up to the next power of 2
 template <typename Integral>
-constexpr Integral pow2ge(Integral x) noexcept;
+constexpr14 Integral ceilp2(Integral x) noexcept {
+  x = x-1;
+  x |= rshl(x, 1);
+  x |= rshl(x, 2);
+  x |= rshl(x, 4);
+  if(sizeof(x) > 1) {
+    x |= rshl(x, 8);
+    if(sizeof(x) > 2) {
+      x |= rshl(x, 16);
+      if(sizeof(x) > 4) {
+        x |= rshl(x, 32);
+      }
+    }
+  }
+  return x + 1;
+}
 
-//Return smallest power of 2 > x
+//Round down to the previous power of 2
 template <typename Integral>
-constexpr Integral pow2gt(Integral x) noexcept;
-
-//Return smallest power of 2 <= x
-template <typename Integral>
-constexpr Integral pow2le(Integral x) noexcept;
-
-//Return smallest power of 2 < x
-template <typename Integral>
-constexpr Integral pow2lt(Integral x) noexcept;
+constexpr14 Integral floorp2(Integral x) noexcept {
+  x |= rshl(x, 1);
+  x |= rshl(x, 2);
+  x |= rshl(x, 4);
+  if(sizeof(x) > 1) {
+    x |= rshl(x, 8);
+    if(sizeof(x) > 2) {
+      x |= rshl(x, 16);
+      if(sizeof(x) > 4) {
+        x |= rshl(x, 32);
+      }
+    }
+  }
+  return x - rshl(x, 1);
+}
 
 ////////////////////////////////////
 //Pointer and size alignment helpers
@@ -305,7 +447,7 @@ template <typename Integral>
 constexpr Integral align_up(Integral val, size_t a) noexcept {
   return ((val + (a -1)) & -a);
 }
-constexpr void* align_up(void* val, size_t a) noexcept {
+void* align_up(void* val, size_t a) noexcept {
   return (void*)align_up(uintptr_t(val), a);
 }
 
@@ -314,7 +456,7 @@ template <typename Integral>
 constexpr Integral align_down(Integral val, size_t a) noexcept {
   return val & -a;
 }
-constexpr void* align_down(void* val, size_t a) noexcept {
+void* align_down(void* val, size_t a) noexcept {
   return (void*)align_down(uintptr_t(val), a);
 }
 
@@ -323,10 +465,57 @@ template <typename Integral>
 constexpr bool is_aligned(Integral t, size_t a) noexcept {
   return ((t & (a-1)) == 0);
 }
-constexpr bool is_aligned(void* t, size_t a) noexcept {
+bool is_aligned(void* t, size_t a) noexcept {
   return is_aligned(uintptr_t(t), a);
 }
 
+///////////////////////////////////
+//Others
+///////////////////////////////////
+
+//Parallel Bits Deposit
+//x    HGFEDCBA
+//mask 01100100
+//res  0CB00A00
+//x86_64 BMI2: PDEP
+template <typename Integral>
+constexpr14 Integral pbits_deposit(Integral x, Integral mask) {
+  Integral res = 0;
+  for(Integral bb = 1; mask != 0; bb += bb) {
+    if(x & bb) {
+      res |= mask & (-mask);
+    }
+    mask &= (mask - 1);
+  }
+  return res;
+}
+
+//Parallel Bits Extract
+//x    HGFEDCBA
+//mask 01100100
+//res  00000GFC
+//x86_64 BMI2: PEXT
+template <typename Integral>
+constexpr14 Integral pbits_extract(Integral x, Integral mask) {
+  Integral res = 0;
+  for(Integral bb = 1; mask != 0; bb += bb) {
+    if(x & mask & -mask) {
+      res |= bb;
+    }
+    mask &= (mask - 1);
+  }
+  return res;
+}
+
+//Returns the next higher number with the same number of 1 bits.
+template <typename Integral>
+constexpr14 Integral snoob(Integral x) {
+  Integral smallest = x & -x;
+  Integral ripple = x + smallest;
+  Integral ones = x ^ ripple;
+  ones = (ones >> 2) / smallest;
+  return ripple | ones;
+}
 
 
 } //namespace std
