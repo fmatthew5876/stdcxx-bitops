@@ -184,15 +184,15 @@ template <typename Integral>
 //gcc: __builtin_parity(x)
 template <typename Integral>
   constexpr14 int parity(Integral x) noexcept {
-    x = x ^ (x >> 1);
-    x = x ^ (x >> 2);
-    x = x ^ (x >> 4);
+    x = x ^ rshl(x, 1);
+    x = x ^ rshl(x, 2);
+    x = x ^ rshl(x, 4);
     if(sizeof(x) > 1) {
-      x = x ^ (x >> 8);
+      x = x ^ rshl(x, 8);
       if(sizeof(x) > 2) {
-        x = x ^ (x >> 16);
+        x = x ^ rshl(x, 16);
         if(sizeof(x) > 4) {
-          x = x ^ (x >> 32);
+          x = x ^ rshl(x, 32);
         }
       }
     }
