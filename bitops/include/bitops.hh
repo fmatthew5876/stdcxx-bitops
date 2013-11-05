@@ -20,9 +20,14 @@
 namespace std {
 
 //This implementation makes the following platform assumptions:
-//signed right shift is an arithmetic shift
-//CHAR_BIT == 8
-//Native integer types are exactly 8, 16, 32, and 64 bits wide. No support is added for larger types.
+//* signed right shift is an arithmetic shift
+//* CHAR_BIT == 8
+//* Native integer types are exactly 8, 16, 32, and 64 bits wide. No support is added for larger types.
+//* Signed numbers are implemented using 2's compliment
+//
+//The implementation is not designed to be efficient. The purpose is only to prove that each proposed function is implementable.
+//A real implementation may use techniques such as SFINAE, static_assert, overloading, and/or = delete to limit the set of overloads.
+//These have been omitted here to improve readability.
 
 ////////////////////////////////////
 //Explicit shifts
@@ -84,8 +89,9 @@ template <typename Integral>
 //Alpha: cttz
 //MIPS: CLZ
 //gcc: x == 0 ? sizeof(x) * CHAR_BIT :__builtin_ctz(x)
+//Applications: SSE2 strlen, Howard Hinnant's gcd example
 template <typename Integral>
-  constexpr14 int ctzb(Integral x) noexcept {
+  constexpr14 int count_tzb(Integral x) noexcept {
     constexpr int nbits = int(sizeof(x) * CHAR_BIT);
     if(x == 0) { return nbits; }
     Integral n = 0;
@@ -112,7 +118,7 @@ template <typename Integral>
 //PowerPC: cntlz[dw]
 //gcc: x == 0 ? sizeof(x) * CHAR_BIT :__builtin_clz(x)
 template <typename Integral>
-  constexpr14 int clzb(Integral x) noexcept {
+  constexpr14 int count_lzb(Integral x) noexcept {
     constexpr int nbits = int(sizeof(x) * CHAR_BIT);
     if(x == 0) { return nbits; }
     Integral n = 1;
@@ -131,7 +137,7 @@ template <typename Integral>
     return n;
   }
 
-//Returns the number of leading redundant sign bits in x
+//Returns the number of leading 1 bits in x.
 //ARMv8: CLS
 //Blackfin: SIGNBITS
 //C6X: NORM
@@ -139,8 +145,14 @@ template <typename Integral>
 //MIPS: CTO
 //gcc: __builtin_clrsb(x)
 template <typename Integral>
-  constexpr14 int clrsb(Integral x) noexcept {
-    return clzb(~x);
+  constexpr14 int count_l1b(Integral x) noexcept {
+    return count_lzb(~x);
+  }
+
+//Returns the number of trailing 1 bits in x.
+template <typename Integral>
+  constexpr14 int count_t1b(Integral x) noexcept {
+    return count_tzb(~x);
   }
 
 //Returns the number of 1 bits in x.
@@ -195,53 +207,105 @@ template <typename Integral>
 //Resets the least siginificant 1 bit of x. Returns 0 if x is 0.
 //x86_64 BMI1: BLSR
 template <typename Integral>
-  constexpr Integral resetls1b(Integral x) {
+  constexpr Integral reset_ls1b(Integral x) {
     return x & (x-1);
   }
 
 //Isolate least siginificant 1 bit
 //Isolates the least significant 1 bit of x and returns it. Returns 0 if x is 0.
 //x86_64 BMI1: BLSI
+//x86_64 AMD TBM: BLSIC, NOT
 template <typename Integral>
-  constexpr Integral isolatels1b(Integral x) {
+  constexpr Integral isolate_ls1b(Integral x) {
     return x & -x;
-  }
-
-//Mask least siginificant 1 bit
-//Returns a mask with all bits before the ls1b set. Returns a mask with all bits set if x is 0.
-//x86_64 BMI1: BLSMSK
-template <typename Integral>
-  constexpr Integral maskls1b(Integral x) {
-    return (x-1) ^ x;
   }
 
 //Set the least significant 0 bit
 //x86_64 AMD TBM: BLCS
 template <typename Integral>
-  constexpr Integral setlszb(Integral x) {
+  constexpr Integral set_lszb(Integral x) {
     return x | (x + 1);
   }
+
+//Set the least significant zero bit to 1 and all of the rest to 1.
+template <typename Integral>
+  constexpr Integral isolate_lszb(Integral x) {
+    return (~x) & (x + 1);
+  }
+
+//Set the least significant 1 bit to 0 and all of the rest to 0.
+template <typename Integral>
+  constexpr Integral inv_isolate_ls1b(Integral x) {
+    return (~x) | (x -1);
+  }
+
+//Reset the trailing 1's in x
+//x86_64 AMD TBM: BLCFILL
+template <typename Integral>
+  constexpr Integral reset_t1b(Integral x) {
+    return x & (x + 1);
+  }
+
+//Set all of the trailing 0's in x
+//x86_64 AMD TBM: BLSFILL
+template <typename Integral>
+  constexpr Integral set_tzb(Integral x) {
+    return x | (x - 1);
+  }
+
+//Returns a mask with all of the trailing 0's set.
+template <typename Integral>
+  constexpr Integral mask_tzb(Integral x) {
+    return (~x) & (x-1);
+  }
+
+//Returns a mask with all of the trailing 0's  and the least significant 1 bit set.
+//x86_64 BMI1: BLSMSK
+//x86_64 AMD TBM: TZMSK
+template <typename Integral>
+  constexpr Integral mask_tzb_ls1b(Integral x) {
+    return (x-1) ^ x;
+  }
+
+//Returns a mask with all of the trailing 1's reset and the other bits set.
+template <typename Integral>
+  constexpr Integral inv_mask_t1b(Integral x) {
+    return (~x) | (x + 1);
+  }
+
+//Returns a mask with all of the trailing 1's and the least significant 0 bit set.
+template <typename Integral>
+  constexpr Integral mask_t1b_lszb(Integral x) {
+    return x ^ (x + 1);
+  }
+
+//Resets the rightmost string of 1 bits in x.
+template <typename Integral>
+  constexpr Integral reset_rstr1b(Integral x) {
+    return (((x | (x-1)) + 1) & x);
+  }
+
 ////////////////////////////////////
 //Bit and Byte reversal algorithms
 ////////////////////////////////////
 
 //Reverse each group of blocks of bits in x.
 //
-//blksz == 1: reverses the bits of x 
+//bits_per_block == 1: reverses the bits of x 
 //ARMv7: RBIT
 //EPIPHANY: BITR
-//blksz == 2: reverses each pair of bits in x
-//blksz == 4: reverses the nibbles in x
+//bits_per_block == 2: reverses each pair of bits in x
+//bits_per_block == 4: reverses the nibbles in x
 //AVR: SWAP
-//blksz == 8: reverses the bytes in x (assuming CHAR_BIT == 8). This is the traditional byte swap.
+//bits_per_block == 8: reverses the bytes in x (assuming CHAR_BIT == 8). This is the traditional byte swap.
 //i386: bswap
 //ARMv5: REV
 //PDP-11: SWAB
 //gcc: __builtin_bswap[16|32|64](x)
-//(grpsz == 2) ARMv6: REV16
-//(grpsz == 4) ARMv8: REV32
-//blksz == 16,32,etc.. reverses the words in x.
-//(blksz == 16) MC68020: SWAP
+//(blocks_per_group == 2) ARMv6: REV16
+//(blocks_per_group == 4) ARMv8: REV32
+//bits_per_block == 16,32,etc.. reverses the words in x.
+//(bits_per_block == 16) MC68020: SWAP
 template <typename Integral>
   constexpr14 Integral revbits(Integral x,
       int bits_per_block = 1,
@@ -252,7 +316,7 @@ template <typename Integral>
     int nbits_per_group = nbits / blocks_per_group;
 
     //Create a mask for the first block of bits in each group
-    Integral lmask = maskls1b(1 << bits_per_block);
+    Integral lmask = mask_tzb(1 << bits_per_block);
     for(int i = 1; i < blocks_per_group; ++i) {
       lmask <<= nbits_per_group;
     }
@@ -304,25 +368,25 @@ template <typename IntegralL, typename IntegralR>
 
 //Sets bit b in x, undefined behavior if b < 0 or b >= sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral setbit(Integral x, int b) noexcept {
+  constexpr Integral set_bit(Integral x, int b) noexcept {
     return x | (Integral(1) << b);
   }
 
 //Resets bit b in x, undefined behavior if b < 0 or b >= sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral resetbit(Integral x, int b) noexcept {
+  constexpr Integral reset_bit(Integral x, int b) noexcept {
     return x & ~(Integral(1) << b);
   }
 
 //Flips bit b in x, undefined behavior if b < 0 or b >= sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral flipbit(Integral x, int b) noexcept {
+  constexpr Integral flip_bit(Integral x, int b) noexcept {
     return x ^ (Integral(1) << b);
   }
 
 //Return whether or not bit b is set in x, undefined behavior if b < 0 or b >= sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr bool testbit(Integral x, int b) noexcept {
+  constexpr bool test_bit(Integral x, int b) noexcept {
     return x & (Integral(1) << b);
   }
 
@@ -333,54 +397,38 @@ template <typename Integral>
 //Resets all bits >= position b, nop if b > sizeof(x) * CHAR_BIT
 //x86_64 w/ BMI2: BZHI
 template <typename Integral>
-  constexpr Integral resetbitsge(Integral x, int b) noexcept {
+  constexpr Integral reset_bitsge(Integral x, int b) noexcept {
     return x & ((Integral(1) << b)-1);
   }
 
 //Resets all bits < position b, nop if b > sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral resetbitsle(Integral x, int b) noexcept {
+  constexpr Integral reset_bitsle(Integral x, int b) noexcept {
     return x & ~((Integral(1) << (b+1))-1);
   }
 
 //Set all bits >= position b, nop if b > sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral setbitsge(Integral x, int b) noexcept {
+  constexpr Integral set_bitsge(Integral x, int b) noexcept {
     return x | ~((Integral(1) << b)-1);
   }
 
 //Sets all bits < position b, nop if b > sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral setbitsle(Integral x, int b) noexcept {
+  constexpr Integral set_bitsle(Integral x, int b) noexcept {
     return x | ((Integral(1) << (b+1))-1);
   }
 
 //Flip all bits >= position b, nop if b > sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral flipbitsge(Integral x, int b) noexcept {
+  constexpr Integral flip_bitsge(Integral x, int b) noexcept {
     return x ^ ~((Integral(1) << b)-1);
   }
 
 //Flip all bits < position b, nop if b > sizeof(x) * CHAR_BIT
 template <typename Integral>
-  constexpr Integral flipbitsle(Integral x, int b) noexcept {
+  constexpr Integral flip_bitsle(Integral x, int b) noexcept {
     return x ^ ((Integral(1) << (b+1))-1);
-  }
-
-////////////////////////////////////
-//Trailing bits manipulation
-////////////////////////////////////
-
-//Reset the trailing 1's in x
-template <typename Integral>
-  constexpr Integral resett1b(Integral x) {
-    return x & (x + 1);
-  }
-
-//Set the trailing 0's in x
-template <typename Integral>
-  constexpr Integral settzb(Integral x) {
-    return x | (x - 1);
   }
 
 ////////////////////////////////////

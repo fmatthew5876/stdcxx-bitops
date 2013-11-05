@@ -61,35 +61,42 @@ INST(lsha, int);
 INST(rsha, int);
 INST(lrot, int);
 INST(rrot, int);
-INSTR(int, ctzb);
-INSTR(int, clzb);
-INSTR(int, clrsb);
+INSTR(int, count_tzb);
+INSTR(int, count_lzb);
+INSTR(int, count_t1b);
+INSTR(int, count_l1b);
 INSTR(int, popcount);
 INSTR(int, parity);
-INST(resetls1b);
-INST(isolatels1b);
-INST(maskls1b);
-INST(setlszb);
+
+INST(reset_ls1b);
+INST(isolate_ls1b);
+INST(set_lszb);
+INST(isolate_lszb);
+INST(inv_isolate_ls1b);
+INST(reset_t1b);
+INST(set_tzb);
+INST(mask_tzb);
+INST(mask_tzb_ls1b);
+INST(inv_mask_t1b);
+INST(mask_t1b_lszb);
+INST(reset_rstr1b);
 INST(revbits, int, int);
 INST(revbytes, int, int);
 
 INSTSAT(decltype(l+r), satadd);
 INSTSAT(decltype(l-r), satsub);
 
-INST(setbit, int);
-INST(resetbit, int);
-INST(flipbit, int);
-INSTR(bool, testbit, int);
+INST(set_bit, int);
+INST(reset_bit, int);
+INST(flip_bit, int);
+INSTR(bool, test_bit, int);
 
-INST(resetbitsge, int);
-INST(resetbitsle, int);
-INST(setbitsge, int);
-INST(setbitsle, int);
-INST(flipbitsge, int);
-INST(flipbitsle, int);
-
-INST(resett1b);
-INST(settzb);
+INST(reset_bitsge, int);
+INST(reset_bitsle, int);
+INST(set_bitsge, int);
+INST(set_bitsle, int);
+INST(flip_bitsge, int);
+INST(flip_bitsle, int);
 
 INSTR(bool, ispow2oz);
 INSTR(bool, ispow2);
