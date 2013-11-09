@@ -5,7 +5,6 @@ using namespace std;
 
 template <typename T>
 class ShiftTest : public ::testing::Test {
-  typedef T Int;
 };
 TYPED_TEST_CASE_P(ShiftTest);
 

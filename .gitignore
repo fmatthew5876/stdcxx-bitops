@@ -19,11 +19,11 @@
 *.d
 
 # Binaries
-bitops/*.test
+bitops/test/*.test
 
 # Editor Junk
 *~
 *.swp
 
 # Google Test
-bitops/gtest-*
+bitops/test/gtest-*

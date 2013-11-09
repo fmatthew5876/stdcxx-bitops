@@ -2,12 +2,17 @@ CXX=clang++
 CXXFLAGS+=-std=c++11 -Iinclude
 CXXFLAGS+=-g
 CXXFLAGS+=-Wall -Wextra -Werror -Wno-shift-count-overflow
-CPPFLAGS+=-Iinclude -I$(GTEST_INC)
+CPPFLAGS+=-I../include -I$(GTEST_INC)
 LDFLAGS+=-pthread
 
-TESTS:=shift.test cc.test
+TESTS:=shift.test cc.test satmath.test
 
 all: $(TESTS)
+
+run: $(patsubst %.test, run%.test, $(TESTS))
+
+run%.test: %.test
+	./$<
 
 %.test: %.o libgtest.a libgtest_main.a
 	$(CXX) $(LDFLAGS) -o $@ $^
@@ -17,6 +22,9 @@ all: $(TESTS)
 
 clean:
 	-rm *.test *.o *.d *.a
+
+distclean: clean
+	-rm -rf $(GTEST_DIR) $(GTEST_ZIP)
 
 libgtest.a: libgtest.o
 	$(AR) rcs $@ $^
