@@ -443,6 +443,7 @@ template <typename Integral>
   }
 
 //Returns true if x is a power of 2
+//Application: Integral template arguments, add optimizations for power of 2
 template <typename Integral>
   constexpr bool ispow2(Integral x) noexcept {
     return x != 0 && ispow2oz(x);
@@ -450,6 +451,8 @@ template <typename Integral>
   }
 
 //Round up to the next power of 2
+//Application: Growable containers whose size must be a power of 2
+//Application: Extending a 2d image size to a power of 2 for 3d graphics libraries (OpenGL/DirectX)
 template <typename Integral>
 constexpr14 Integral ceilp2(Integral x) noexcept {
   x = x-1;
@@ -469,6 +472,7 @@ constexpr14 Integral ceilp2(Integral x) noexcept {
 }
 
 //Round down to the previous power of 2
+//Application: See ceilp2
 template <typename Integral>
 constexpr14 Integral floorp2(Integral x) noexcept {
   x |= rshl(x, 1);
