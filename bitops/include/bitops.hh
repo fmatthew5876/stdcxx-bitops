@@ -91,7 +91,7 @@ template <typename Integral>
 //gcc: x == 0 ? sizeof(x) * CHAR_BIT :__builtin_ctz(x)
 //Applications: SSE2 strlen, Howard Hinnant's gcd example
 template <typename Integral>
-  constexpr14 int count_tzb(Integral x) noexcept {
+  constexpr14 int count_t0b(Integral x) noexcept {
     constexpr int nbits = int(sizeof(x) * CHAR_BIT);
     if(x == 0) { return nbits; }
     Integral n = 0;
@@ -118,7 +118,7 @@ template <typename Integral>
 //PowerPC: cntlz[dw]
 //gcc: x == 0 ? sizeof(x) * CHAR_BIT :__builtin_clz(x)
 template <typename Integral>
-  constexpr14 int count_lzb(Integral x) noexcept {
+  constexpr14 int count_l0b(Integral x) noexcept {
     constexpr int nbits = int(sizeof(x) * CHAR_BIT);
     if(x == 0) { return nbits; }
     Integral n = 1;
@@ -146,13 +146,13 @@ template <typename Integral>
 //gcc: __builtin_clrsb(x)
 template <typename Integral>
   constexpr14 int count_l1b(Integral x) noexcept {
-    return count_lzb(~x);
+    return count_l0b(~x);
   }
 
 //Returns the number of trailing 1 bits in x.
 template <typename Integral>
   constexpr14 int count_t1b(Integral x) noexcept {
-    return count_tzb(~x);
+    return count_t0b(~x);
   }
 
 //Returns the number of 1 bits in x.
@@ -223,13 +223,13 @@ template <typename Integral>
 //Set the least significant 0 bit
 //x86_64 AMD TBM: BLCS
 template <typename Integral>
-  constexpr Integral set_lszb(Integral x) {
+  constexpr Integral set_ls0b(Integral x) {
     return x | (x + 1);
   }
 
 //Set the least significant zero bit to 1 and all of the rest to 1.
 template <typename Integral>
-  constexpr Integral isolate_lszb(Integral x) {
+  constexpr Integral isolate_ls0b(Integral x) {
     return (~x) & (x + 1);
   }
 
@@ -249,13 +249,13 @@ template <typename Integral>
 //Set all of the trailing 0's in x
 //x86_64 AMD TBM: BLSFILL
 template <typename Integral>
-  constexpr Integral set_tzb(Integral x) {
+  constexpr Integral set_t0b(Integral x) {
     return x | (x - 1);
   }
 
 //Returns a mask with all of the trailing 0's set.
 template <typename Integral>
-  constexpr Integral mask_tzb(Integral x) {
+  constexpr Integral mask_t0b(Integral x) {
     return (~x) & (x-1);
   }
 
@@ -263,7 +263,7 @@ template <typename Integral>
 //x86_64 BMI1: BLSMSK
 //x86_64 AMD TBM: TZMSK
 template <typename Integral>
-  constexpr Integral mask_tzb_ls1b(Integral x) {
+  constexpr Integral mask_t0b_ls1b(Integral x) {
     return (x-1) ^ x;
   }
 
@@ -275,7 +275,7 @@ template <typename Integral>
 
 //Returns a mask with all of the trailing 1's and the least significant 0 bit set.
 template <typename Integral>
-  constexpr Integral mask_t1b_lszb(Integral x) {
+  constexpr Integral mask_t1b_ls0b(Integral x) {
     return x ^ (x + 1);
   }
 
@@ -316,7 +316,7 @@ template <typename Integral>
     int nbits_per_group = nbits / blocks_per_group;
 
     //Create a mask for the first block of bits in each group
-    Integral lmask = mask_tzb(1 << bits_per_block);
+    Integral lmask = mask_t0b(1 << bits_per_block);
     for(int i = 1; i < blocks_per_group; ++i) {
       lmask <<= nbits_per_group;
     }
