@@ -1,0 +1,524 @@
+<html><head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<title>A constexpr bitwise operations library for C++</title>
+</head>
+
+<body>
+
+<table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" bordercolor="#111111" width="607">
+	<tr>
+		<td width="172" align="left" valign="top">Document number:</td>
+		<td width="435"><span style="background-color: #FFFF00">NXXX</span>=YY-ZZZZ</td>
+	</tr>
+	<tr>
+		<td width="172" align="left" valign="top">Date:</td>
+		<td width="435">
+			<!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%Y-%m-%d" startspan -->2013-11-10<!--webbot bot="Timestamp" endspan i-checksum="12112" --></td>
+	</tr>
+	<tr>
+		<td width="172" align="left" valign="top">Project:</td>
+		<td width="435">Programming Language C++, Library Working Group</td>
+	</tr>
+	<tr>
+		<td width="172" align="left" valign="top">Reply-to:</td>
+		<td width="435">Matthew Fioravante &lt;<a href="mailto:fmatthew5876@gmail.com">fmatthew5876@gmail.com</a>&gt;</td>
+	</tr>
+</table>
+
+
+<h1>A constexpr bitwise operations library for C++</h1>
+
+
+<p><a href="#Introduction">Introduction</a><br>
+<a href="#Increasing-chance-acceptance">Increasing the chance of acceptance</a><br>
+<a href="#Existing-practice">Existing practice</a><br>
+<a href="#Guidelines">Guidelines for a proposal document</a><br>
+<a href="#Organization">Organization of a typical proposal</a><br>
+<a href="#Proposal-examples">Proposal examples</a><br>
+<a href="#Submission-procedures">Submission procedures</a><br>
+<a href="#Acknowledgements">Acknowledgements</a></p>
+
+
+<h2><a name="Introduction">Introduction</a></h2>
+
+<p>This proposal adds support for low level bitwise and logical operations to C++.</p>
+
+<h2><a name="Impact On the Standard">Impact on the Standard</a></h2>
+
+<p>This proposal is a pure library extension. In it's current form, it does not modify any exsiting headers.
+It does not require any changes in the core language, and does not depend on any other library extensions.
+While the reference implementation [<a name="#BitOpsReference">BitOpsReference</a>] has been implemented in
+standard C++14, optimal implementations will require additional support from the compiler via compiler intrinsics.
+</p>
+
+<h2><a name="Motivation">Motivation</a></h2>
+
+<p>The C and C++ languages provide an abstraction over the machine.
+Most platforms provide the common arithmetic and logical operations, which are
+accessed using the builtin operators inherited from C. These operations are the primtives, the
+low level building blocks which are used to implement higher level abstractions.
+</p>
+
+<p>While arithmetic and logical operations are often the most commonly used
+features when designing an algorithm, sometimes significant performance
+benefits can be gained by directly manipulating the binary quantities contained
+within the registers which make up this numerical abstraction.
+Hardware vendors have understood this need, and many of them have provided
+additional cpu instructions which allow the programmer to perform these
+bitwise manipulations. Other bitwise manipulation algorithms
+can be implemented using clever but non-intuitive combinations of
+arithmetic and logical operations. Most importantly, for many bitwise algorithms, the most
+efficent implementation varies greatly between hardware platforms.
+These differences create an unreasonably large maintenance burden on the programmer.
+</p>
+<p>
+Many online and print references including [<a href="#Anderson01">Anderson01</a>],
+[<a href="Deitz01">Dietz01</a>], [<a href="Neumann01">Neumann01</a>], [<a href="Warren01">Warren01</a>],
+are devoted to discussing the implementations of these algorithms.
+Consider the implementation of a count trailing zeroes algorithm
+used in [<a href="#Kostjuchenko01">Kostjuchenko01</a>]. There are several different implementations
+presented here, all of which must be profiled and tested on each platform. 
+None of them take advantage of machines with builtin instructions
+for the count trailing zeroes algorithm. One who wishes to exploit 
+the <code>bsf</code> or <code>tzcnt</code> intructions on Intel must rely on non-standard
+compiler instrinsics or inline assembly. One must also provide 
+backup implementations for other platforms which do not have such instructions.
+</p>
+
+<p>
+Bitwise algorithms are general purpose tools which can be used in a wide
+variety of domains and are the key to unlocking high performance in many
+important algorithms. A bitwise operations library has beed badly needed in 
+the C and C++ standard libraries for many years.
+</p>
+
+
+<h2><a name="Goals">Design Goals and Scope</a></h2>
+<p>
+There are seemingly endless ways one can manipulate binary quantities. How does one go
+about choosing which ones to include in a library and which ones to exclude? 
+How does one choose proper names for each function? Which algorithms can
+be trivially converted into single instructions by the optimizer and which
+actually require the programmer to declare their use through a function call?
+We will address these questions with the following design goals.
+</p>
+
+<h3>Design Goal 1: Provide the programmer with better access to the machine</h3>
+
+<p>
+In 1970, the Digital Equipment Corporation announced the PDP11. 
+This 16 bit machine has 3 instructions of interest, <code>ROR</code> (rotate right), 
+<code>ROL</code> (rotate left), and <code>SWAB</code> (swap bytes).
+These operations along with their later 32 and 64 bit variants are provided 
+by many more modern machines as will be shown. As of 2013,
+the programmer still does not have direct access to these instructions in modern C and C++.
+</p>
+
+<p>
+Therefore, the first and most important goal of this proposal is to provide the programmer with better
+access to the machine. We will present new functions for the standard library which can be implemented
+using only few instructions if supported by the machine, using backup implementations
+if no such support is provided by the hardware.
+</p>
+
+<h3>Design Goal 2: Provide a set of commonly used bitwise manipulation routines</h3>
+
+<p>
+In designing this proposal, we wish not just to limit ourselves to operations which may have
+native machine instruction implementations on at least on platform. We would like to provide
+a library of primitives which are commonly found to be reimplemented time and time again in different code bases.
+The standard library already provides a rich set of containers and algorithms. What is missing is a 
+set of bitwise manipulation primitives.
+</p>
+
+<p>
+Of particular emphasis are algorithms whose most efficient implementations depend on the implementations of
+other bitwise operations. A motivating example is checking whether a number is a power of 2. 
+This universally useful and popular function has many possible implementations. Consider the following:
+</p>
+
+<code>
+	bool ispow2(unsigned x) { return popcount(x) == 1; }
+</code>
+<br>
+<code>
+	bool ispow2(unsigned x) { return x != 0 && (x & (x -1)) == 0; }
+</code>
+
+<p>
+In the above example, popcount() is the population count or number of 1 bits in x. 
+On a machine with a popcount instruction, the first implementation uses less instructions
+and no branches. Without a popcount instruction, the second version is the better choice
+as computing popcount requires much more than a few logical operations and comparisons 
+[<a href="#Deitz01">Dietz01</a>].  The above can be verified using Clang 3.3 [<a href="#Clang">Clang</a>]
+with the <code>__builtin_popcount()</code> compiler instrinsic on an Intel machine with the <code>popcntl</code> instruction available.
+</p>
+
+
+<h2><a name="Implementation">Implementation Notes</a></h2>
+Those who wish to implement the functions provided by this proposal must consider the following guidelines:
+<ul>
+	<li><b>Prefer</b> compiler intrinsics to inline assembly.
+	The former allows important optimizations while the later does not. 
+	As a motivating example, consider the count trailing zeros algorithm. On older intel machines, this is implemented
+	with a <code>bsf</code> instruction followed by a <code>cmov</code> instruction to handle the case
+	where the input is 0. In many contexts the optimizer is able to prove that the input is never 0 and thus
+	the cmov instruction can be omitted. This optimization is impossible with inline assembly.</li>
+</ul>
+
+
+<h2><a name="Libarary">Library Specification</a></h2>
+<p>
+We will now describe the contents of the new <code><bitops></code> header. This is a procedural library implemented
+entirely using <code>constexpr</code> free functions. Each function is classified into different groups to aid analysis and discussion
+and each group will be presented one at a time. 
+Several machine architectures were surveyed for their instruction references.
+If the function can be implemented using native instructions it will be noted. 
+Citations for each instruction reference have been omitted in order to reduce clutter.
+A list of processor manual references can be found in the <a href="#References">References</a> section.
+</p>
+
+<h3>&ltbitops&gt Header</h3>
+
+<blockquote><pre>
+
+//SHift Logical Left
+template &ltclass integral&gt
+constexpr integral shll(integral x, int s) noexcept;
+
+//SHift Logical Right
+template &ltclass integral&gt
+constexpr integral shlr(integral x, int s) noexcept;
+
+//SHift Arithmetic Left
+template &ltclass integral&gt
+constexpr integral shal(integral x, int s) noexcept;
+
+//SHift Arithmetic Right
+template &ltclass integral&gt
+constexpr integral shar(integral x, int s) noexcept;
+
+//ROTate Left
+template &ltclass integral&gt
+constexpr integral rotl(integral x, int s) noexcept;
+
+//ROTate Right
+template &ltclass integral&gt
+constexpr integral rotr(integral x, int s) noexcept;
+
+//CouNT Trailing 0's
+template &ltclass integral&gt
+constexpr int cntt0(integral x) noexcept;
+
+//CouNT Leading 0's
+template &ltclass integral&gt
+constexpr int cntl0(integral x) noexcept;
+
+//CouNT Trailing 1's
+template &ltclass integral&gt
+constexpr int cntt1(integral x) noexcept;
+
+//CouNT Leading 1's
+template &ltclass integral&gt
+constexpr int cntl1(integral x) noexcept;
+
+//POPulation COUNT
+template &ltclass integral&gt
+constexpr int popcount(integral x) noexcept;
+
+//PARITY
+template &ltclass integral&gt
+constexpr int parity(integral x) noexcept;
+
+//ReSeT Least Significant 1 Bit
+template &ltclass integral&gt
+constexpr integral rstls1b(integral x) noexcept;
+
+//SET Least Significant 0 Bit
+template &ltclass integral&gt
+constexpr integral setls0b(integral x) noexcept;
+
+//ISOlate Least Significant 1 Bit
+template &ltclass integral&gt
+constexpr integral isols1b(integral x) noexcept;
+
+//ISOlate Least Significant 0 Bit
+template &ltclass integral&gt
+constexpr integral isols0b(integral x) noexcept;
+
+//ReSeT Trailing 1's
+template &ltclass integral&gt
+constexpr integral rstt1(integral x) noexcept;
+
+//SET Trailing 0's
+template &ltclass integral&gt
+constexpr integral sett0(integral x) noexcept;
+
+//MaSK Trailing 0's
+template &ltclass integral&gt
+constexpr integral mskt0(integral x) noexcept;
+
+//MaSK Trailing 1's
+template &ltclass integral&gt
+constexpr integral mskt1(integral x) noexcept;
+
+//MaSK Trailing 0's and Least Significant 1 Bit
+template &ltclass integral&gt
+constexpr integral mskt0ls1b(integral x) noexcept;
+
+//MaSK Trailing 1's and Least Significant 0 Bit
+template &ltclass integral&gt
+constexpr integral mskt1ls0b(integral x) noexcept;
+
+//REVerse BITS
+template &ltclass integral&gt
+constexpr integral revbits(integral x, int bits_per_block=1, int blocks_per_group = INT_MAX) noexcept;
+
+//REVerse BYTES
+template &ltclass integral&gt
+constexpr integral revbytes(integral x, int bytes_per_block=1, int blocks_per_group = INT_MAX) noexcept;
+
+//SET BIT
+template &ltclass integral&gt
+constexpr integral setbit(integral x, int b) noexcept;
+
+//ReSeT BIT
+template &ltclass integral&gt
+constexpr integral rstbit(integral x, int b) noexcept;
+
+//FLIP BIT
+template &ltclass integral&gt
+constexpr integral flipbit(integral x, int b) noexcept;
+
+//TEST BIT
+template &ltclass integral&gt
+constexpr bool testbit(integral x, int b) noexcept;
+
+//ReSeT BITS Greater Than
+template &ltclass integral&gt
+constexpr integral rstbitsge(integral x, int b) noexcept;
+
+//ReSeT BITS Less Than
+template &ltclass integral&gt
+constexpr integral rstbitsle(integral x, int b) noexcept;
+
+//SET BITS Greater Than
+template &ltclass integral&gt
+constexpr integral setbitsge(integral x, int b) noexcept;
+
+//SET BITS Less Than
+template &ltclass integral&gt
+constexpr integral setbitsle(integral x, int b) noexcept;
+
+//FLIP BITS Greater Than
+template &ltclass integral&gt
+constexpr integral flipbitsge(integral x, int b) noexcept;
+
+//FLIP BITS Less Than
+template &ltclass integral&gt
+constexpr integral flipbitsle(integral x, int b) noexcept;
+
+//IS POWer of 2
+template &ltclass integral&gt
+constexpr bool ispow2(integral x) noexcept;
+
+//CEILing Power of 2
+template &ltclass integral&gt
+constexpr integral ceilp2(integral x) noexcept;
+
+//FLOOR Power of 2
+template &ltclass integral&gt
+constexpr integral floorp2(integral x) noexcept;
+
+//SATurated ADDition
+template &ltclass integral_l, class integral_r&gt
+constexpr auto satadd(integral_l l, integral_r r) noexcept -> decltype(l + r);
+
+//SATurated SUBtraction
+template &ltclass integral_l, class integral_r&gt
+constexpr auto satsub(integral_l l, integral_r r) noexcept -> decltype(l - r);
+
+//ALIGN UP
+template &ltclass integral&gt
+constexpr integral align_up(integral x, size_t align) noexcept;
+void* align_up(void* val, size_t align) noexcept;
+
+//ALIGN DOWN
+template &ltclass integral&gt
+constexpr integral align_down(integral x, size_t align) noexcept;
+void* align_down(void* val, size_t align) noexcept;
+
+//IS ALIGNED
+template &ltclass integral&gt
+constexpr bool is_aligned(integral x, size_t align) noexcept;
+bool is_aligned(void* val, size_t align) noexcept;
+
+//Parallel BITS DEPOSIT
+template &ltclass integral&gt
+constexpr integral pbits_deposit(integral x, integral mask) noexcept;
+
+//Parallel BITS EXTRACT
+template &ltclass integral&gt
+constexpr integral pbits_extract(integral x, integral mask) noexcept;
+
+
+</pre></blockquote>
+
+<h3>Explicit Shifts</h3>
+<p>Bit shifting is provided in C++ with <code>operator<<() </code> and <code>operator>>()</code> for integral types. While this abstraction is generally
+useful for the majority of cases there are some deficiencies. 
+
+First as noted earlier, there is no primitive for rotational shifts even though these shifts can be found in the instruction 
+set of almost every machine. Second, 
+<code>operator>>()</code> for signed types has implementation defined behavior with regards to filling in the high order bits. This makes
+writing a portable arithmetic right shift cumbersome at best and inefficient at worst. Finally, performing a logical right shift on a signed
+quantity is also cumbersome because it requires an ugly cast. For this reason and for symmetry, we have included mnemonics for 
+logical shift.
+</p>
+
+<ul>
+	<li><code>//SHift Logical Left</code><br/>
+	<code>template &ltclass integral&gt constexpr integral shll(integral x, int s) noexcept;</code><br/>
+	Returns a quantity equivalent to <code>x</code> with all of its bits shifted left by <code>s</code> positions. 
+	The <code>s</code> low order bits of the result are set to 0.
+	Undefined behavior if <code>(s < 0 || s > sizeof(x) * CHAR_BIT).</code>
+	<br/><br/> </li>
+	<li><code>//SHift Logical Right</code><br/>
+	<code>template &ltclass integral&gt constexpr integral lshr(integral x, int s) noexcept;</code><br/>
+	Returns a quantity equivalent to <code>x</code> with all of its bits shifted right by <code>s</code> positions.
+	The <code>s</code> high order bits of the result are set to 0.
+	Undefined behavior if <code>(s < 0 || s > sizeof(x) * CHAR_BIT).</code>
+	<br/><br/> </li>
+	<li><code>//SHift Arithmetic Left</code><br/>
+	<code>template &ltclass integral&gt constexpr integral shal(integral x, int s) noexcept;</code><br/>
+	Returns a quantity equivalent to <code>x</code> with all of its bits shift left by <code>s</code> positions.
+	The <code>s</code> low order bits of the result are set to 0.
+	Undefined behavior if <code>s < 0 || s > sizeof(x) * CHAR_BIT.</code>
+	<br/><br/> </li>
+	<li><code>//SHift Arithmetic Right</code><br/>
+	<code>template &ltclass integral&gt constexpr integral shar(integral x, int s) noexcept;</code><br/>
+	Returns a quantity equivalent to <code>x</code> with all of its bits shift left by <code>s</code> positions.
+	The <code>s</code> high order bits of the result are set to the value of the most significant bit in <code>x</code>.
+	Undefined behavior if <code>(s < 0 || s > sizeof(x) * CHAR_BIT).</code>
+	<br/><br/> </li>
+	<li><code>//ROTate Left</code><br/>
+	<code>template &ltclass integral&gt constexpr integral rotl(integral x, int s) noexcept;</code><br/>
+	Returns a quantity equivalent to <code>x</code> with all of its bits shift left by <code>s</code> positions.
+	The <code>s</code> low order bits of result are set to the <code>s</code> high order bits of <code>x</code>.
+	Undefined behavior if <code>(s < 0 || s > sizeof(x) * CHAR_BIT).</code>
+	<br/><br/> </li>
+	<li><code>//ROTate Right</code><br/>
+	<code>template &ltclass integral&gt constexpr integral rotr(integral x, int s) noexcept;</code><br/>
+	Returns a quantity equivalent to <code>x</code> with all of its bits shift left by <code>s</code> positions.
+	The <code>s</code> high order bits of result are set to the <code>s</code> low order bits of <code>x</code>.
+	Undefined behavior if <code>(s < 0 || s > sizeof(x) * CHAR_BIT).</code>
+	<br/><br/> </li>
+</ul>
+<h3>Bit Counting Algorithms</h3>
+Bit counting is useful in a variety of contexts. Many of these operations have native instructions available on a wide variety of modern hardware.
+
+<ul>
+	<li><code>//Count Trailing Zero Bits</code><br/>
+	<code>template &ltclass integral&gt constexpr int cntt0(integral x) noexcept;</code><br/>
+	Returns the number of trailing zero bits in <code>x</code>, or <code>(sizeof(x) * CHAR_BIT)</code> if <code>(x == 0)</code>.
+	<ul>
+		<li>i386: <code>bsf</code>, <code>cmov</code></li>
+		<li>x86_64 w/ BMI1: <code>tzcnt</code></li>
+		<li>alpha: <code>cttz</code></li>
+		<li>MIPS: <code>CLZ</code></li>
+		<li>gcc/clang: <code>(x == 0 ? sizeof(x) * CHAR_BIT : __builtin_ctz(x))</code>
+		<li>&ltbitops&gt: <code>cntt1(~x)</code></li>
+	</ul>
+	<br/><br/></li>
+	<li><code>//Count Leading Zero Bits</code><br/>
+	<code>template &ltclass integral&gt constexpr int cntl0(integral x) noexcept;</code><br/>
+	Returns the number of leading zero bits in <code>x</code>, or <code>(sizeof(x) * CHAR_BIT)</code> if <code>(x == 0)</code>.
+	<ul>
+		<li>i386: <code>bsr</code>, <code>cmov</code></li>
+		<li>x86_64 w/ SSE4: <code>lzcnt</code></li>
+		<li>ARMv5: <code>CLZ</code></li>
+		<li>IA64: <code>clz</code></li>
+		<li>PowerPC: <code>cntlz[dw]</code></li>
+		<li>gcc/clang: <code>(x == 0 ? sizeof(x) * CHAR_BIT : __builtin_clz(x))</code>
+		<li>&ltbitops&gt: <code>cntl1(~x)</code></li>
+	</ul>
+	<br/><br/></li>
+	<li><code>//Count Trailing 1 Bits</code><br/>
+	<code>template &ltclass integral&gt constexpr int cntt1(integral x) noexcept;</code><br/>
+	Returns the number of trailing 1 bits in <code>x</code>, or <code>(sizeof(x) * CHAR_BIT)</code> if <code>(x == ~intregral(0))</code>.
+	<ul>
+		<li>MIPS: <code>CTO</code></li>
+		<li>&ltbitops&gt: <code>cntt0(~x)</code></li>
+	</ul>
+	<br/><br/></li>
+	<li><code>//Count Leading 1 Bits</code><br/>
+	<code>template &ltclass integral&gt constexpr int cntl1(integral x) noexcept;</code><br/>
+	Returns the number of leading 1 bits in <code>x</code>, or <code>(sizeof(x) * CHAR_BIT)</code> if <code>(x == ~intregral(0))</code>.
+	<ul>
+		<li>ARMv8: <code>CLS</code></li>
+		<li>Blackfin: <code>SIGNBITS</code></li>
+		<li>C6X: <code>NORM</code></li>
+		<li>Picochip: <code>SBC</code></li>
+		<li>MIPS: <code>CTO</code></li>
+		<li>&ltbitops&gt: <code>cntl0(~x)</code></li>
+	</ul>
+	<br/><br/></li>
+	<li><code>//POPulation COUNT</code><br/>
+	<code>template &ltclass integral&gt constexpr int popcount(integral x) noexcept;</code><br/>
+	Returns the number of 1 bits in <code>x</code>.
+	<ul>
+		<li>x86_64 SSE4: <code>popcnt</code></li>
+		<li>IA64: <code>popcnt</code></li>
+		<li>Alpha: <code>CTPOP</code></li>
+		<li>PowerPC: <code>popcntb</code></li>
+		<li>SparcV9: <code>POPC</code></li>
+		<li>gcc: <code>__builtin_popcount()</code></li>
+	</ul>
+	<br/><br/></li>
+	<li><code>//PARITY</code><br/>
+	<code>template &ltclass integral&gt constexpr int parity(integral x) noexcept;</code><br/>
+	Returns 1 if the  number of 1 bits in <code>x</code> is odd, else returns 0.
+	<ul>
+		<li>gcc: <code>__builtin_parity()</code></li>
+		<li>&ltbitops&gt: <code>popcount(x) & 1</code></li>
+	</ul>
+	<br/><br/></li>
+</ul>
+
+
+<h2>
+	<a name="Acknowledgements">Acknowledgements</a></h2>
+
+<p>
+This document is based on
+<a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2005/n1810.html">
+	N1810, Library Extension TR2 Call for Proposals</a>, by Howard Hinnant, Beman 
+Dawes, and Matt Austern.</p>
+
+<h2><a name="References">References</a></h2>
+<ul>
+	<li>[<a name="Anderson01">Anderson01</a>] Anderson, Sean Eron. <i>Bit Twiddling Hacks</i>,
+	Available online at <a href="http://graphics.stanford.edu/~seander/bithacks.html">http://graphics.stanford.edu/~seander/bithacks.html</a></li>
+	<li>[<a name="Dietz01">Dietz01</a>] Deitz, Hendry Gordon. <i>The Aggregate Magic Algorithms</i>, University of Kentucky. 
+	Available online at <a href="http://aggregate.org/MAGIC/">http://aggregate.org/MAGIC/</a></li>
+	<li>[<a name="Neumann01">Neumann01</a>] Neumann, Jasper. <i>Bit permutations</i>, Available online at
+	<a href="http://programming.sirrida.de/bit_perm.html">http://programming.sirrida.de/bit_perm.html</a></li>
+	<li>[<a name="Warren01">Warren01</a>] Warren, Henry S. Jr. <i>Hacker's Delight Second Edition</i>,
+	Addison-Wesley, Oct 2012, ISBN 0-321-84268-5.</li>	
+	<li>[<a name="pdp11">pdp11</a>] <i>pdp11/40 process handbook</i>, Digital Equipment Corporation, 1972. </li>
+	<li>[<a name="Kostjuchenko01">Kostjuchenko01</a>] Kostjuchenko, Dmitry. <i> SSE2 optimized strlen</i>, Available online at
+	<a href="http://www.strchr.com/sse2_optimised_strlen?allcomments=1">http://www.strchr.com/sse2_optimised_strlen?allcomments=1</a></li>
+	<li>[<a name="Clang">Clang</a>] <i>clang: a C language family frontend for LLVM</i>, Available online at
+	<a href="http://clang.llvm.org/">http://clang.llvm.org/</a></li>
+	<li>[<a name="BitOpsReference">BitOpsReference</a>] <i>GitHub: BitOps Proposal and Reference Implementation</i>, Available online at
+	<a href="https://github.com/fmatthew5876/stdcxx">https://github.com/fmatthew5876/stdcxx</a></li>
+</ul>
+
+<hr>
+
+
+
+
+</body></html>
+
