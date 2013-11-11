@@ -13,7 +13,7 @@ Std-Proposals discussion:
 
 Often we need to do bitwise manipulations such as finding the next power of 2, counting trailing zeros, and so on.
 
-I'd like to propose a new <bitops> header which will contain a set of constexpr bit manipulation functions.
+I'd like to propose a new &ltbitops&gt header which will contain a set of constexpr bit manipulation functions.
 
 Why standardize this?
 1. These are low level basic primitives that can be used in a wide variety of applications and domains.
