@@ -57,50 +57,47 @@
   template uint64_t std::X<uint64_t>(uint64_t, uint64_t, ##__VA_ARGS__) noexcept
 
 //Do explicit instantiations to check for compiler errors and warnings
-INST(lshl, int);
-INST(rshl, int);
-INST(lsha, int);
-INST(rsha, int);
-INST(lrot, int);
-INST(rrot, int);
-INSTR(int, count_t0b);
-INSTR(int, count_l0b);
-INSTR(int, count_t1b);
-INSTR(int, count_l1b);
+INST(shll, int);
+INST(shlr, int);
+INST(shal, int);
+INST(shar, int);
+INST(rotl, int);
+INST(rotr, int);
+INSTR(int, cntt0);
+INSTR(int, cntl0);
+INSTR(int, cntt1);
+INSTR(int, cntl1);
 INSTR(int, popcount);
 INSTR(int, parity);
 
-INST(reset_ls1b);
-INST(isolate_ls1b);
-INST(set_ls0b);
-INST(isolate_ls0b);
-INST(inv_isolate_ls1b);
-INST(reset_t1b);
-INST(set_t0b);
-INST(mask_t0b);
-INST(mask_t0b_ls1b);
-INST(inv_mask_t1b);
-INST(mask_t1b_ls0b);
-INST(reset_rstr1b);
+INST(rstls1b);
+INST(isols1b);
+INST(setls0b);
+INST(isols0b);
+INST(rstt1);
+INST(sett0);
+INST(mskt0);
+INST(mskt1);
+INST(mskt0ls1b);
+INST(mskt1ls0b);
 INST(revbits, int, int);
 INST(revbytes, int, int);
+
+INST(setbit, int);
+INST(rstbit, int);
+INST(flipbit, int);
+INSTR(bool, testbit, int);
+
+INST(rstbitsge, int);
+INST(rstbitsle, int);
+INST(setbitsge, int);
+INST(setbitsle, int);
+INST(flipbitsge, int);
+INST(flipbitsle, int);
 
 INSTSAT(decltype(l+r), satadd);
 INSTSAT(decltype(l-r), satsub);
 
-INST(set_bit, int);
-INST(reset_bit, int);
-INST(flip_bit, int);
-INSTR(bool, test_bit, int);
-
-INST(reset_bitsge, int);
-INST(reset_bitsle, int);
-INST(set_bitsge, int);
-INST(set_bitsle, int);
-INST(flip_bitsge, int);
-INST(flip_bitsle, int);
-
-INSTR(bool, ispow2oz);
 INSTR(bool, ispow2);
 INST(ceilp2);
 INST(floorp2);
@@ -111,7 +108,6 @@ INSTR(bool, is_aligned, size_t);
 
 INST2(pbits_deposit);
 INST2(pbits_extract);
-INST(snoob);
 
 TEST(Compile, Test) {
 }
