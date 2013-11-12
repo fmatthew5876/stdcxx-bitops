@@ -76,10 +76,10 @@ INST(setls0b);
 INST(isols0b);
 INST(rstt1);
 INST(sett0);
-INST(mskt0);
-INST(mskt1);
-INST(mskt0ls1b);
-INST(mskt1ls0b);
+INST(maskt0);
+INST(maskt1);
+INST(maskt0ls1b);
+INST(maskt1ls0b);
 INST(revbits, int, int);
 INST(revbytes, int, int);
 

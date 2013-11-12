@@ -227,7 +227,7 @@ template <typename Integral>
     return x & -x;
   }
 
-//Set the least significant zero bit to 1 and all of the rest to 1.
+//Set the least significant zero bit to 1 and all of the rest to 0.
 template <typename Integral>
   constexpr Integral isols0b(Integral x) {
     return (~x) & (x + 1);
@@ -249,28 +249,27 @@ template <typename Integral>
 
 //Returns a mask with all of the trailing 0's set.
 template <typename Integral>
-  constexpr Integral mskt0(Integral x) {
+  constexpr Integral maskt0(Integral x) {
     return (~x) & (x-1);
   }
 
 //Returns a mask with all of the trailing 1's set.
 template <typename Integral>
-  constexpr Integral mskt1(Integral x) {
+  constexpr Integral maskt1(Integral x) {
     return ~((~x) | (x + 1));
   }
-
 
 //Returns a mask with all of the trailing 0's  and the least significant 1 bit set.
 //x86_64 BMI1: BLSMSK
 //x86_64 AMD TBM: TZMSK
 template <typename Integral>
-  constexpr Integral mskt0ls1b(Integral x) {
+  constexpr Integral maskt0ls1b(Integral x) {
     return (x-1) ^ x;
   }
 
 //Returns a mask with all of the trailing 1's and the least significant 0 bit set.
 template <typename Integral>
-  constexpr Integral mskt1ls0b(Integral x) {
+  constexpr Integral maskt1ls0b(Integral x) {
     return x ^ (x + 1);
   }
 
@@ -298,14 +297,14 @@ template <typename Integral>
 template <typename Integral>
   constexpr14 Integral revbits(Integral x,
       int bits_per_block = 1,
-      int blocks_per_group = INT_MAX) noexcept
+      int blocks_per_group = sizeof(Integral) * CHAR_BIT) noexcept
   {
     if(bits_per_block >= int(sizeof(x) * CHAR_BIT)) { return x; }
     constexpr size_t nbits = sizeof(Integral) * CHAR_BIT;
     int nbits_per_group = nbits / blocks_per_group;
 
     //Create a mask for the first block of bits in each group
-    Integral lmask = mskt0(1 << bits_per_block);
+    Integral lmask = maskt0(1 << bits_per_block);
     for(int i = 1; i < blocks_per_group; ++i) {
       lmask <<= nbits_per_group;
     }
@@ -326,7 +325,7 @@ template <typename Integral>
 template <typename Integral>
   constexpr14 Integral revbytes(Integral x,
       int bytes_per_block=1,
-      int blocks_per_group = INT_MAX) noexcept {
+      int blocks_per_group = sizeof(Integral)) noexcept {
     return revbits(x, CHAR_BIT * bytes_per_block, blocks_per_group);
   }
 
