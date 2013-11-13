@@ -16,6 +16,8 @@
 #include <climits>
 #include <limits>
 #include <type_traits>
+#include <algorithm>
+#include <iostream>
 
 namespace std {
 
@@ -46,7 +48,7 @@ template <typename Integral>
 //Included for symmetry, also can right shift a signed number easily without a cast to unsigned
 template <typename Integral>
   constexpr Integral shlr(Integral x, int s) noexcept {
-    return Integral(typename std::make_unsigned<Integral>::type(x) << s);
+    return Integral(typename std::make_unsigned<Integral>::type(x) >> s);
   }
 
 //Arithmetic left shift, undefined if s < 0 or x > sizeof(x) * CHAR_BIT
@@ -295,31 +297,32 @@ template <typename Integral>
 //bits_per_block == 16,32,etc.. reverses the words in x.
 //(bits_per_block == 16) MC68020: SWAP
 template <typename Integral>
-  constexpr14 Integral revbits(Integral x,
+  constexpr14 auto revbits(Integral x,
       int bits_per_block = 1,
-      int blocks_per_group = sizeof(Integral) * CHAR_BIT) noexcept
-  {
-    if(bits_per_block >= int(sizeof(x) * CHAR_BIT)) { return x; }
-    constexpr size_t nbits = sizeof(Integral) * CHAR_BIT;
-    int nbits_per_group = nbits / blocks_per_group;
-
-    //Create a mask for the first block of bits in each group
-    Integral lmask = maskt0(1 << bits_per_block);
-    for(int i = 1; i < blocks_per_group; ++i) {
-      lmask <<= nbits_per_group;
-    }
-    //Another mask for the last block of bits in each group
-    Integral rmask = lmask << (nbits_per_group - bits_per_block);
-
-    Integral r = 0;
-    for(int boff = 0; boff < nbits_per_group/2; boff += bits_per_block) {
-      //Move the rightmost block left
-      r |= (lmask << (nbits_per_group-boff)) & (x << (nbits_per_group-boff));
-      //Move the leftmost block right
-      r |= shlr(rmask, boff) & shlr(x, boff);
-    }
-    return r;
+      int blocks_per_group = sizeof(Integral) * CHAR_BIT)
+  noexcept -> typename std::enable_if<std::is_unsigned<Integral>::value, Integral>::type {
+    int group_sz = std::min(bits_per_block * blocks_per_group, int(sizeof(Integral) * CHAR_BIT));
+    int k = group_sz - bits_per_block;
+    cout << "K IS " << k << std::endl;
+    if(k & 1) x = shll(x & Integral(0x5555555555555555UL), 1) | shlr(x & Integral(0xAAAAAAAAAAAAAAAAUL), 1);
+    if(k & 2) x = shll(x & Integral(0x3333333333333333UL), 2) | shlr(x & Integral(0xCCCCCCCCCCCCCCCCUL), 2);
+    if(k & 4) x = shll(x & Integral(0x0F0F0F0F0F0F0F0FUL), 4) | shlr(x & Integral(0xF0F0F0F0F0F0F0F0UL), 4);
+    //sizeof comparisons added to help compiler remove these checks for small integers
+    if(sizeof(x) > 1 && k & 8) x = shll(x & Integral(0x00FF00FF00FF00FFUL), 8) | shlr(x & Integral(0xFF00FF00FF00FF00UL), 8);
+    if(sizeof(x) > 2 && k & 16) x = shll(x & Integral(0x0000FFFF0000FFFFUL), 16) | shlr(x & Integral(0xFFFF0000FFFF0000UL), 16);
+    if(sizeof(x) > 4 && k & 32) x = shll(x & Integral(0x00000000FFFFFFFFUL), 32) | shlr(x & Integral(0xFFFFFFFF00000000UL), 32);
+    return x;
   }
+
+//Signed version calls unsigned to avoid sign extension issues
+template <typename Integral>
+  constexpr14 auto revbits(Integral x,
+      int bits_per_block = 1,
+      int blocks_per_group = sizeof(Integral) * CHAR_BIT)
+  noexcept -> typename std::enable_if<std::is_signed<Integral>::value, Integral>::type {
+    return Integral(revbits(typename std::make_unsigned<Integral>::type(x), bits_per_block, blocks_per_group));
+  }
+
 
 //Byte reversal, simple wrapper around revbits
 template <typename Integral>

@@ -5,7 +5,8 @@ CXXFLAGS+=-Wall -Wextra -Werror -Wno-shift-count-overflow
 CPPFLAGS+=-I../include -I$(GTEST_INC)
 LDFLAGS+=-pthread
 
-TESTS:=shift.test cc.test satmath.test
+TESTS:=shift.test cc.test satmath.test \
+	revbytes.test
 
 all: $(TESTS)
 
@@ -53,3 +54,5 @@ $(GTEST_DIR)/src/gtest-all.cc: $(GTEST_ZIP)
 $(GTEST_ZIP):
 	wget http://googletest.googlecode.com/files/$(GTEST_ZIP)
 
+DEPS=$(patsubst %.test, %.d, $(TESTS));
+-include $(DEPS)
