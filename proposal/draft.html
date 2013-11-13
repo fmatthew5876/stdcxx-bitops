@@ -370,12 +370,12 @@ constexpr integral pbits_extract(integral x, integral mask) noexcept;
 </pre></blockquote>
 
 <h3>Explicit Shifts</h3>
-<p>Bit shifting is provided in C++ with <code>operator<<() </code> and <code>operator>>()</code> for integral types. While this abstraction is generally
+<p>Bit shifting is provided in C++ with <code>operator&lt;&lt; </code> and <code>operator&gt;&gt;()</code> for integral types. While this abstraction is generally
 useful for the majority of cases there are some deficiencies. 
 
 First as noted earlier, there is no primitive for rotational shifts even though these shifts can be found in the instruction 
 set of almost every machine. Second, 
-<code>operator>>()</code> for signed types has implementation defined behavior with regards to filling in the high order bits. This makes
+<code>operator&gt;&gt;()</code> for signed types has implementation defined behavior with regards to filling in the high order bits. This makes
 writing a portable arithmetic right shift cumbersome at best and inefficient at worst. Finally, performing a logical right shift on a signed
 quantity is also cumbersome because it requires an ugly cast. For this reason and for symmetry, we have included mnemonics for 
 logical shift.
@@ -491,6 +491,12 @@ Bit counting is useful in a variety of contexts. Many of these operations have n
 </ul>
 
 <h3>Rightmost bit manipulation</h3>
+The following functions perform simple manipulations on the rightmost bits of the given quantity.
+Some of them are implemented in hardware on Intel and AMD machines. All of these operations
+consist of a few simple arithmetic and logical operations and thus the C++ implementations
+have been included in the descriptions. All of these functions were successfully
+detected and converted into their native BMI and/or TBM instructions by the gcc 4.8 optimizer.
+Therefore we only present these functions as usability wrappers.
 
 <ul>
 	<li><code>//ReSeT Least Significant 1 Bit</code><br/>
@@ -624,16 +630,16 @@ in <code>x</code> and <code>revbytes()</code> will reverse all of the bytes in <
 	</ul>
 	<p>Hardware and compiler support:</p>
 	<ul>
-		<li>(1,INT_MAX) ARMv7: <code>RBIT</code></li>
-		<li>(1, INT_MAX) EPIPHANY: <code>BITR</code></li>
-		<li>(4, INT_MAX) AVR: <code>SWAP</code></li>
-		<li>(8, INT_MAX) i386: <code>bswap</code></li>
-		<li>(8, INT_MAX) ARMv5: <code>REV</code></li>
-		<li>(8, INT_MAX) PDP11: <code>SWAB</code></li>
-		<li>(8, INT_MAX) gcc: <code>__builtin_bswap[16|32|64]()</code></li>
-		<li>(8, 2) ARMv6: <code>REV16</code></li>
-		<li>(8, 4) ARMv8: <code>REV32</code></li>
-		<li>(16, INT_MAX) MC68020: <code>SWAP</code></li>
+		<li><code>(1, sizeof(x)*CHAR_BIT)</code> ARMv7: <code>RBIT</code></li>
+		<li><code>(1, sizeof(x)*CHAR_BIT)</code> EPIPHANY: <code>BITR</code></li>
+		<li><code>(4, sizeof(x)*CHAR_BIT/2)</code> AVR: <code>SWAP</code></li>
+		<li><code>(8, sizeof(x))</code> i386: <code>bswap</code></li>
+		<li><code>(8, sizeof(x))</code> ARMv5: <code>REV</code></li>
+		<li><code>(8, sizeof(x))</code> PDP11: <code>SWAB</code></li>
+		<li><code>(8, sizeof(x))</code> gcc: <code>__builtin_bswap[16|32|64]()</code></li>
+		<li><code>(8, sizeof(x))</code> ARMv6: <code>REV16</code></li>
+		<li><code>(8, sizeof(x))</code> ARMv8: <code>REV32</code></li>
+		<li><code>(16, sizeof(x)/2)</code> MC68020: <code>SWAP</code></li>
 	</ul>
 	<br/></li>
 	<li><code>//REVerse BYTES</code></li>
