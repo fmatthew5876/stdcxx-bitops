@@ -337,11 +337,16 @@ constexpr integral floorp2(integral x) noexcept;
 
 //SATurated ADDition
 template &lt;class integral_l, class integral_r&gt;
-constexpr auto satadd(integral_l l, integral_r r) noexcept -> decltype(l + r);
+constexpr auto satadd(integral_l l, integral_r r) noexcept -&gt; decltype(l + r);
 
 //SATurated SUBtraction
 template &lt;class integral_l, class integral_r&gt;
-constexpr auto satsub(integral_l l, integral_r r) noexcept -> decltype(l - r);
+constexpr auto satsub(integral_l l, integral_r r) noexcept -&gt; decltype(l - r);
+
+//IS ALIGNED
+template &lt;class integral&gt;
+constexpr bool is_aligned(integral x, size_t align) noexcept;
+bool is_aligned(void* val, size_t align) noexcept;
 
 //ALIGN UP
 template &lt;class integral&gt;
@@ -353,18 +358,29 @@ template &lt;class integral&gt;
 constexpr integral align_down(integral x, size_t align) noexcept;
 void* align_down(void* val, size_t align) noexcept;
 
-//IS ALIGNED
+//OUTER perfect SHUFFLE
 template &lt;class integral&gt;
-constexpr bool is_aligned(integral x, size_t align) noexcept;
-bool is_aligned(void* val, size_t align) noexcept;
+constexpr integral outer_shuffle(integral x) noexcept;
 
-//Parallel BITS DEPOSIT
+//OUTER perfect UNSHUFFLE
 template &lt;class integral&gt;
-constexpr integral pbits_deposit(integral x, integral mask) noexcept;
+constexpr integral outer_unshuffle(integral x) noexcept;
 
-//Parallel BITS EXTRACT
+//INNER perfect SHUFFLE
 template &lt;class integral&gt;
-constexpr integral pbits_extract(integral x, integral mask) noexcept;
+constexpr integral inner_shuffle(integral x) noexcept;
+
+//INNER perfect UNSHUFFLE
+template &lt;class integral&gt;
+constexpr integral inner_unshuffle(integral x) noexcept;
+
+//DEPOSIT BITS
+template &lt;class integral&gt;
+constexpr integral deposit_bits(integral x, integral mask) noexcept;
+
+//EXTRACT_BITS
+template &lt;class integral&gt;
+constexpr integral extract_bits(integral x, integral mask) noexcept;
 
 
 </pre></blockquote>
@@ -654,7 +670,6 @@ in <code>x</code> and <code>revbytes()</code> will reverse all of the bytes in <
 These functions are provided only for usability. They are all trivial to implement.
 
 <ul>
-	<br/></li>
 	<li><code>//SET BIT</code></li>
 	<code>template &lt;class integral&gt; constexpr integral setbit(integral x, int b) noexcept;</code><br/>
 	Sets bit <code>b</code> to 1 in <code>x</code> and returns <code>x</code>. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
@@ -663,7 +678,6 @@ These functions are provided only for usability. They are all trivial to impleme
 	</ul>
 	<br/></li>
 
-	<br/></li>
 	<li><code>//ReSeT BIT</code></li>
 	<code>template &lt;class integral&gt; constexpr integral rstbit(integral x, int b) noexcept;</code><br/>
 	Sets bit <code>b</code> to 0 in <code>x</code> and returns <code>x</code>. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
@@ -672,7 +686,6 @@ These functions are provided only for usability. They are all trivial to impleme
 	</ul>
 	<br/></li>
 
-	<br/></li>
 	<li><code>//FLIP BIT</code></li>
 	<code>template &lt;class integral&gt; constexpr integral flipbit(integral x, int b) noexcept;</code><br/>
 	Inverts bit <code>b</code> in <code>x</code> and returns <code>x</code>. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
@@ -681,7 +694,6 @@ These functions are provided only for usability. They are all trivial to impleme
 	</ul>
 	<br/></li>
 
-	<br/></li>
 	<li><code>//TEST BIT</code></li>
 	<code>template &lt;class integral&gt; constexpr bool testbit(integral x, int b) noexcept;</code><br/>
 	Returns true if bit <code>b</code> in <code>x</code> is 1. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
@@ -689,6 +701,183 @@ These functions are provided only for usability. They are all trivial to impleme
 		<li>C/C++: <code>x & (integral(1) &lt;&lt; b)</code>
 	</ul>
 	<br/></li>
+</ul>
+
+<h3>Range of Bits Manipulation</h3>
+
+<ul>
+	<li><code>//ReSeT BITS Greater than or Equal</code></li>
+	<code>template &lt;class integral&gt; constexpr integral rstbitsge(integral x, int b) noexcept;</code><br/>
+	Sets all bits in positions &ge; <code>b</code> in <code>x<code> to 0. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
+	<ul>
+		<li>C/C++: <code>x & ((integral(1) &lt;&lt; b)-1)</code>
+	</ul>
+	<br/></li>
+
+	<li><code>//ReSeT BITS Less Than</code></li>
+	<code>template &lt;class integral&gt; constexpr integral rstbitsle(integral x, int b) noexcept;</code><br/>
+	Sets all bits in positions &le; <code>b</code> in <code>x<code> to 0. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
+	<ul>
+		<li>C/C++: <code>x & ~((integral(1) &lt;&lt; (b+1))-1)</code>
+	</ul>
+	<br/></li>
+
+	<li><code>//SET BITS Greater than or Equal</code></li>
+	<code>template &lt;class integral&gt; constexpr integral setbitsge(integral x, int b) noexcept;</code><br/>
+	Sets all bits in positions &ge; <code>b</code> in <code>x<code> to 1. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
+	<ul>
+		<li>C/C++: <code>x | ((integral(1) &lt;&lt; b)-1)</code>
+	</ul>
+	<br/></li>
+
+	<li><code>//SET BITS Less Than</code></li>
+	<code>template &lt;class integral&gt; constexpr integral setbitsle(integral x, int b) noexcept;</code><br/>
+	Sets all bits in positions &le; <code>b</code> in <code>x<code> to 1. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
+	<ul>
+		<li>C/C++: <code>x | ~((integral(1) &lt;&lt; (b+1))-1)</code>
+	</ul>
+	<br/></li>
+
+	<li><code>//FLIP BITS Greater than or Equal</code></li>
+	<code>template &lt;class integral&gt; constexpr integral flipbitsge(integral x, int b) noexcept;</code><br/>
+        Inverts all bits in positions &ge; <code>b</code> in <code>x<code>. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
+	<ul>
+		<li>C/C++: <code>x ^ ((integral(1) &lt;&lt; b)-1)</code>
+	</ul>
+	<br/></li>
+
+	<li><code>//FLIP BITS Less Than</code></li>
+	<code>template &lt;class integral&gt; constexpr integral flipbitsle(integral x, int b) noexcept;</code><br/>
+	Inverts all bits in positions &le; <code>b</code> in <code>x<code>. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
+	<ul>
+		<li>C/C++: <code>x ^ ~((integral(1) &lt;&lt; (b+1))-1)</code>
+	</ul>
+	<br/></li>
+</ul>
+
+<h3>Power of 2 manipulation</h3>
+
+<ul>
+	<li><code>//IS POWer of 2</code></li>
+	<code>template &lt;class integral&gt; constexpr bool ispow2(integral x) noexcept;</code><br/>
+	Returns true if <code>x<code> is a power of 2.
+	<ul>
+		<li>C/C++: <code>x &gt; 0 && (x & (x-1)) == 0)</code>
+		<li>C/C++: <code>x &gt;= 0 && popcount(x) == 0)</code>
+	</ul>
+	<br/></li>
+
+	<li><code>//CEILing Power of 2</code></li>
+	<code>template &lt;class integral&gt; constexpr integral ceilp2(integral x) noexcept;</code><br/>
+	Returns the next power of 2 &gt; <code>x</code>.
+	<ul>
+	</ul>
+	<br/></li>
+
+	<li><code>//FLOOR Power of 2</code></li>
+	<code>template &lt;class integral&gt; constexpr integral floorp2(integral x) noexcept;</code><br/>
+	Returns the next power of 2 &lt; <code>x</code>.
+	<ul>
+	</ul>
+	<br/></li>
+</ul>
+
+<h3>Saturated Arithmetic</h3>
+<ul>
+	<li><code>//SATurated ADD</code></li>
+	<code>template &lt;class integralL, class integralR&gt; constexpr auto satadd(integralL l, integralR r) noexcept -&gt; decltype(l + r);</code><br/>
+	Returns l + r, or std::numeric_limits<decltype(l+r)>::max() if l + r would overflow.
+	<ul>
+	</ul>
+	<br/></li>
+
+	<li><code>//SATurated SUBtract</code></li>
+	<code>template &lt;class integralL, class integralR&gt; constexpr auto satsub(integralL l, integralR r) noexcept -&gt; decltype(l - r);</code><br/>
+	Returns l - r, or std::numeric_limits<decltype(l-r)>::min() if l - r would underflow.
+	<ul>
+	</ul>
+	<br/></li>
+</ul>
+
+<h3>Pointer and Size Alignment Helpers</h3>
+
+<ul>
+	<li><code>//IS ALIGNED</code></li>
+	<code>template &lt;class integral&gt; constexpr bool is_aligned(integral x, size_t a) noexcept;</code><br/>
+	<code>bool is_aligned(void* x, size_t a) noexcept;</code><br/>
+	Returns true if <code>x</code> is a multiple of <code>a</code>. The result is undefined if <code>a</code> is not a power of 2.
+	<ul>
+	</ul>
+	<br/></li>
+
+	<li><code>//ALIGN UP</code></li>
+	<code>template &lt;class integral&gt; constexpr integral align_up(integral x, size_t a) noexcept;</code><br/>
+	<code>void* align_up(void* x, size_t a) noexcept;</code><br/>
+	Returns the smaller number n where <code>n &gt;= x && is_aligned(n, a)</code>. The result is undefined if <code>a</code> is not a power of 2.
+	<ul>
+	</ul>
+	<br/></li>
+
+	<li><code>//ALIGN DOWN</code></li>
+	<code>template &lt;class integral&gt; constexpr integral align_down(integral x, size_t a) noexcept;</code><br/>
+	<code>void* align_down(void* x, size_t a) noexcept;</code><br/>
+	Returns the largest number n where <code>n &lt;= x && is_aligned(n, a)</code>. The result is undefined if <code>a</code> is not a power of 2.
+	<ul>
+	</ul>
+	<br/></li>
+</ul>
+
+<h3>Bitwise Perfect Shuffle</h3>
+
+<ul>
+	<li><code>//OUTER perfect SHUFFLE</code></li>
+	<code>template &lt;class integral&gt; constexpr integral outer_shuffle(integral x) noexcept;</code><br/>
+	Returns the bitwise outer perfect shuffle of <code>x</code>.
+	<ul>
+	</ul>
+	<br/></li>
+
+	<li><code>//OUTER perfect UNSHUFFLE</code></li>
+	<code>template &lt;class integral&gt; constexpr integral outer_unshuffle(integral x) noexcept;</code><br/>
+	Returns the bitwise outer perfect unshuffle of <code>x</code>.
+	<ul>
+	</ul>
+	<br/></li>
+
+	<li><code>//INNER perfect SHUFFLE</code></li>
+	<code>template &lt;class integral&gt; constexpr integral outer_shuffle(integral x) noexcept;</code><br/>
+	Returns the bitwise inner perfect shuffle of <code>x</code>.
+	<ul>
+	</ul>
+	<br/></li>
+
+	<li><code>//INNER perfect UNSHUFFLE</code></li>
+	<code>template &lt;class integral&gt; constexpr integral outer_unshuffle(integral x) noexcept;</code><br/>
+	Returns the bitwise inner perfect unshuffle of <code>x</code>.
+	<ul>
+	</ul>
+	<br/></li>
+</ul>
+
+<h3>Bitwise Deposit and Extract</h3>
+
+<ul>
+	<li><code>//DEPOSIT BITS</code></li>
+	<code>template &lt;class integral&gt; constexpr integral deposit_bits(integral x, integral m) noexcept;</code><br/>
+	Returns the bitwise deposit of <code>x</code> with the given bitmask <code>m</code>.
+	<ul>
+		<li>x86_64 w/ BMI2: PDEP</li>
+	</ul>
+	<br/></li>
+
+	<li><code>//EXTRACT BITS</code></li>
+	<code>template &lt;class integral&gt; constexpr integral extract_bits(integral x, integral m) noexcept;</code><br/>
+	Returns the bitwise extraction of <code>x</code> with the given bitmask <code>m</code>.
+	<ul>
+		<li>x86_64 w/ BMI2: PEXT</li>
+	</ul>
+	<br/></li>
+
 </ul>
 
 <h2>

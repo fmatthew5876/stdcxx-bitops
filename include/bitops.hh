@@ -479,6 +479,15 @@ template <typename IntegralL, typename IntegralR>
 //Pointer and size alignment helpers
 ////////////////////////////////////
 
+//Returns true if t is aligned to a
+template <typename Integral>
+constexpr bool is_aligned(Integral t, size_t a) noexcept {
+  return ((t & (a-1)) == 0);
+}
+bool is_aligned(void* t, size_t a) noexcept {
+  return is_aligned(uintptr_t(t), a);
+}
+
 //Returns the smallest number n when n >= val && is_aligned(n, align). align must be a power of 2!
 template <typename Integral>
 constexpr Integral align_up(Integral val, size_t a) noexcept {
@@ -497,17 +506,67 @@ void* align_down(void* val, size_t a) noexcept {
   return (void*)align_down(uintptr_t(val), a);
 }
 
-//Returns true if t is aligned to a
+///////////////////////////////////
+//Bit Shuffling
+///////////////////////////////////
+
+//Outer Perfect Shuffle
 template <typename Integral>
-constexpr bool is_aligned(Integral t, size_t a) noexcept {
-  return ((t & (a-1)) == 0);
+constexpr14 Integral outer_shuffle(Integral x) noexcept {
+  Integral t = 0;
+  if(sizeof(x) > 4) {
+    t = (x ^ shlr(x, 16)) & Integral(0x00000000FFFF0000UL);
+    x = x ^ t ^ shll(t, 16);
+  }
+  if(sizeof(x) > 2) {
+    t = (x ^ shlr(x, 8)) & Integral(0x0000FF000000FF00UL);
+    x = x ^ t ^ shll(t, 8);
+  }
+  if(sizeof(x) > 1) {
+    t = (x ^ shlr(x, 4)) & Integral(0x00F000F000F000F0UL);
+    x = x ^ t ^ shll(t, 4);
+  }
+  t = (x ^ shlr(x, 2)) & Integral(0x0C0C0C0C0C0C0C0CUL);
+  x = x ^ t ^ shll(t, 2);
+  t = (x ^ shlr(x, 1)) & Integral(0x2222222222222222UL);
+  x = x ^ t ^ shll(t, 1);
+  return x;
 }
-bool is_aligned(void* t, size_t a) noexcept {
-  return is_aligned(uintptr_t(t), a);
+
+template <typename Integral>
+constexpr14 Integral outer_unshuffle(Integral x) noexcept {
+  Integral t = 0;
+  t = (x ^ shlr(x, 1)) & Integral(0x2222222222222222UL);
+  x = x ^ t ^ shll(t, 1);
+  t = (x ^ shlr(x, 2)) & Integral(0x0C0C0C0C0C0C0C0CUL);
+  x = x ^ t ^ shll(t, 2);
+  if(sizeof(x) > 1) {
+    t = (x ^ shlr(x, 4)) & Integral(0x00F000F000F000F0UL);
+    x = x ^ t ^ shll(t, 4);
+  }
+  if(sizeof(x) > 2) {
+    t = (x ^ shlr(x, 8)) & Integral(0x0000FF000000FF00UL);
+    x = x ^ t ^ shll(t, 8);
+  }
+  if(sizeof(x) > 4) {
+    t = (x ^ shlr(x, 16)) & Integral(0x00000000FFFF0000UL);
+    x = x ^ t ^ shll(t, 16);
+  }
+  return x;
+}
+
+template <typename Integral>
+constexpr14 Integral inner_shuffle(Integral x) noexcept {
+  return outer_shuffle(revbits(x, sizeof(x)*CHAR_BIT/2, 2));
+}
+
+template <typename Integral>
+constexpr14 Integral inner_unshuffle(Integral x) noexcept {
+  return revbits(outer_unshuffle(x), sizeof(x)*CHAR_BIT/2, 2);
 }
 
 ///////////////////////////////////
-//Others
+//Bits Deposit and Extract
 ///////////////////////////////////
 
 //Parallel Bits Deposit
@@ -516,7 +575,7 @@ bool is_aligned(void* t, size_t a) noexcept {
 //res  0CB00A00
 //x86_64 BMI2: PDEP
 template <typename Integral>
-constexpr14 Integral pbits_deposit(Integral x, Integral mask) {
+constexpr14 Integral deposit_bits(Integral x, Integral mask) {
   Integral res = 0;
   for(Integral bb = 1; mask != 0; bb += bb) {
     if(x & bb) {
@@ -533,7 +592,7 @@ constexpr14 Integral pbits_deposit(Integral x, Integral mask) {
 //res  00000GFC
 //x86_64 BMI2: PEXT
 template <typename Integral>
-constexpr14 Integral pbits_extract(Integral x, Integral mask) {
+constexpr14 Integral extract_bits(Integral x, Integral mask) {
   Integral res = 0;
   for(Integral bb = 1; mask != 0; bb += bb) {
     if(x & mask & -mask) {

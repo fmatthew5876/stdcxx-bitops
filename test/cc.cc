@@ -106,8 +106,13 @@ INST(align_up, size_t);
 INST(align_down, size_t);
 INSTR(bool, is_aligned, size_t);
 
-INST2(pbits_deposit);
-INST2(pbits_extract);
+INST(outer_shuffle);
+INST(outer_unshuffle);
+INST(inner_shuffle);
+INST(inner_unshuffle);
+
+INST2(deposit_bits);
+INST2(extract_bits);
 
 TEST(Compile, Test) {
 }
