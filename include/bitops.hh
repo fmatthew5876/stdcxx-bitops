@@ -512,7 +512,7 @@ void* align_down(void* val, size_t a) noexcept {
 
 //Outer Perfect Shuffle
 template <typename Integral>
-constexpr14 Integral outer_shuffle(Integral x) noexcept {
+constexpr14 Integral outer_pshuffle(Integral x) noexcept {
   Integral t = 0;
   if(sizeof(x) > 4) {
     t = (x ^ shlr(x, 16)) & Integral(0x00000000FFFF0000UL);
@@ -534,7 +534,7 @@ constexpr14 Integral outer_shuffle(Integral x) noexcept {
 }
 
 template <typename Integral>
-constexpr14 Integral outer_unshuffle(Integral x) noexcept {
+constexpr14 Integral outer_punshuffle(Integral x) noexcept {
   Integral t = 0;
   t = (x ^ shlr(x, 1)) & Integral(0x2222222222222222UL);
   x = x ^ t ^ shll(t, 1);
@@ -556,13 +556,13 @@ constexpr14 Integral outer_unshuffle(Integral x) noexcept {
 }
 
 template <typename Integral>
-constexpr14 Integral inner_shuffle(Integral x) noexcept {
-  return outer_shuffle(revbits(x, sizeof(x)*CHAR_BIT/2, 2));
+constexpr14 Integral inner_pshuffle(Integral x) noexcept {
+  return outer_pshuffle(revbits(x, sizeof(x)*CHAR_BIT/2, 2));
 }
 
 template <typename Integral>
-constexpr14 Integral inner_unshuffle(Integral x) noexcept {
-  return revbits(outer_unshuffle(x), sizeof(x)*CHAR_BIT/2, 2);
+constexpr14 Integral inner_punshuffle(Integral x) noexcept {
+  return revbits(outer_punshuffle(x), sizeof(x)*CHAR_BIT/2, 2);
 }
 
 ///////////////////////////////////

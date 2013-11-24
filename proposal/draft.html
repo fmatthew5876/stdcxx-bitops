@@ -358,21 +358,21 @@ template &lt;class integral&gt;
 constexpr integral align_down(integral x, size_t align) noexcept;
 void* align_down(void* val, size_t align) noexcept;
 
-//OUTER perfect SHUFFLE
+//OUTER Perfect SHUFFLE
 template &lt;class integral&gt;
-constexpr integral outer_shuffle(integral x) noexcept;
+constexpr integral outer_pshuffle(integral x) noexcept;
 
-//OUTER perfect UNSHUFFLE
+//OUTER Perfect UNSHUFFLE
 template &lt;class integral&gt;
-constexpr integral outer_unshuffle(integral x) noexcept;
+constexpr integral outer_punshuffle(integral x) noexcept;
 
-//INNER perfect SHUFFLE
+//INNER Perfect SHUFFLE
 template &lt;class integral&gt;
-constexpr integral inner_shuffle(integral x) noexcept;
+constexpr integral inner_pshuffle(integral x) noexcept;
 
-//INNER perfect UNSHUFFLE
+//INNER Perfect UNSHUFFLE
 template &lt;class integral&gt;
-constexpr integral inner_unshuffle(integral x) noexcept;
+constexpr integral inner_punshuffle(integral x) noexcept;
 
 //DEPOSIT BITS
 template &lt;class integral&gt;
@@ -830,29 +830,29 @@ These functions are provided only for usability. They are all trivial to impleme
 <h3>Bitwise Perfect Shuffle</h3>
 
 <ul>
-	<li><code>//OUTER perfect SHUFFLE</code></li>
-	<code>template &lt;class integral&gt; constexpr integral outer_shuffle(integral x) noexcept;</code><br/>
+	<li><code>//OUTER Perfect SHUFFLE</code></li>
+	<code>template &lt;class integral&gt; constexpr integral outer_pshuffle(integral x) noexcept;</code><br/>
 	Returns the bitwise outer perfect shuffle of <code>x</code>.
 	<ul>
 	</ul>
 	<br/></li>
 
-	<li><code>//OUTER perfect UNSHUFFLE</code></li>
-	<code>template &lt;class integral&gt; constexpr integral outer_unshuffle(integral x) noexcept;</code><br/>
+	<li><code>//OUTER Perfect UNSHUFFLE</code></li>
+	<code>template &lt;class integral&gt; constexpr integral outer_punshuffle(integral x) noexcept;</code><br/>
 	Returns the bitwise outer perfect unshuffle of <code>x</code>.
 	<ul>
 	</ul>
 	<br/></li>
 
-	<li><code>//INNER perfect SHUFFLE</code></li>
-	<code>template &lt;class integral&gt; constexpr integral outer_shuffle(integral x) noexcept;</code><br/>
+	<li><code>//INNER Perfect SHUFFLE</code></li>
+	<code>template &lt;class integral&gt; constexpr integral outer_pshuffle(integral x) noexcept;</code><br/>
 	Returns the bitwise inner perfect shuffle of <code>x</code>.
 	<ul>
 	</ul>
 	<br/></li>
 
-	<li><code>//INNER perfect UNSHUFFLE</code></li>
-	<code>template &lt;class integral&gt; constexpr integral outer_unshuffle(integral x) noexcept;</code><br/>
+	<li><code>//INNER Perfect UNSHUFFLE</code></li>
+	<code>template &lt;class integral&gt; constexpr integral outer_punshuffle(integral x) noexcept;</code><br/>
 	Returns the bitwise inner perfect unshuffle of <code>x</code>.
 	<ul>
 	</ul>

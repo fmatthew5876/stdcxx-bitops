@@ -106,10 +106,10 @@ INST(align_up, size_t);
 INST(align_down, size_t);
 INSTR(bool, is_aligned, size_t);
 
-INST(outer_shuffle);
-INST(outer_unshuffle);
-INST(inner_shuffle);
-INST(inner_unshuffle);
+INST(outer_pshuffle);
+INST(outer_punshuffle);
+INST(inner_pshuffle);
+INST(inner_punshuffle);
 
 INST2(deposit_bits);
 INST2(extract_bits);
