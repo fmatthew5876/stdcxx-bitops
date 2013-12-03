@@ -179,13 +179,12 @@ Citations for each instruction reference have been omitted in order to reduce cl
 A list of processor manual references can be found in the <a href="#References">References</a> section.
 </p>
 
+<p>Template arguments for each proposed function are named "integral" to indicate support
+for all builtin integral types. The includes signed and unsigned integers.</p>
+
 <h3>&ltbitops&gt Header Synopsis</h3>
 
-
 <blockquote><pre>
-
-//template arguments named "integral" are assumed to be signed or unsigned integer types.
-//That is, std::is_integral&lt;integral&gt;::value == true.
 
 //SHift Logical Left
 template &lt;class integral&gt;
@@ -275,14 +274,6 @@ constexpr integral maskt0ls1b(integral x) noexcept;
 template &lt;class integral&gt;
 constexpr integral maskt1ls0b(integral x) noexcept;
 
-//REVerse BITS
-template &lt;class integral&gt;
-constexpr integral revbits(integral x, int bits_per_block=1, int blocks_per_group = sizeof(integral) * CHAR_BIT) noexcept;
-
-//REVerse BYTES
-template &lt;class integral&gt;
-constexpr integral revbytes(integral x, int bytes_per_block=1, int blocks_per_group = sizeof(integral)) noexcept;
-
 //SET BIT
 template &lt;class integral&gt;
 constexpr integral setbit(integral x, int b) noexcept;
@@ -323,6 +314,54 @@ constexpr integral flipbitsge(integral x, int b) noexcept;
 template &lt;class integral&gt;
 constexpr integral flipbitsle(integral x, int b) noexcept;
 
+template &lt;class integral&gt;
+constexpr integral reverse_bits(integral x, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral reverse_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;
+
+template &lt;class integral&gt;
+constexpr integral outer_perfect_shuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral outer_perfect_shuffle_bytes(integral x, int subword_bits=1, int num_words=1) noexcept;
+
+template &lt;class integral&gt;
+constexpr integral outer_perfect_unshuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral outer_perfect_unshuffle_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;
+
+template &lt;class integral&gt;
+constexpr integral inner_perfect_shuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral inner_perfect_shuffle_bytes(integral x, int subword_bits=1, int num_words=1) noexcept;
+
+template &lt;class integral&gt;
+constexpr integral inner_perfect_unshuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral inner_perfect_unshuffle_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;
+
+template &lt;class integral&gt;
+constexpr integral deposit_bits_right(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral deposit_bytes_right(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral deposit_bits_left(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral deposit_bytes_left(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+
+template &lt;class integral&gt;
+constexpr integral extract_bits_right(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral extract_bytes_right(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral extract_bits_left(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+template &lt;class integral&gt;
+constexpr integral extract_bytes_left(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+
+</pre></blockquote>
+
+<h3>&lt;cmath&gt; Header Synopsis</h3>
+
+<blockquote><pre>
 //IS POWer of 2
 template &lt;class integral&gt;
 constexpr bool ispow2(integral x) noexcept;
@@ -335,6 +374,7 @@ constexpr integral ceilp2(integral x) noexcept;
 template &lt;class integral&gt;
 constexpr integral floorp2(integral x) noexcept;
 
+
 //SATurated ADDition
 template &lt;class integral_l, class integral_r&gt;
 constexpr auto satadd(integral_l l, integral_r r) noexcept -&gt; decltype(l + r);
@@ -343,56 +383,34 @@ constexpr auto satadd(integral_l l, integral_r r) noexcept -&gt; decltype(l + r)
 template &lt;class integral_l, class integral_r&gt;
 constexpr auto satsub(integral_l l, integral_r r) noexcept -&gt; decltype(l - r);
 
-//IS ALIGNED
+</pre></blockquote>
+
+<h3>&lt;memory&gt; Header Synopsis</h3>
+
+<blockquote><pre>
 template &lt;class integral&gt;
 constexpr bool is_aligned(integral x, size_t align) noexcept;
 bool is_aligned(void* val, size_t align) noexcept;
 
-//ALIGN UP
 template &lt;class integral&gt;
 constexpr integral align_up(integral x, size_t align) noexcept;
 void* align_up(void* val, size_t align) noexcept;
 
-//ALIGN DOWN
 template &lt;class integral&gt;
 constexpr integral align_down(integral x, size_t align) noexcept;
 void* align_down(void* val, size_t align) noexcept;
 
-//OUTER Perfect SHUFFLE
-template &lt;class integral&gt;
-constexpr integral outer_pshuffle(integral x) noexcept;
-
-//OUTER Perfect UNSHUFFLE
-template &lt;class integral&gt;
-constexpr integral outer_punshuffle(integral x) noexcept;
-
-//INNER Perfect SHUFFLE
-template &lt;class integral&gt;
-constexpr integral inner_pshuffle(integral x) noexcept;
-
-//INNER Perfect UNSHUFFLE
-template &lt;class integral&gt;
-constexpr integral inner_punshuffle(integral x) noexcept;
-
-//DEPOSIT BITS
-template &lt;class integral&gt;
-constexpr integral deposit_bits(integral x, integral mask) noexcept;
-
-//EXTRACT_BITS
-template &lt;class integral&gt;
-constexpr integral extract_bits(integral x, integral mask) noexcept;
-
-
 </pre></blockquote>
 
 <h3>Explicit Shifts</h3>
-<p>Bit shifting is provided in C++ with <code>operator&lt;&lt; </code> and <code>operator&gt;&gt;()</code> for integral types. While this abstraction is generally
+<p>Bit shifting is provided in C++ with <code>operator&lt;&lt;</code> and <code>operator&gt;&gt;</code> for integral types. While this abstraction is generally
 useful for the majority of cases there are some deficiencies. 
 
 First as noted earlier, there is no primitive for rotational shifts even though these shifts can be found in the instruction 
 set of almost every machine. Second, 
-<code>operator&gt;&gt;()</code> for signed types has implementation defined behavior with regards to filling in the high order bits. This makes
-writing a portable arithmetic right shift cumbersome at best and inefficient at worst. Finally, performing a logical right shift on a signed
+<code>operator&gt;&gt;</code> for signed types has implementation defined behavior with regards to filling in the high order bits, making
+it useless for portable code that requires specific behavior on the high order bits.
+Writing a portable arithmetic right shift cumbersome at best and inefficient at worst. Finally, performing a logical right shift on a signed
 quantity is also cumbersome because it requires an ugly cast. For this reason and for symmetry, we have included mnemonics for 
 logical shift.
 </p>
@@ -405,7 +423,7 @@ logical shift.
 	Undefined behavior if <code>(s < 0 || s > sizeof(x) * CHAR_BIT).</code>
 	<br/><br/> </li>
 	<li><code>//SHift Logical Right</code><br/>
-	<code>template &lt;class integral&gt; constexpr integral lshr(integral x, int s) noexcept;</code><br/>
+	<code>template &lt;class integral&gt; constexpr integral shlr(integral x, int s) noexcept;</code><br/>
 	Returns a quantity equivalent to <code>x</code> with all of its bits shifted right by <code>s</code> positions.
 	The <code>s</code> high order bits of the result are set to 0.
 	Undefined behavior if <code>(s < 0 || s > sizeof(x) * CHAR_BIT).</code>
@@ -446,7 +464,6 @@ Bit counting is useful in a variety of contexts. Many of these operations have n
 		<li>i386: <code>bsf</code>, <code>cmov</code></li>
 		<li>x86_64 w/ BMI1: <code>tzcnt</code></li>
 		<li>alpha: <code>cttz</code></li>
-		<li>MIPS: <code>CLZ</code></li>
 		<li>gcc/clang: <code>(x == 0 ? sizeof(x) * CHAR_BIT : __builtin_ctz(x))</code>
 		<li>&lt;bitops&gt;: <code>cntt1(~x)</code></li>
 	</ul>
@@ -460,6 +477,7 @@ Bit counting is useful in a variety of contexts. Many of these operations have n
 		<li>ARMv5: <code>CLZ</code></li>
 		<li>IA64: <code>clz</code></li>
 		<li>PowerPC: <code>cntlz[dw]</code></li>
+		<li>MIPS: <code>CLZ</code></li>
 		<li>gcc/clang: <code>(x == 0 ? sizeof(x) * CHAR_BIT : __builtin_clz(x))</code>
 		<li>&lt;bitops&gt;: <code>cntl1(~x)</code></li>
 	</ul>
@@ -468,7 +486,6 @@ Bit counting is useful in a variety of contexts. Many of these operations have n
 	<code>template &lt;class integral&gt; constexpr int cntt1(integral x) noexcept;</code><br/>
 	Returns the number of trailing 1 bits in <code>x</code>, or <code>(sizeof(x) * CHAR_BIT)</code> if <code>(x == ~intregral(0))</code>.
 	<ul>
-		<li>MIPS: <code>CTO</code></li>
 		<li>&lt;bitops&gt;: <code>cntt0(~x)</code></li>
 	</ul>
 	<br/></li>
@@ -480,7 +497,7 @@ Bit counting is useful in a variety of contexts. Many of these operations have n
 		<li>Blackfin: <code>SIGNBITS</code></li>
 		<li>C6X: <code>NORM</code></li>
 		<li>Picochip: <code>SBC</code></li>
-		<li>MIPS: <code>CTO</code></li>
+		<li>MIPS: <code>CLO</code></li>
 		<li>&lt;bitops&gt;: <code>cntl0(~x)</code></li>
 	</ul>
 	<br/></li>
@@ -605,67 +622,6 @@ Therefore we only present these functions as usability wrappers.
 	</ul>
 	<br/></li>
 </ul>
-<h3>Reversing bits and bytes</h3>
-<p>
-The following 2 functions provide a generic interface for reversing the order of bits and bytes.
-These operations are commonly known as byte swapping routines. While the term swapping bytes
-may make sense in a 2 byte quantity, it breaks down for larger values. Therefore we choose
-to discard tradition and use the more accurate terminology of bit and byte reversal.
-</p>
-
-<p>
-The most common application of byte reversal is packing and unpacking of cross platform binary 
-protocols. The network byte order proposal [<a href="N3646">N3646</a>] could be implemented
-using these functions.
-</p>
-
-<p>
-All of the bit and byte swapping permutions are encapsulated behind a single function
-<code>revbits()</code>. A usability wrapper <code>revbytes()</code> is provided
-for byte swapping.
-</p>
-
-<p>
-These functions take 3 arguments, the first being the value to reverse, the
-second the number of bits in a "block", and the third the number of "blocks" in a "group".
-The last 2 arguments have default values. If not specified, <code>revbits()</code> will reverse all of the bits
-in <code>x</code> and <code>revbytes()</code> will reverse all of the bytes in <code>x</code>.
-</p>
-
-
-<ul>
-	<li><code>//REVerse BITS</code></li>
-	<code>template &lt;class integral&gt; constexpr integral revbits(integral x, int bits_per_block=1, int blocks_per_group=sizeof(integral) * CHAR_BIT) noexcept;</code><br/>
-	For each group of blocks of bits in <code>x</code>, the blocks in each group are reversed and the resulting value is returned.
-	<p>The result is undefined if any of the following hold:</p>
-	<ul>
-		<li><code>bits_per_block &le; 0</code></li>
-		<li><code>blocks_per_group &le; 0</code></li>
-		<li><code>bits_per_block &gt; sizeof(x) * CHAR_BIT</code></li>
-		<li><code>sizeof(x) % bits_per_block != 0</code></li>
-	</ul>
-	<p>Hardware and compiler support:</p>
-	<ul>
-		<li><code>(1, sizeof(x)*CHAR_BIT)</code> ARMv7: <code>RBIT</code></li>
-		<li><code>(1, sizeof(x)*CHAR_BIT)</code> EPIPHANY: <code>BITR</code></li>
-		<li><code>(4, sizeof(x)*CHAR_BIT/2)</code> AVR: <code>SWAP</code></li>
-		<li><code>(8, sizeof(x))</code> i386: <code>bswap</code></li>
-		<li><code>(8, sizeof(x))</code> ARMv5: <code>REV</code></li>
-		<li><code>(8, sizeof(x))</code> PDP11: <code>SWAB</code></li>
-		<li><code>(8, sizeof(x))</code> gcc: <code>__builtin_bswap[16|32|64]()</code></li>
-		<li><code>(8, sizeof(x))</code> ARMv6: <code>REV16</code></li>
-		<li><code>(8, sizeof(x))</code> ARMv8: <code>REV32</code></li>
-		<li><code>(16, sizeof(x)/2)</code> MC68020: <code>SWAP</code></li>
-	</ul>
-	<br/></li>
-	<li><code>//REVerse BYTES</code></li>
-	<code>template &lt;class integral&gt; constexpr integral revbytes(integral x, int bytes_per_block=1, int blocks_per_group=sizeof(integral)) noexcept;</code><br/>
-	Returns <code>revbits(x, bytes_per_block * CHAR_BIT, blocks_per_group)</code>.
-	<ul>
-	</ul>
-	<br/></li>
-</ul>
-
 <h3>Single Bit Manipulation</h3>
 These functions are provided only for usability. They are all trivial to implement.
 
@@ -704,12 +660,15 @@ These functions are provided only for usability. They are all trivial to impleme
 </ul>
 
 <h3>Range of Bits Manipulation</h3>
+The following are for changing a range of bits above or below a given position index.
+One of them is implemented in hardware, the rest are provided for symmetry and usability.
 
 <ul>
 	<li><code>//ReSeT BITS Greater than or Equal</code></li>
 	<code>template &lt;class integral&gt; constexpr integral rstbitsge(integral x, int b) noexcept;</code><br/>
 	Sets all bits in positions &ge; <code>b</code> in <code>x<code> to 0. The result is undefined if <code>(b &lt; 0 || b &gt; sizeof(x) * CHAR_BIT)</code>.
 	<ul>
+		<li>x86_64 w/ BMI2: <code>BZHI</code></li>
 		<li>C/C++: <code>x & ((integral(1) &lt;&lt; b)-1)</code>
 	</ul>
 	<br/></li>
@@ -756,6 +715,17 @@ These functions are provided only for usability. They are all trivial to impleme
 </ul>
 
 <h3>Power of 2 manipulation</h3>
+Detecting and computing powers of 2 has uses in a variety of applications. Some examples are:
+<ul>
+	<li>A circular queue, where the size is always a power of 2. Restricting the 
+	size to a power of 2 allows optimizing the index computation to use logical and instead of modulus.</li>
+	<li>In 3d graphics applications, 2 dimensional textures are often required
+	have dimensions which are a power of 2. The function <code>ceilp2()</code> can be used to scale
+	a non power of 2 image dimensions up to the next power of 2.</li>
+</ul>
+
+Detecting whether a number is a power of 2 is an interesting example of a computation whose most efficient
+implementation is platform depedent. 
 
 <ul>
 	<li><code>//IS POWer of 2</code></li>
@@ -782,7 +752,195 @@ These functions are provided only for usability. They are all trivial to impleme
 	<br/></li>
 </ul>
 
+<h3>General permutations of bits and bytes</h3>
+<p>These functions provide a generic interface for permuting the bits and bytes in a word.
+All of these functions take at least 3 arguments, the integral value to permute, the
+subword size (default=1), and the number of words to permute in parallel (default=1).
+</p>
+<p>
+A subword is defined as a collection of bits. As an example, a byte is a subword of size CHAR_BITS (usually 8),
+a nibble is a subword of size 4. A word might be defined as a subword of size 16, 32, or 64, depending on your
+platform. Each function operates on the subwords of the given value.
+</p>
+<p>
+For example, <code>reverse_bits(x, 2)</code>, will reverse each pair of bits in <code>x</code>.
+<code>reverse_bits(x, 1)</code> or equivalently <code>reverse_bits(x)</code>, will reverse
+all of the bits of <code>x</code>. <code>outer_perfect_shuffle_bytes(x)</code> will outer perfect shuffle
+all of the bytes of <code>x</code>.
+</p>
+<p>
+The <code>num_words</code> parameter allows operating on multiple words packed into a larger value. This
+is the well known SWAR (SIMD within a register) idiom.
+For example,
+assuming <code>x</code> is a 32 bit integral type, <code>reverse_bytes(x, 1, 2)</code> will
+separately reverse the 2 high order bytes of <code>x</code> and the 2 low order bytes of <code>x</code>.
+Some machines provide native instructions to permute multiple words at once and thus these operations
+can be optimized into a single instruction.
+</p>
+
+<p>
+For each function there is a variant which operates on subwords whose size is counted in bits
+and subwords whose size is counted in bytes.
+The byte variants are provided for usability and expressiveness. The bytewise variants are trivially
+implementable in terms of their bitwise versions.
+<p>Applications</p>
+<ul>
+	<li>Endian conversion for networking and binary protocols [<a href="N3646">N3646</a>]</li>
+	<li>Multimedia</li>
+	<li>Cryptography</li>
+</ul>
+
+<p>The result of all of the following functions is undefined if</p>
+<ul>
+	<li><code>subword_bits &le; 0</code></li>
+	<li><code>num_words &le; 0</code></li>
+	<li><code>num_words * subword_bits &gt; sizeof(x) * CHAR_BIT</code></li>
+	<li><code>(sizeof(x) * CHAR_BIT) % (num_words * subword_bits) != 0</code></li>
+</ul>
+
+<p>The list of proposed permutation functions is described here:</p>
+<ul>
+	<li>
+	<p><code>template &lt;class integral&gt; constexpr integral reverse_bits(integral x, int subword_bits=1, int num_words=1) noexcept;</code></p>
+	<p><code>template &lt;class integral&gt; constexpr integral reverse_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;</code></p>
+	<p>Independently reverses the subwords of each word in <code>x</code></p>
+	</li>
+	<li>
+	<p><code>template &lt;class integral&gt; constexpr integral outer_perfect_shuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;</code></p>
+	<p><code>template &lt;class integral&gt; constexpr integral outer_perfect_shuffle_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;</code></p>
+	<p>Independently outer perfect shuffles the subwords of each word in <code>x</code></p>
+	</li>
+	<li>
+	<p><code>template &lt;class integral&gt; constexpr integral outer_perfect_unshuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;</code></p>
+	<p><code>template &lt;class integral&gt; constexpr integral outer_perfect_unshuffle_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;</code></p>
+	<p>Independently outer perfect unshuffles the subwords of each word in <code>x</code></p>
+	</li>
+	<li>
+	<p><code>template &lt;class integral&gt; constexpr integral inner_perfect_shuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;</code></p>
+	<p><code>template &lt;class integral&gt; constexpr integral inner_perfect_shuffle_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;</code></p>
+	<p>Independently inner perfect shuffles the subwords of each word in <code>x</code></p>
+	</li>
+	<li>
+	<p><code>template &lt;class integral&gt; constexpr integral inner_perfect_unshuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;</code></p>
+	<p><code>template &lt;class integral&gt; constexpr integral inner_perfect_unshuffle_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;</code></p>
+	<p>Independently inner perfect unshuffles the subwords of each word in <code>x</code></p>
+	</li>
+
+	<li>
+	<p><code>template &lt;class integral&gt; constexpr integral deposit_bits_right(integral x, integral m, int subword_bits=1, int num_words=1) noexcept;</code></p>
+	<p><code>template &lt;class integral&gt; constexpr integral deposit_bytes_right(integral x, integral m, int subword_bytes=1, int num_words=1) noexcept;</code></p>
+	<p>For each word in <code>x</code>, the low order subwords are replaced with the subwords selected by the bits of mask <code>m</code>.</p>
+	</li>
+	<li>
+	<p><code>template &lt;class integral&gt; constexpr integral deposit_bits_left(integral x, integral m, int subword_bits=1, int num_words=1) noexcept;</code></p>
+	<p><code>template &lt;class integral&gt; constexpr integral deposit_bytes_left(integral x, integral m, int subword_bytes=1, int num_words=1) noexcept;</code></p>
+	<p>For each word in <code>x</code>, the high order subwords are replaced with the subwords selected by the bits of mask <code>m</code>.</p>
+	</li>
+	<li>
+	<p><code>template &lt;class integral&gt; constexpr integral extract_bits_right(integral x, integral m, int subword_bits=1, int num_words=1) noexcept;</code></p>
+	<p><code>template &lt;class integral&gt; constexpr integral extract_bytes_right(integral x, integral m, int subword_bytes=1, int num_words=1) noexcept;</code></p>
+	<p>For each word in <code>x</code>, the subwords selected by the bits of mask <code>m</code> are replaced by the low order subwords.</p>
+	</li>
+	<li>
+	<p><code>template &lt;class integral&gt; constexpr integral extract_bits_left(integral x, integral m, int subword_bits=1, int num_words=1) noexcept;</code></p>
+	<p><code>template &lt;class integral&gt; constexpr integral extract_bytes_left(integral x, integral m, int subword_bytes=1, int num_words=1) noexcept;</code></p>
+	<p>For each word in <code>x</code>, the subwords selected by the bits of mask <code>m</code> are replaced by the high order subwords.</p>
+	</li>
+</ul>
+
+<p>The following table shows how an example 64bit quantity would be permuted by each byte permuting function. The bitwise permuting variants are similar.</p>
+<table border="1">
+	<tr>
+		<th><code>x</code></th>
+		<td>0x8877665544332211</td>
+	</tr><tr>
+		<th><code>reverse_bytes(x)</code></th>
+		<td>0x1122334455667788</td>
+	</tr><tr>
+		<th><code>reverse_bytes(x, 1, 2)</code></th> 
+		<td>0x5566778811223344</td>
+	</tr><tr>
+		<th><code>reverse_bytes(x, 1, 4)</code></th>
+		<td>0x7788556633441122</td>
+	</tr><tr>
+		<th><code>reverse_bytes(x, 2)</code></th>
+		<td>0x6655887722114433</td>
+	</tr><tr>
+		<th><code>reverse_bytes(x, 2, 2)</code></th>
+		<td>0x6655887722114433</td>
+	</tr><tr>
+		<th><code>reverse_bytes(x, 4)</code></th>
+		<td>0x4433221188776655</td>
+	</tr><tr>
+		<th><code>outer_perfect_shuffle_bytes(x)</code></th>
+		<td>0x8844773366225511</td>
+	</tr><tr>
+		<th><code>outer_perfect_shuffle_bytes(x, 1, 2)</code></th>
+		<td>0x8866775544223311</td>
+	</tr><tr>
+		<th><code>outer_perfect_shuffle_bytes(x, 1, 4)</code></th>
+		<td align="center"><code>x</code></td>
+	</tr><tr>
+		<th><code>outer_perfect_shuffle_bytes(x, 2)</code></th>
+		<td>0x8877443366552211</td>
+	</tr><tr>
+		<th><code>outer_perfect_shuffle_bytes(x, 2, 2)</code></th>
+		<td align="center"><code>x</code></td>
+	</tr><tr>
+		<th><code>outer_perfect_shuffle_bytes(x, 4)</code></th>
+		<td align="center"><code>x</code></td>
+	</tr><tr>
+		<th><code>inner_perfect_shuffle_bytes(x)</code></th>
+		<td>0x4488337722661155</td>
+	</tr><tr>
+		<th><code>inner_perfect_shuffle_bytes(x, 1, 2)</code></th>
+		<td>0x6688557722441133</td>
+	</tr><tr>
+		<th><code>inner_perfect_shuffle_bytes(x, 1, 4)</code></th>
+		<td align="center"><code>reverse_bytes(x, 1, 4)</code></td>
+	</tr><tr>
+		<th><code>inner_perfect_shuffle_bytes(x, 2)</code></th>
+		<td>0x4433887722116655</td>
+	</tr><tr>
+		<th><code>inner_perfect_shuffle_bytes(x, 2, 2)</code></th>
+		<td align="center"><code>reverse_bytes(x, 2, 2)</code></td>
+	</tr><tr>
+		<th><code>inner_perfect_shuffle_bytes(x, 4)</code></th>
+		<td align="center"><code>reverse_bytes(x, 4)</code></td>
+	</tr>
+</table>
+
+
+<p>Hardware and compiler support:</p>
+<ul>
+	<li><code>reverse_bits&lt;uin32_t&gt;(x)</code> ARMv7: <code>RBIT</code></li>
+	<li><code>reverse_bits&lt;uin64_t&gt;(x)</code> ARMv8: <code>RBIT</code></li>
+	<li><code>reverse_bits&lt;uint32_t&gt;(x)</code> EPIPHANY: <code>BITR</code></li>
+	<li><code>reverse_bits&lt;uint8_t&gt;(x, 4)</code> AVR: <code>SWAP</code></li>
+	<li><code>reverse_bytes&lt;uint32_t&gt;(x)</code> i486: <code>bswap</code></li>
+	<li><code>reverse_bytes&lt;uint64_t&gt;(x)</code> x86_64: <code>bswap</code></li>
+	<li><code>reverse_bytes&lt;uint16_t&gt;(x)</code> PDP11: <code>SWAB</code></li>
+	<li><code>reverse_bytes&lt;uint16_t&gt;(x)</code> gcc: <code>__builtin_bswap16()</code></li>
+	<li><code>reverse_bytes&lt;uint32_t&gt;(x)</code> gcc: <code>__builtin_bswap32()</code></li>
+	<li><code>reverse_bytes&lt;uint64_t&gt;(x)</code> gcc: <code>__builtin_bswap64()</code></li>
+	<li><code>reverse_bytes&lt;uint32_t&gt;(x)</code> ARMv5: <code>REV</code></li>
+	<li><code>reverse_bytes&lt;uint64_t&gt;(x)</code> ARMv8: <code>REV</code></li>
+	<li><code>reverse_bytes&lt;uint32_t&gt;(x, 1, 2)</code> ARMv6: <code>REV16</code></li>
+	<li><code>reverse_bytes&lt;uint64_t&gt;(x, 1, 4)</code> ARMv8: <code>REV16</code></li>
+	<li><code>reverse_bytes&lt;uint64_t&gt;(x, 1, 2)</code> ARMv8: <code>REV32</code></li>
+	<li><code>reverse_bytes&lt;uint32_t&gt;(x, 2)</code> MC68020: <code>SWAP</code></li>
+	<li><code>(int32_t)reverse_bytes&lt;int16_t&gt;(x)</code> ARMv5: <code>REVSH</code></li>
+	<li><code>(int32_t)reverse_bytes&lt;unt16_t&gt;(x)</code> ARMv5: <code>REVSH</code></li>
+	<li><code>deposit_bits_right&lt;uint32_t&gt;(x)</code> x86_64 w/ BMI2: <code>PDEP</code></li>
+	<li><code>deposit_bits_right&lt;uint64_t&gt;(x)</code> x86_64 w/ BMI2: <code>PDEP</code></li>
+	<li><code>extract_bits_right&lt;uint32_t&gt;(x)</code> x86_64 w/ BMI2: <code>PDEP</code></li>
+	<li><code>extract_bits_right&lt;uint64_t&gt;(x)</code> x86_64 w/ BMI2: <code>PDEP</code></li>
+</ul>
+
 <h3>Saturated Arithmetic</h3>
+Saturated arithmetic is useful in digital signal processing applications. It is also provided as a hardware instruction
+on some machines. In our efforts to better expose hardware features, we have included saturated addition and subtraction functions in this proposal.
+These functions are proposed for the &lt;cmath&gt; header.
 <ul>
 	<li><code>//SATurated ADD</code></li>
 	<code>template &lt;class integralL, class integralR&gt; constexpr auto satadd(integralL l, integralR r) noexcept -&gt; decltype(l + r);</code><br/>
@@ -800,6 +958,7 @@ These functions are provided only for usability. They are all trivial to impleme
 </ul>
 
 <h3>Pointer and Size Alignment Helpers</h3>
+<p>These are primitives used for aligning objects in memory. They are proposed for the &lt;memory&gt; header.</p>
 
 <ul>
 	<li><code>//IS ALIGNED</code></li>
@@ -827,58 +986,33 @@ These functions are provided only for usability. They are all trivial to impleme
 	<br/></li>
 </ul>
 
-<h3>Bitwise Perfect Shuffle</h3>
+<p>
+We currently have <code>std::align</code> in the standard for this purpose. While <code>std::align</code> can
+be useful in many cases, the interface was designed for only one very specific use case.
+Consider the following example of using aligned SIMD registers to process a memory buffer.
+This idiom cannot be expressed using <code>std::align</code>.
+</p>
+<pre><blockquote>
+void process(char* b, char* e) {
+  char* pb = std::min((char*)std::align_up(b, sizeof(simd16)), e);
+  char* pe = (char*)std::align_down(e, sizeof(simd16));
 
-<ul>
-	<li><code>//OUTER Perfect SHUFFLE</code></li>
-	<code>template &lt;class integral&gt; constexpr integral outer_pshuffle(integral x) noexcept;</code><br/>
-	Returns the bitwise outer perfect shuffle of <code>x</code>.
-	<ul>
-	</ul>
-	<br/></li>
+  for(char* p = b; p &lt; pb; ++p) {
+    process1(p);
+  }
+  for(char* p = pb; p &lt; pe; p += sizeof(simd16)) {
+    simd16 x = simd16_aligned_load(p);
+    process16(x);
+    simd16_aligned_store(x, p);
+  }
+  for(char* p = pe; p &lt; e; ++p) {
+    process1(p);
+  }
+}
+</blockquote></pre>
 
-	<li><code>//OUTER Perfect UNSHUFFLE</code></li>
-	<code>template &lt;class integral&gt; constexpr integral outer_punshuffle(integral x) noexcept;</code><br/>
-	Returns the bitwise outer perfect unshuffle of <code>x</code>.
-	<ul>
-	</ul>
-	<br/></li>
 
-	<li><code>//INNER Perfect SHUFFLE</code></li>
-	<code>template &lt;class integral&gt; constexpr integral outer_pshuffle(integral x) noexcept;</code><br/>
-	Returns the bitwise inner perfect shuffle of <code>x</code>.
-	<ul>
-	</ul>
-	<br/></li>
 
-	<li><code>//INNER Perfect UNSHUFFLE</code></li>
-	<code>template &lt;class integral&gt; constexpr integral outer_punshuffle(integral x) noexcept;</code><br/>
-	Returns the bitwise inner perfect unshuffle of <code>x</code>.
-	<ul>
-	</ul>
-	<br/></li>
-</ul>
-
-<h3>Bitwise Deposit and Extract</h3>
-
-<ul>
-	<li><code>//DEPOSIT BITS</code></li>
-	<code>template &lt;class integral&gt; constexpr integral deposit_bits(integral x, integral m) noexcept;</code><br/>
-	Returns the bitwise deposit of <code>x</code> with the given bitmask <code>m</code>.
-	<ul>
-		<li>x86_64 w/ BMI2: PDEP</li>
-	</ul>
-	<br/></li>
-
-	<li><code>//EXTRACT BITS</code></li>
-	<code>template &lt;class integral&gt; constexpr integral extract_bits(integral x, integral m) noexcept;</code><br/>
-	Returns the bitwise extraction of <code>x</code> with the given bitmask <code>m</code>.
-	<ul>
-		<li>x86_64 w/ BMI2: PEXT</li>
-	</ul>
-	<br/></li>
-
-</ul>
 
 <h2>
 	<a name="Acknowledgements">Acknowledgements</a></h2>
