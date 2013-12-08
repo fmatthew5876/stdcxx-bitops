@@ -113,7 +113,7 @@ template <typename Integral>
 
 //Returns the number of leading zeroes in x, or sizeof(x) * CHAR_BIT if x is 0
 //i386 bsr, cmov
-//x86_64 w/ SSE4: lzcnt 
+//x86_64 w/ SSE4: lzcnt
 //ARMv5: CLZ
 //IA64: clz
 //Alpha: CTLZ
@@ -281,7 +281,7 @@ template <typename Integral>
 
 //Reverse each group of blocks of bits in x.
 //
-//bits_per_block == 1: reverses the bits of x 
+//bits_per_block == 1: reverses the bits of x
 //ARMv7: RBIT
 //EPIPHANY: BITR
 //bits_per_block == 2: reverses each pair of bits in x
@@ -297,12 +297,12 @@ template <typename Integral>
 //bits_per_block == 16,32,etc.. reverses the words in x.
 //(bits_per_block == 16) MC68020: SWAP
 template <typename Integral>
-  constexpr14 auto revbits(Integral x,
-      int bits_per_block = 1,
-      int blocks_per_group = sizeof(Integral) * CHAR_BIT)
+  constexpr14 auto reverse_bits(Integral x,
+      int subword_bits = 1,
+      int group_subwords = 1)
   noexcept -> typename std::enable_if<std::is_unsigned<Integral>::value, Integral>::type {
-    int group_sz = std::min(bits_per_block * blocks_per_group, int(sizeof(Integral) * CHAR_BIT));
-    int k = group_sz - bits_per_block;
+    int group_sz = int(sizeof(Integral) * CHAR_BIT) / group_subwords;
+    int k = group_sz - subword_bits;
     cout << "K IS " << k << std::endl;
     if(k & 1) x = shll(x & Integral(0x5555555555555555UL), 1) | shlr(x & Integral(0xAAAAAAAAAAAAAAAAUL), 1);
     if(k & 2) x = shll(x & Integral(0x3333333333333333UL), 2) | shlr(x & Integral(0xCCCCCCCCCCCCCCCCUL), 2);
@@ -316,11 +316,11 @@ template <typename Integral>
 
 //Signed version calls unsigned to avoid sign extension issues
 template <typename Integral>
-  constexpr14 auto revbits(Integral x,
-      int bits_per_block = 1,
-      int blocks_per_group = sizeof(Integral) * CHAR_BIT)
+  constexpr14 auto reverse_bits(Integral x,
+      int subword_bits = 1,
+      int group_subwords = 1)
   noexcept -> typename std::enable_if<std::is_signed<Integral>::value, Integral>::type {
-    return Integral(revbits(typename std::make_unsigned<Integral>::type(x), bits_per_block, blocks_per_group));
+    return Integral(reverse_bits(typename std::make_unsigned<Integral>::type(x), bits_per_block, blocks_per_group));
   }
 
 

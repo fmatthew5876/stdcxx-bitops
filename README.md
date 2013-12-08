@@ -1,34 +1,1128 @@
 A constexpr bitwise operations library for C++
-======
+==========================================
 
-For the current draft go here:
-* https://rawgithub.com/fmatthew5876/stdcxx-bitops/master/proposal/draft.html
+* Document Number: NXXX=YY-ZZZZ
+* Date: 2013-12-07
+* Programming Language C++, Numerics Working Group
+* Reply-to: Matthew Fioravante <fmatthew5876@gmail.com>
 
-Reference header:
-* https://github.com/fmatthew5876/stdcxx-bitops/blob/master/include/bitops.hh
+Introduction
+=============================
 
-Std-Proposals discussion:
-* Current: https://groups.google.com/a/isocpp.org/forum/#!topic/std-proposals/lE5-kecjJTc
-* Old: https://groups.google.com/a/isocpp.org/forum/#!topic/std-proposals/8WB2Z9d7A0w
+This proposal adds support for low level bitwise and logical operations to C++.
 
-Often we need to do bitwise manipulations such as finding the next power of 2, counting trailing zeros, and so on.
+Impact on the standard
+=============================
 
-I'd like to propose a new &lt;bitops&gt; header which will contain a set of constexpr bit manipulation functions.
+This proposal is a pure library extension. 
+It does not require any changes in the core language, and does not depend on any other library extensions.
+The proposal is composed entirely of free functions. The proposed functions are added to the `<cmath>` and `<memory>`
+headers. No new headers are introduced.
 
-Why standardize this?
+While this proposal can be implemented entirely in standard C++14,
+optimal implementations will require additional support from the compiler to detect and
+replace function calls with native instructions when available.
+See \[[BitopsRef](#BitopsRef)\] for a reference implementation written in C++14.
 
-1. These are low level basic primitives that can be used in a wide variety of applications and domains.
-1. Many cpus provide special instructions for these operations which are not available to the programmer without implementation specific support.
-1. The most efficient implementation varies greatly between platforms (built in instructions? loops? arithmetic? table lookup?), thus it belongs in the standard so that library implementers can sort out the differences on each platform
-1. Many compilers already provide intrinsics for a lot of these operations, so a lot of the work is already done. We just need a standard wrapper.
-1. operator>> for signed integral types behavior is implementation defined. There are no standard primitives to explicitly state logical shift and arithmetic shift. Also there is no circular shift or rotate.
-1. This is a very simple library addition that has no dependencies.
+Motivation
+================
 
-TODO:
+The C and C++ languages provide an abstraction over the machine.
+The machine provides the common arithmetic and logical operations, which are
+accessed using the builtin operators inherited from C. These operations are the primtives
+which are used to implement higher level abstractions.
 
-* Come up with at least one application for each proposed function.
-* Double check the reference implementation for bugs.
-* Write unit tests for the reference implementation using google test framework.
-* Propose more bitwise functions / remove or clarify existing.
-* Debate or propose new names for any of the functions.
-* (Low Priority) list native instructions for more machine types.
+While arithmetic and logical operations are often the most commonly used
+features when designing an algorithm, sometimes significant performance
+benefits can be gained by directly manipulating the binary quantities contained
+within the registers which make up this numerical abstraction.
+Hardware vendors have understood this need, and many of them have provided
+additional hardware which can perform these bitwise operations directly with
+a single instruction. These instructions are often much more efficient than
+computing the algorithm manually in C or assembly.
+
+Other bitwise manipulation algorithms can be implemented using
+clever but non-intuitive combinations of arithmetic and logical operations.
+Most importantly, for some bitwise algorithms, the most
+efficent implementation varies between hardware platforms.
+These differences create an unreasonably large maintenance burden on the programmer.
+
+Many online and print references including \[[Anderson01](#Anderson01)\]
+\[[Dietz01](#Dietz01)\], \[[Neumann01](#Neumann01)\], \[[Warren01](#Warren01)\]
+are devoted to discussing the implementations of these algorithms.
+Consider the implementation of a count trailing zeroes algorithm
+used in \[[Kostjuchenko01](#Kostjuchenko01)\]. There are several different implementations
+presented here, all of which must be profiled and tested on each platform. 
+None of them take advantage of native instructions.
+One who wishes to exploit 
+the `bsf` or `tzcnt` intructions on Intel must rely on non-standard
+compiler instrinsics or inline assembly. One must also provide 
+backup implementations for other platforms which do not have such instructions.
+
+Bitwise algorithms are general purpose tools which can be used in a wide
+variety of domains and are the key to unlocking high performance in many
+important algorithms. A bitwise operations library has been badly needed in 
+the C and C++ standard libraries for many years.
+
+Design Goals and Scope
+========================
+
+There are seemingly endless ways one can manipulate binary quantities. How does one go
+about choosing which ones to include in a library and which ones to exclude? 
+How does one choose proper names for each function? Which algorithms can
+be trivially converted into single instructions by the optimizer and which
+actually require the programmer to declare their use through a function call?
+We will address these questions with the following design goals.
+
+Design Goal 1: Provide the programmer with better access to the machine
+----------------------------
+
+In 1970, the Digital Equipment Corporation announced the PDP11. 
+This 16 bit machine has 3 instructions of interest, `ROR` (rotate right), 
+`ROL` (rotate left), and `SWAB` (swap bytes).
+These operations along with their later 32 and 64 bit variants are provided 
+by many more modern machines as will be shown. As of 2013,
+the programmer still does not have direct access to these instructions in modern C and C++.
+
+Therefore, the first and most important goal of this proposal is to provide the programmer with better
+access to the machine via a new set of primitives which go beyond simple arithmetic
+and logical operations. We will present new functions for the standard library which can be implemented
+using only few instructions if supported by the machine, using backup implementations
+if no such support is provided by the hardware.
+
+Design Goal 2: Provide a set of commonly used bitwise manipulation routines
+--------------------------
+
+In designing this proposal, we wish not just to limit ourselves to operations which may have
+native machine instruction implementations on at least one platform. We would like to provide
+a standard library of primitives which are commonly found to be reimplemented time and time again in different code bases.
+The standard library already provides a rich set of containers and algorithms. What is missing is a 
+set of bitwise manipulation primitives.
+
+Of particular emphasis are algorithms whose most efficient implementations depend on the implementations of
+other bitwise operations. A motivating example is checking whether a number is a power of 2. 
+
+Consider the following implementations:
+
+    bool ispow2(unsigned x) { return popcount(x) == 1; }
+    bool ispow2(unsigned x) { return x != 0 && (x & (x -1)) == 0; }
+
+In the above example, `popcount()` is the population count or number of 1 bits in `x`. 
+On a machine with a popcount instruction, the first implementation uses less instructions
+and no branches. Without a popcount instruction, the second version is the better choice
+as computing popcount requires much more than a few logical operations and comparisons 
+\[[Dietz01](#Dietz)\].  The above can be verified using Clang 3.3 \[[Clang](#Clang)\]
+with the `__builtin_popcount()` compiler instrinsic on an Intel machine with the `popcntl` instruction available.
+
+Glossary of Terms
+=====================
+
+The following terminology is used in the remainder of this document to describe the technical aspects of this proposal.
+
+* *set*: If we say that a bit has been "set", we mean that we will change it's value to 1. We can also say "set the bit to x", which has the obvious meaning of changing the value to 0 or 1, depending on the value of x.
+* *reset*: To reset a bit is to change it's value to 0.
+* *flip*: To flip a bit is to invert it's value. That is set the bit if it is currently 0 and likewise reset if it is currently 1.
+* *test*: To test a bit is to return it's value.
+* *subword*: A collection of contiguous bits of a given size (usually > 1). Some commonly found examples:
+ * *nibble*: a subword of size 4
+ * *byte*: a subword of size `CHAR_BIT`, usually 8
+ * *word*: Depending on the platform terminology, often a subword of size 16, 32 or 64. 
+* *most significant bit (msb)*: The high order bit in a binary quantity.
+* *most significant X bit (msXb)*: The highest order bit in a binary quantity with a value of X.
+* *least significant bit (lsb)*: The low order bit in a binary quantity.
+* *least significant X bit (lsXb)*: The lowest order bit in a binary quantity with a value of X.
+* *~T(0)*: This statement represents a quantity of type `T` where all of the bits are 1. We avoid the commonly used `T(-1)` as this assumes 2's compliment signed integers.
+
+Technical Specification
+====================
+
+We will now describe the additions to `<cmath>` and `<memory>`. This is a procedural library implemented
+entirely using `constexpr` free functions and templates. 
+The functions are classified into different groups to aid analysis and discussion
+and each group will be presented one at a time. 
+Citations for each instruction reference have been omitted in order to reduce clutter.
+
+We have chosen to support all signed and unsigned integral types in this proposal. It
+is often suggested that signed integers represent "numbers" and unsigned integers
+represent "bit fields" and the author generally agrees with this. However, in reality
+even signed integers are represented in binary and some operations such as counting the
+leading sign bits a naturally designed for signed quantities. The danger of using both
+signed and unsigned integers comes from comparing them. None of the functions in this
+proposal require or encourage comparing signed and unsigned types.
+Template arguments for each proposed function are named `integral` to indicate generic support
+for all builtin integral types. The includes signed and unsigned integers.
+
+At a minimum, support must be provided for 1, 2, 4, and 8 byte integral types. Implementors are 
+encouraged to add support for wider types if they are available.
+
+cmath Header Additions
+-------------------------
+
+The following sections describe the additions to the `<cmath>` header.
+
+### Explicit shifts
+
+Bit shifting is provided in C++ with `operator<<` and `operator>>` for integral types.
+While this abstraction is generally useful for the majority of cases there are some deficiencies. 
+
+First as noted earlier, there is no primitive for rotational shifts even though these shifts can be found in the instruction 
+set of almost every machine. Second, 
+`operator>>` for signed types has implementation defined behavior with regards to filling in the high order bits, making
+it useless for portable code that requires specific behavior on the high order bits.
+Writing a portable arithmetic right shift cumbersome at best and inefficient at worst. Finally, performing a logical right shift on a signed
+quantity is also cumbersome because it requires an ugly cast. For this reason and for symmetry, we have included mnemonics for 
+logical shift.
+
+#### List of Functions
+
+    //SHift Logical Left
+    template <class integral>
+    constexpr integral shll(integral x, int s) noexcept;
+
+* *Returns:* `x << s`
+* *Remarks:* result is undefined if `s << 0 | s >> sizeof(x) * CHAR_BIT`
+
+<!-- -->
+
+    //SHift Logical Right
+    template <class integral>
+    constexpr integral shlr(integral x, int s) noexcept;
+
+* *Returns:* `x` with all of it's bits shifted right by `s` positions. The `s` high order bits of the result are reset.
+* *Remarks:* result is undefined if `s << 0 | s >> sizeof(x) * CHAR_BIT`
+
+<!-- -->
+
+    //SHift Arithmetic Left
+    template <class integral>
+    constexpr integral shal(integral x, int s) noexcept;
+
+* *Returns:* `x << s`
+* *Remarks:* result is undefined if `s << 0 | s >> sizeof(x) * CHAR_BIT`
+
+<!-- -->
+
+    //SHift Arithmetic Right
+    template <class integral>
+    constexpr integral shar(integral x, int s) noexcept;
+    
+* *Returns:* `x` with all of it's bits shifted right by `s` positions. The `s` high order bits of the result are set to the value of most significant bit of `x`.
+* *Remarks:* result is undefined if `s << 0 | s >> sizeof(x) * CHAR_BIT`
+
+<!-- -->
+
+    //ROTate Left
+    template <class integral>
+    constexpr integral rotl(integral x, int s) noexcept;
+
+* *Returns:* `x` with all of it's bits shifted left by `s` positions.
+    The `s` low order bits are set to the `s` high order bits of `x`.
+* *Remarks:* result is undefined if `s << 0 | s >> sizeof(x) * CHAR_BIT`
+
+<!-- -->
+
+    //ROTate Right
+    template <class integral>
+    constexpr integral rotr(integral x, int s) noexcept;
+
+* *Returns:* `x` with all of it's bits shifted right by `s` positions.
+    The `s` high order bits are set to the `s` low order bits of `x`.
+* *Remarks:* result is undefined if `s << 0 | s >> sizeof(x) * CHAR_BIT`
+
+<!-- -->
+    
+    //CouNT Trailing 0's
+    template <class integral>
+    constexpr int cntt0(integral x) noexcept;
+
+* *Returns:* The number of trailing 0 bits in `x`, or `sizeof(x) * CHAR_BIT` if `x == 0`.
+    
+### Bit Counting Algorithms
+
+Bit counting is useful in a variety of contexts. Many of these operations have native instructions available on a wide variety of modern hardware.
+
+#### List of functions
+    
+    //CouNT Leading 0's
+    template <class integral>
+    constexpr int cntl0(integral x) noexcept;
+
+* *Returns:* The number of leading 0 bits in `x`, or `sizeof(x) * CHAR_BIT` if `x == 0`.
+    
+<!-- -->
+    
+    //CouNT Trailing 1's
+    template <class integral>
+    constexpr int cntt1(integral x) noexcept;
+
+* *Returns:* The number of trailing 1 bits in `x`, or `sizeof(x) * CHAR_BIT` if `x == ~integral(0)`.
+    
+<!-- -->
+    
+    //CouNT Leading 1's
+    template <class integral>
+    constexpr int cntl1(integral x) noexcept;
+
+* *Returns:* The number of leading 1 bits in `x`, or `sizeof(x) * CHAR_BIT` if `x == ~integral(0)`.
+    
+<!-- -->
+    
+    //POPulation COUNT
+    template <class integral>
+    constexpr int popcount(integral x) noexcept;
+
+* *Returns:* The number of 1 bits in `x`.
+    
+<!-- -->
+    
+    //PARITY
+    template <class integral>
+    constexpr int parity(integral x) noexcept;
+
+* *Returns:* 1 if the number of 1 bits in `x` is odd, otherwise 0.
+
+#### Applications
+
+One application of `cntt0` is in computing the greatest common divisor of 2 numbers. Credit goes
+to Howard Hinnant for bringing this to our attention.
+
+    template <typename unsigned-integral>
+    T gcd(T x, T y) 
+    { 
+        if (x == 0) 
+            return y; 
+        if (y == 0) 
+            return x; 
+        int cf2 = std::cntt0(x | y); 
+        x >>= std::cntt0(x); 
+        while (true) 
+        { 
+            y >>= std::cntt0(y); 
+            if (x == y) 
+                break; 
+            if (x > y) 
+                std::swap(x, y); 
+            if (x == 1) 
+                break; 
+            y -= x; 
+        } 
+        return x << cf2; 
+    } 
+ 
+
+### Rightmost bit manipulation
+
+The following functions perform simple manipulations on the rightmost bits of the given quantity.
+Some of them are implemented in hardware on Intel and AMD machines. All of these operations
+consist of a few simple arithmetic and logical operations and thus the C++ implementations
+have been included in the descriptions. All of these functions were successfully
+detected and converted into their native BMI and/or TBM instructions by the gcc 4.8 optimizer.
+Therefore we only present these functions as usability wrappers.
+
+#### List of Functions
+    
+    //ReSeT Least Significant 1 Bit
+    template <class integral>
+    constexpr integral rstls1b(integral x) noexcept;
+
+* *Returns:* `x` with it's least significant 1 bit reset, or 0 if `x == 0`.
+    
+<!-- -->
+    
+    //SET Least Significant 0 Bit
+    template <class integral>
+    constexpr integral setls0b(integral x) noexcept;
+
+* *Returns:* `x` with it's least significant 0 bit set, or `x` if `x == ~integral(0)`.
+    
+<!-- -->
+    
+    //ISOlate Least Significant 1 Bit
+    template <class integral>
+    constexpr integral isols1b(integral x) noexcept;
+
+* *Returns:* A quantity where the bit in the position of the least significant 1 bit of `x` is set and all of the other bits reset. Returns 0 if `x == 0`.
+    
+<!-- -->
+    
+    //ISOlate Least Significant 0 Bit
+    template <class integral>
+    constexpr integral isols0b(integral x) noexcept;
+
+* *Returns:* A quantity where the bit in the position of the least significant 0 bit of `x` is set and all of the other bits reset. Returns `x` if `x == ~integral(0)`.
+    
+<!-- -->
+    
+    //ReSeT Trailing 1's
+    template <class integral>
+    constexpr integral rstt1(integral x) noexcept;
+
+* *Returns:* resets all of the trailing 1's in `x`, or 0 if `x == ~integral(0)`.
+    
+<!-- -->
+    
+    //SET Trailing 0's
+    template <class integral>
+    constexpr integral sett0(integral x) noexcept;
+
+* *Returns:* sets all of the trailing 0's in `x`, or `x` if `x == 0`.
+    
+<!-- -->
+    
+    //MaSK Trailing 0's
+    template <class integral>
+    constexpr integral maskt0(integral x) noexcept;
+
+* *Returns:* a quantity where all of the bits corresponding to the trailing 0 bits of `x` are set, the remaining bits reset.
+    
+<!-- -->
+    
+    //MaSK Trailing 1's
+    template <class integral>
+    constexpr integral maskt1(integral x) noexcept;
+
+* *Returns:* a quantity where all of the bits corresponding to the trailing 1 bits of `x` are set, the remaining bits reset.
+    
+<!-- -->
+    
+    //MaSK Trailing 0's and Least Significant 1 Bit
+    template <class integral>
+    constexpr integral maskt0ls1b(integral x) noexcept;
+
+* *Returns:* a quantity where all of the bits corresponding to the trailing 0 bits and the least significant 1 bit of `x` are set, the remaining bits reset.
+    
+<!-- -->
+    
+    //MaSK Trailing 1's and Least Significant 0 Bit
+    template <class integral>
+    constexpr integral maskt1ls0b(integral x) noexcept;
+
+* *Returns:* a quantity where all of the bits corresponding to the trailing 1 bits and the least significant 0 bit of `x` are set, the remaining bits are reset.
+    
+### Single bit manipulation
+
+These functions are provided only for usability. They are all trivial to implement.
+
+#### List of Functions
+    
+    //SET BIT
+    template <class integral>
+    constexpr integral setbit(integral x, int b) noexcept;
+
+* *Returns:* Sets bit at position `b` of `x`.
+* *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
+    
+<!-- -->
+    
+    //ReSeT BIT
+    template <class integral>
+    constexpr integral rstbit(integral x, int b) noexcept;
+
+* *Returns:* Resets bit at position `b` of `x`.
+* *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
+    
+<!-- -->
+    
+    //FLIP BIT
+    template <class integral>
+    constexpr integral flipbit(integral x, int b) noexcept;
+
+* *Returns:* Flips bit at position `b` of `x`.
+* *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
+    
+<!-- -->
+    
+    //TEST BIT
+    template <class integral>
+    constexpr bool testbit(integral x, int b) noexcept;
+
+* *Returns:* Returns true if the bit at position `b` of `x` is set, otherwise 0.
+* *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
+    
+### Range of bits manipulation
+
+The following are for changing a range of bits above or below a given position index.
+One of them is implemented in hardware, the rest are provided for symmetry and usability.
+
+#### List of functions
+    
+    //ReSeT BITS Greater than or Equal to
+    template <class integral>
+    constexpr integral rstbitsge(integral x, int b) noexcept;
+
+* *Returns:* Reset all bits of `x` in positions greater than or equal to `b`.
+* *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
+    
+<!-- -->
+    
+    //ReSeT BITS Less than or Equal to
+    template <class integral>
+    constexpr integral rstbitsle(integral x, int b) noexcept;
+
+* *Returns:* Reset all bits of `x` in positions less than or equal to `b`.
+* *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
+    
+<!-- -->
+    
+    //SET BITS Greater than or Equal to
+    template <class integral>
+    constexpr integral setbitsge(integral x, int b) noexcept;
+
+* *Returns:* Set all bits of `x` in positions greater than or equal to `b`.
+* *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
+    
+<!-- -->
+    
+    //SET BITS Less than or Equal to
+    template <class integral>
+    constexpr integral setbitsle(integral x, int b) noexcept;
+
+* *Returns:* Set all bits of `x` in positions less than or equal to `b`.
+* *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
+    
+<!-- -->
+    
+    //FLIP BITS Greater than or Equal to
+    template <class integral>
+    constexpr integral flipbitsge(integral x, int b) noexcept;
+
+* *Returns:* Flip all bits of `x` in positions greater than or equal to `b`.
+* *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
+    
+<!-- -->
+    
+    //FLIP BITS Less than or Equal to
+    template <class integral>
+    constexpr integral flipbitsle(integral x, int b) noexcept;
+
+* *Returns:* Flip all bits of `x` in positions less than or equal to `b`.
+* *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
+    
+<!-- -->
+
+### Bitwise and Bytewise Permutations
+
+These functions provide a generic interface for permuting the bits and bytes in a word.
+All of these functions take at least 3 arguments, the integral value to permute, the
+subword size (default=1), and the number of words to permute in parallel (default=1).
+
+For example, `reverse_bits(x, 2)`, will reverse each pair of bits in `x`.
+`reverse_bits(x, 1)` or equivalently `reverse_bits(x)`, will reverse
+all of the bits of `x`. `outer_perfect_shuffle_bytes(x)` will outer perfect shuffle
+all of the bytes of `x`.
+
+The `num_words` parameter allows operating on multiple words packed into a larger value. This
+is the well known SWAR (SIMD within a register) idiom.
+For example,
+assuming `x` is a 32 bit integral type, `reverse_bytes(x, 1, 2)` will
+separately reverse the 2 high order bytes of `x` and the 2 low order bytes of `x`.
+Some machines provide native instructions to permute multiple words at once and thus these operations
+can be optimized into a single instruction.
+
+For each function there is a variant which operates on subwords whose size is counted in bits
+and subwords whose size is counted in bytes.
+The byte variants are provided for usability and expressiveness. The bytewise variants are trivially
+implementable in terms of their bitwise versions.
+
+#### List of Functions
+    
+    template <class integral>
+    constexpr integral reverse_bits(integral x, int subword_bits=1, int num_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_words` "words" of equal size and then independently reverse the subwords of size `subword_bits` bits in each word.
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral reverse_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;
+
+* *Returns:* `reverse_bits(x, subword_bytes * CHAR_BIT, num_words);`
+    
+<!-- -->
+    
+    template <class integral>
+    constexpr integral outer_perfect_shuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_words` "words" of equal size and then independently outer perfect shuffle the subwords of size `subword_bits` bits in each word.
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral outer_perfect_shuffle_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;
+
+* *Returns:* `outer_perfect_shuffle_bits(x, subword_bytes * CHAR_BIT, num_words);`
+    
+<!-- -->
+    
+    template <class integral>
+    constexpr integral outer_perfect_unshuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_words` "words" of equal size and then independently outer perfect unshuffle the subwords of size `subword_bits` bits in each word.
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral outer_perfect_unshuffle_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;
+
+* *Returns:* `outer_perfect_unshuffle_bits(x, subword_bytes * CHAR_BIT, num_words);`
+    
+<!-- -->
+    
+    template <class integral>
+    constexpr integral inner_perfect_shuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_words` "words" of equal size and then independently inner perfect shuffle the subwords of size `subword_bits` bits in each word.
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral inner_perfect_shuffle_bytes(integral x, int subword_bits=1, int num_words=1) noexcept;
+
+* *Returns:* `inner_perfect_shuffle_bits(x, subword_bytes * CHAR_BIT, num_words);`
+    
+<!-- -->
+    
+    template <class integral>
+    constexpr integral inner_perfect_unshuffle_bits(integral x, int subword_bits=1, int num_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_words` "words" of equal size and then independently inner perfect unshuffle the subwords of size `subword_bits` bits in each word.
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral inner_perfect_unshuffle_bytes(integral x, int subword_bytes=1, int num_words=1) noexcept;
+
+* *Returns:* `inner_perfect_unshuffle_bits(x, subword_bytes * CHAR_BIT, num_words);`
+    
+<!-- -->
+    
+    template <class integral>
+    constexpr integral deposit_bits_right(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_words` "words" of equal size and then independently deposit the subwords of size `subword_bits` bits in each word identified by the bits of `mask` to the low order subwords of the result. The remaining subwords are set to 0.
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral deposit_bytes_right(integral x, integral mask, int subword_right=1, int num_words=1) noexcept;
+
+* *Returns:* `deposit_bits_right(x, mask, subword_bytes * CHAR_BIT, num_words);`
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral deposit_bits_left(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_words` "words" of equal size and then independently deposit the subwords of size `subword_bits` bits in each word identified by the bits of `mask` to the high order subwords of the result. The remaining subwords are set to 0.
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral deposit_bytes_left(integral x, integral mask, int subword_bytes=1, int num_words=1) noexcept;
+
+* *Returns:* `deposit_bits_left(x, mask, subword_bytes * CHAR_BIT, num_words);`
+    
+<!-- -->
+    
+    template <class integral>
+    constexpr integral extract_bits_right(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_words` "words" of equal size and then independently extract the low order subwords of size `subword_bits` bits in each word to the subwords of the result identified by the bits of `mask`. The remaining subwords are set to 0.
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral extract_bytes_right(integral x, integral mask, int subword_bytes=1, int num_words=1) noexcept;
+
+* *Returns:* `extract_bits_right(x, mask, subword_bytes * CHAR_BIT, num_words);`
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral extract_bits_left(integral x, integral mask, int subword_bits=1, int num_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_words` "words" of equal size and then independently extract the high order subwords of size `subword_bits` bits in each word to the subwords of the result identified by the bits of `mask`. The remaining subwords are set to 0.
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral extract_bytes_left(integral x, integral mask, int subword_bytes=1, int num_words=1) noexcept;
+
+* *Returns:* `extract_bits_left(x, mask, subword_bytes * CHAR_BIT, num_words);`
+
+#### Examples
+
+The following table shows how an example 64bit quantity would be permuted by each byte permuting function. The bitwise permuting variants are similar.
+
+<table border="1">
+	<tr>
+		<th>`x`</th>
+		<td>0x8877665544332211</td>
+	</tr><tr>
+		<th>`reverse_bytes(x)`</th>
+		<td>0x1122334455667788</td>
+	</tr><tr>
+		<th>`reverse_bytes(x, 1, 2)`</th> 
+		<td>0x5566778811223344</td>
+	</tr><tr>
+		<th>`reverse_bytes(x, 1, 4)`</th>
+		<td>0x7788556633441122</td>
+	</tr><tr>
+		<th>`reverse_bytes(x, 2)`</th>
+		<td>0x6655887722114433</td>
+	</tr><tr>
+		<th>`reverse_bytes(x, 2, 2)`</th>
+		<td>0x6655887722114433</td>
+	</tr><tr>
+		<th>`reverse_bytes(x, 4)`</th>
+		<td>0x4433221188776655</td>
+	</tr><tr>
+		<th>`outer_perfect_shuffle_bytes(x)`</th>
+		<td>0x8844773366225511</td>
+	</tr><tr>
+		<th>`outer_perfect_shuffle_bytes(x, 1, 2)`</th>
+		<td>0x8866775544223311</td>
+	</tr><tr>
+		<th>`outer_perfect_shuffle_bytes(x, 1, 4)`</th>
+		<td align="center">`x`</td>
+	</tr><tr>
+		<th>`outer_perfect_shuffle_bytes(x, 2)`</th>
+		<td>0x8877443366552211</td>
+	</tr><tr>
+		<th>`outer_perfect_shuffle_bytes(x, 2, 2)`</th>
+		<td align="center">`x`</td>
+	</tr><tr>
+		<th>`outer_perfect_shuffle_bytes(x, 4)`</th>
+		<td align="center">`x`</td>
+	</tr><tr>
+		<th>`inner_perfect_shuffle_bytes(x)`</th>
+		<td>0x4488337722661155</td>
+	</tr><tr>
+		<th>`inner_perfect_shuffle_bytes(x, 1, 2)`</th>
+		<td>0x6688557722441133</td>
+	</tr><tr>
+		<th>`inner_perfect_shuffle_bytes(x, 1, 4)`</th>
+		<td align="center">`reverse_bytes(x, 1, 4)`</td>
+	</tr><tr>
+		<th>`inner_perfect_shuffle_bytes(x, 2)`</th>
+		<td>0x4433887722116655</td>
+	</tr><tr>
+		<th>`inner_perfect_shuffle_bytes(x, 2, 2)`</th>
+		<td align="center">`reverse_bytes(x, 2, 2)`</td>
+	</tr><tr>
+		<th>`inner_perfect_shuffle_bytes(x, 4)`</th>
+		<td align="center">`reverse_bytes(x, 4)`</td>
+	</tr>
+</table>
+
+### Power of 2 manipulation
+
+The following functions detect and compute powers of 2.
+
+#### List of Functions
+
+    //IS POWer of 2
+    template <class integral>
+    constexpr bool ispow2(integral x) noexcept;
+
+* *Returns:* `true` if `x` is a positive power of 2, other `false`.
+    
+<!-- -->
+    
+    //CEILing Power of 2
+    template <class integral>
+    constexpr integral ceilp2(integral x) noexcept;
+
+* *Returns:* Returns the unique quantity `n` where `ispow2(n) && n >= x`.
+* *Remarks:* Result is undefined if the value of `n` is too large to be represented by type `integral`.
+    
+<!-- -->
+    
+    //FLOOR Power of 2
+    template <class integral>
+    constexpr integral floorp2(integral x) noexcept;
+
+* *Returns:* Returns the unique quantity `n` where `ispow2(n) && N <= x`.
+* *Remarks:* Result is undefined if `x == 0`.
+    
+### Saturated arithmetic
+
+Saturated arithmetic is useful in digital signal processing applications. It is also provided as a hardware instruction
+on some machines. In our efforts to better expose hardware features, we have included saturated addition and subtraction functions in this proposal.
+
+#### List of Functions
+    
+    //SATurated ADDition
+    template <class integral_l, class integral_r>
+    constexpr auto satadd(integral_l l, integral_r r) noexcept -&gt; decltype(l + r);
+
+* *Returns:* `l + r`, or `std::numeric_limits<decltype(l+r)>::max()` if `l + r` would overflow.
+    
+<!-- -->
+    
+    //SATurated SUBtraction
+    template <class integral_l, class integral_r>
+    constexpr auto satsub(integral_l l, integral_r r) noexcept -&gt; decltype(l - r);
+
+* *Returns:* `l - r`, or `std::numeric_limits<decltype(l-r)>::min()` if `l - r` would overflow.
+    
+memory Header Additions
+------------------------
+
+This section describes the additions to the `<memory>` header.
+
+### Alignment helpers
+
+These are primitives used for aligning objects in memory. They suppliment use cases with which `std::align` is
+not designed to handle.
+
+#### List of Functions
+    
+    template <class integral>
+    constexpr bool is_aligned(integral x, size_t align) noexcept;
+
+* *Returns:* `true` if `x` is a multiple of `align`.
+    
+<!-- -->
+
+    bool is_aligned(void* val, size_t align) noexcept;
+
+* *Returns:* `is_aligned(uintptr_t(val), align)`.
+    
+<!-- -->
+
+    template <class integral>
+    constexpr integral align_up(integral x, size_t align) noexcept;
+
+* *Returns:* The unique value `n` such that `is_aligned(n, align) && n >= x`.
+    
+<!-- -->
+
+    void* align_up(void* val, size_t align) noexcept;
+
+* *Returns:* `(void*)align_up(uintptr_t(val), align)`.
+    
+<!-- -->
+    
+    template <class integral>
+    constexpr integral align_down(integral x, size_t align) noexcept;
+
+* *Returns:* The unique value `n` such that `is_aligned(n, align) && n <= x`.
+    
+<!-- -->
+
+    void* align_down(void* val, size_t align) noexcept;
+
+* *Returns:* `(void*)align_down(uintptr_t(val), align)`.
+
+#### Applications and std::align
+
+We currently have `std::align` in the standard for doing alignment calculations.
+The function `std::align`
+has one very specific use case, that is to carve out an aligned buffer of a given size within a larger buffer.
+In order to use `std::align`, the user must a priori know the size of the aligned buffer
+they require. Unfortunately in some use cases, even calculating the size of this buffer
+as an input to `std::align` itself requires doing alignment calculations.
+Consider the following example of using aligned SIMD registers to process a memory buffer.
+This idiom cannot be expressed using `std::align`.
+
+    void process(char* b, char* e) {
+      char* pb = std::min((char*)std::align_up(b, sizeof(simd16)), e);
+      char* pe = (char*)std::align_down(e, sizeof(simd16));
+    
+      for(char* p = b; p < pb; ++p) {
+        process1(p);
+      }
+      for(char* p = pb; p < pe; p += sizeof(simd16)) {
+        simd16 x = simd16_aligned_load(p);
+        process16(x);
+        simd16_aligned_store(x, p);
+      }
+      for(char* p = pe; p < e; ++p) {
+        process1(p);
+      }
+    }
+
+We conclude that `std::align` is much too specific for general alignment calculations. It has a very narrow
+use case and should only be considered as a helper function for when that use case is needed.
+
+    
+Implementation
+===================
+
+## Guidelines for Implementors
+
+Those who wish to implement the functions provided by this proposal must consider the following guidelines:
+
+* *Prefer* compiler intrinsics to inline assembly.
+    The former allows important optimizations while the later does not.
+    As a motivating example, consider the count trailing zeros algorithm.
+    On older intel machines, this is implemented with a `bsf` instruction followed by a `cmov`
+    instruction to handle the case where the input is 0. In many contexts
+    the optimizer is able to prove that the input is never 0 and thus the
+    cmov instruction can be omitted. These optimizations are often impossible with inline assembly.
+
+Survey of hardware support
+-----------------------------
+
+The following is a list of compiler intrinsics and native instructions which can be used to implement
+the proposal on various platforms. 
+Several machine architectures were surveyed for their instruction references.
+The purpose of this section is to demonstrate the current state
+of the art on many different machines. C/C++ code implementations are also provided
+for some functions whose implementation is trivial.
+
+A list of processor manual references can be found in the [References](#references) section.
+
+* `cntt0(x)`
+ * i386: `bsf`, `cmov`
+ * x86\_64 w/ BMI1: `tzcnt`
+ * alpha: `cttz`
+ * gcc: `x == 0 ? sizeof(x) * CHAR_BIT : __builtin_ctz(x)`
+ * bitops: `cntt1(~x)`
+
+* `cntl0(x)`
+ * i386: `bsr`, `cmov`
+ * x86\_64 w AMD SSE4a / Intel BMI1: `lzcnt`
+ * ARMv5: `CLZ`
+ * IA64: `clz`
+ * PowerPC: `cntlzd`
+ * MIPS: `CLZ`
+ * gcc: `(x == 0 ? sizeof(x) * CHAR_BIT : __builtin_clz(x))`
+ * bitops: `cntl1(~x)`
+
+* `cntt1(x)`
+ * bitops: `cntt0(~x)`
+
+* `cntl1(x)`
+ * ARMv8: `CLS`
+ * Blackfin: `SIGNBITS`
+ * C6X: `NORM`
+ * Picochip: `SBC`
+ * MIPS: `CLO`
+ * bitops: `cntl0(~x)`
+
+* `popcount(x)`
+ * x86\_64 SSE4: `popcnt`
+ * IA64: `popcnt`
+ * Alpha: `CTPOP`
+ * PowerPC: `popcntb`
+ * SparcV9: `POPC`
+ * gcc: `__builtin_popcount(x)`
+
+* `parity(x)`
+ * gcc: `__builtin_parity(x)`
+ * bitops: `popcount(x) & 1`
+
+* `rstls1b(x)`
+ * x86\_64 w/ BMI1: `BLSR`
+ * C/C++: `(x & (x - 1))`
+
+* `setls0b(x)`
+ * x86\_64 w/ AMD TBM: `BLCS`
+ * C/C++: `(x | (x + 1))`
+
+* `isols0b(x)`
+ * x86\_64 w/ AMD TBM: `BLCI`, `NOT`
+ * x86\_64 w/ AMD TBM: `BLCIC`
+ * C/C++: `((~x) & (x + 1))`
+
+* `isols1b(x)`
+ * x86\_64 w/ BMI1: `BLSI`
+ * x86\_64 w/ AMD TBM: `BLSIC`, `NOT`
+ * C/C++: `x & (-x)`
+
+* `rstt1(x)`
+ * x86\_64 w/ AMD TBM: `BLCFILL`
+ * C/C++: `x & (x + 1)`
+
+* `sett0(x)`
+ * x86\_64 w/ AMD TBM: `BLSFILL`
+ * C/C++: `x | (x - 1)`
+
+* `maskt0(x)`
+ * x86\_64 w/ AMD TBM: `TZMSK`
+ * C/C++: `(~x) & (x - 1)`
+
+* `maskt1(x)`
+ * x86\_64 w/ AMD TBM: `T1MSKC`, `NOT`
+ * C/C++: `~((~x) | (x + 1))`
+
+* `maskt0ls1b(x)`
+ * x86\_64 w/ BMI1: `BLSMSK`
+ * C/C++: `(x - 1) ^ x`
+
+* `maskt1ls0b(x)`
+ * x86\_64 w/ AMD TBM: `BLCMSK`
+ * C/C++: `(x + 1) ^ x`
+
+* `setbit(x, b)`
+ * C/C++: `x | (integral(1) << b)`
+
+* `rstbit(x, b)`
+ * C/C++: `x & ~(integral(1) << b)`
+
+* `flipbit(x, b)`
+ * C/C++: `x ^ (integral(1) << b)`
+
+* `testbit(x, b)`
+ * C/C++: `x & (integral(1) << b)`
+
+* `rstbitsge(x, b)`
+ * x86\_64 w/ BMI2: `BZHI`
+ * C/C++: `x & ((integral(1) << b) - 1)`
+
+* `rstbitsle(x, b)`
+ * C/C++ `x & ~((integral(1) << (b + 1))) - 1`
+
+* `setbitsge(x, b)`
+ * C/C++: `x | ((integral(1) << b) - 1)`
+
+* `setbitsle(x, b)`
+ * C/C++: `x | ~((integral(1) << (b + 1)) - 1)`
+
+* `flipbitsge(x, b)`
+ * C/C++: `x ^ ((integral(1) << b) - 1)`
+
+* `flipbitsle(x, b)`
+ * C/C++: `X ^ ~((integral(1) << (b + 1)) - 1)`
+
+* `ispow2(x)`
+ * bitops: `x >= 0 && popcount(x) == 0`
+ * C/C++: `x > 0 && (x & (x - 1)) == 0`
+
+* `reverse_bits<uint32_t>(x)`
+ * ARMv7: `RBIT`
+ * EPIPHANY: `BITR`
+* `reverse_bits<uint64_t>(x)`
+ * ARMv8: `RBIT`
+* `reverse_bits<uint8_t>(x, 4)`
+ * AVR: `SWAP`
+* `reverse_bytes<uint16_t>(x)`
+ * PDP11: `SWAB`
+ * gcc: `__builtin_bswap16(x)`
+* `reverse_bytes<uint32_t>(x)`
+ * i486: `bswap`
+ * ARMv5: `REV`
+ * gcc: `__builtin_bswap32(x)`
+* `reverse_bytes<uint64_t>(x)`
+ * x86\_64: `bswap`
+ * ARMv8: `REV`
+ * gcc: `__builtin_bswap64(x)`
+* `reverse_bytes<uint32_t>(x, 1, 2)`
+ * ARMv6: `REV16`
+* `reverse_bytes<uint64_t>(x, 1, 4)`
+ * ARMv8: `REV16`
+* `reverse_bytes<uint64_t>(x, 1, 2)`
+ * ARMv8: `REV32`
+* `reverse_bytes<uint32_t>(x, 2)`
+ * MC68020: `SWAP`
+* `(int32_t)reverse_bytes<int16_t>(x)`
+ * ARMv5: `REVSH`
+* `(int32_t)reverse_bytes<uint16_t>(x)`
+ * ARMv5: `REVSH`
+* `deposit_bits_right(x)`
+ * x86\_64 w/ BMI2: PDEP
+* `extract_bits_right(x)`
+ * x86\_64 w/ BMI2: PEXT
+* `satadd(l, r)`
+ * ARMv7: QADD
+* `satsub(l, r)`
+ * ARMv7: QSUB
+* `is_aligned(x, a)`
+ * C/C++: `(x & (a - 1)) == 0`
+* `align_up(x, a)`
+ * C/C++: `(x + (a - 1)) & -a`
+* `align_down(x, a)`
+ * C/C++: `x & (-a)`
+    
+Open Questions
+=====================
+
+Naming
+----------------
+
+Naming is one of the most difficult problems in software development. 
+One one extreme are extremely terse names such as `std::ctz()` for Count
+Trailing Zeroes. This naming style mimics assemble mnemonics and is also
+an artifact of the old days when programming languages had limits on the
+length of names of identifiers.
+
+These short names do have some merits. They reduce the ammount of typing required by
+the programmer and more importantly can be used within complex expressions.
+The downside is the ambiguity that can come with some short names. Consider
+a hypothetical Count Leading Sign bits function `std::cls()`. This name could
+be interpreted in many other contexts such as CLear Screen.
+
+On the other extreme are verbose names such as `std::mask_least_significant_1_bit_and_trailing_zeroes()`. While these names
+remove all ambiguity they are very cumbersome to type. They also cannot be
+used easily in complex expressions with other operations.
+
+We have opted to make a compromise. The current naming scheme adheres to the
+following rules:
+
+* All functions start with a verb. Each verb must be abbreviated to at a minimum of 3 characters. That is instead of 'ctz', we would say 'cnttz'.
+* Use 0 and 1 for 0 and 1, not O and Z or some other combination. While the z in `cnttz()` is pretty obviously zero, the o in `cntto()` is not so obviously meant to be 1. Therefore we stick to the numbers.
+* Nouns can be abbreviated to one character per word, as long as they are reused consistently. We reuse the following nouns:
+ * t0: trailing 0s
+ * t1: trailing 1s
+ * l0: trailing 0s
+ * l1: trailing 1s
+ * ls1b: least significant 1 bit
+ * ms1b: most significant 0 bit
+ * ls0b: least significant 1 bit
+ * ms0b: most significant 0 bit
+
+As always, the naming question is always up for debate and reconsideration. Some other styles have been suggested on the std-proposals discussion forum.
+
+* `ct0()`
+* `cntt0()`
+* `countt0()`
+* `count_t0()`
+* `count_trailing_0_bits()`
+* `count_trailing<bool>()`
+
+Support for std::bitset
+------------------------
+
+Many people have suggesting adding support for `std::bitset`. While this is certainly a good idea, we believe that is outside of the scope of
+this proposal. Once this proposal is finished and the interface is agreed upon, adding a follow up proposal for `std::bitset` would be easy to do.
+
+Support for C
+-----------------
+
+This library would also be very useful for the C community. Many of these bitwise operations
+are used by embedded developers and they often choose to implement in C.  While C compatibility is a noble goal, we
+do not want to make sacrifices to the C++ interface in the name of C compatibility. Particularly with regards to
+templates, overloading, and `constexpr`.
+This is first and foremost a C++ proposal which takes advantage of modern C++ tools and techniques
+to provide and easy to use and elegant interface.
+
+If the C community shows interest we may consider a C interface that uses the generic macro feature. This
+may allow interoperability, using macros for C and templates for C++. The `constexpr` qualifier
+could be used in the C++ version while `inline` is used in the C version. If the C community shows interest,
+we will consider a joint C proposal and flesh out the technical details of the interface.
+
+Acknowledgements
+====================
+
+References
+==================
+
+* <a name="Anderson01"></a>[Anderson01] Anderson, Sean Eron. *Bit Twiddling Hacks*, Available online at <http://graphics.stanford.edu/~seander/bithacks.html>
+* <a name="Dietz01"></a>[Dietz01] Deitz, Hendry Gordon. *The Aggregate Magic Algorithms*, University of Kentucky. 
+	Available online at <http://aggregate.org/MAGIC/>
+* <a name="Neumann01"></a>[Neumann01] Neumann, Jasper. *Bit permutations*, Available online at
+	<http://programming.sirrida.de/bit_perm.html>
+* <a name="Warren01"></a>[Warren01] Warren, Henry S. Jr. *Hacker's Delight Second Edition*,
+	Addison-Wesley, Oct 2012, ISBN 0-321-84268-5.
+* <a name="pdp11"></a>[pdp11] *pdp11/40 process handbook*, Digital Equipment Corporation, 1972.
+* <a name="Kostjuchenko01"></a>[Kostjuchenko01] Kostjuchenko, Dmitry. *SSE2 optimized strlen*, Available online at
+	<http://www.strchr.com/sse2_optimised_strlen>
+* <a name="Clang"></a>[Clang] *clang: a C language family frontend for LLVM*, Available online at
+	<http://clang.llvm.org/>
+* <a name="BitOpsRef"></a>[BitOpsReference] *GitHub: BitOps Proposal and Reference Implementation*, Available online at
+	<https://github.com/fmatthew5876/stdcxx>
+* <a name="N3646"></a>[N3646] Pratte, Robert. *Network Byte Order Conversion Document Number: N3646*.
+	Available online at <http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3646.pdf>
+

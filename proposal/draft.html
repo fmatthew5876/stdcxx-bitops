@@ -46,16 +46,17 @@
 
 <h2><a name="Impact">Impact on the Standard</a></h2>
 
-<p>This proposal is a pure library extension. In it's current form, it does not modify any exsiting headers.
+<p>This proposal is a pure library extension. 
 It does not require any changes in the core language, and does not depend on any other library extensions.
 While the reference implementation [<a name="#BitOpsReference">BitOpsReference</a>] has been implemented in
-standard C++14, optimal implementations will require additional support from the compiler via compiler intrinsics.
+standard C++14, optimal implementations will require additional support from the compiler to detect and
+replace function calls with native instructions when available.
 </p>
 
 <h2><a name="Motivation">Motivation</a></h2>
 
 <p>The C and C++ languages provide an abstraction over the machine.
-Most platforms provide the common arithmetic and logical operations, which are
+The machine provides the common arithmetic and logical operations, which are
 accessed using the builtin operators inherited from C. These operations are the primtives, the
 low level building blocks which are used to implement higher level abstractions.
 </p>
@@ -65,10 +66,14 @@ features when designing an algorithm, sometimes significant performance
 benefits can be gained by directly manipulating the binary quantities contained
 within the registers which make up this numerical abstraction.
 Hardware vendors have understood this need, and many of them have provided
-additional cpu instructions which allow the programmer to perform these
-bitwise manipulations. Other bitwise manipulation algorithms
-can be implemented using clever but non-intuitive combinations of
-arithmetic and logical operations. Most importantly, for many bitwise algorithms, the most
+additional hardware which can perform these bitwise operations directly with
+a single instruction. These instructions are often much more efficient than
+computing the algorithm manually in C or assembly.
+</p>
+<p>
+Other bitwise manipulation algorithms can be implemented using
+clever but non-intuitive combinations of arithmetic and logical operations [<a name="#BitOpsReference">BitOpsReference</a>].
+Most importantly, for some bitwise algorithms, the most
 efficent implementation varies greatly between hardware platforms.
 These differences create an unreasonably large maintenance burden on the programmer.
 </p>
