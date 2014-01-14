@@ -2,7 +2,7 @@ A constexpr bitwise operations library for C++
 ==========================================
 
 * Document Number: NXXX=YY-ZZZZ
-* Date: 2013-12-07
+* Date: 2014-01-08
 * Programming Language C++, Numerics Working Group
 * Reply-to: Matthew Fioravante <fmatthew5876@gmail.com>
 
