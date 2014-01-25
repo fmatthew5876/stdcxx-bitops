@@ -1,10 +1,10 @@
 <h1>A constexpr bitwise operations library for C++</h1>
 
 <ul>
-<li>Document Number: NXXX=YY-ZZZZ</li>
+<li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#109;&#x61;&#105;&#x6C;&#116;&#x6F;:&#x66;&#109;&#x61;&#116;&#116;&#104;&#x65;&#119;&#x35;&#56;&#x37;&#54;&#64;&#x67;&#x6D;&#x61;i&#108;&#46;&#x63;&#x6F;&#109;">&#x66;&#109;&#x61;&#116;&#116;&#104;&#x65;&#119;&#x35;&#56;&#x37;&#54;&#64;&#x67;&#x6D;&#x61;i&#108;&#46;&#x63;&#x6F;&#109;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#109;&#97;&#x69;l&#x74;o:&#102;&#x6D;&#97;&#x74;&#x74;&#x68;&#101;&#x77;&#x35;&#x38;&#55;&#x36;&#64;&#x67;&#109;&#97;&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#109;">&#102;&#x6D;&#97;&#x74;&#x74;&#x68;&#101;&#x77;&#x35;&#x38;&#55;&#x36;&#64;&#x67;&#109;&#97;&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#109;</a></li>
 </ul>
 
 <h1>Introduction</h1>
@@ -132,9 +132,9 @@ section.</p>
 <p>The following terminology is used in the remainder of this document to describe the technical aspects of this proposal.</p>
 
 <ul>
-<li><em>set</em>: If we say that a bit has been "set", we mean that we will change it's value to 1. We can also say "set the bit to x", which has the obvious meaning of changing the value to 0 or 1, depending on the value of x.</li>
-<li><em>reset</em>: To reset a bit is to change it's value to 0.</li>
-<li><em>flip</em>: To flip a bit is to invert it's value. That is set the bit if it is currently 0 and likewise reset the bit if it is currently 1.</li>
+<li><em>set</em>: If we say that a bit has been "set", we mean that we will change its value to 1. We can also say "set the bit to x", which has the obvious meaning of changing the value to 0 or 1, depending on the value of x.</li>
+<li><em>reset</em>: To reset a bit is to change its value to 0.</li>
+<li><em>flip</em>: To flip a bit is to invert its value. That is set the bit if it is currently 0 and likewise reset the bit if it is currently 1.</li>
 <li><em>test</em>: To test a bit is to return <code>true</code> if its value is 1, otherwise return <code>false</code>.</li>
 <li><em>subword</em>: A collection of contiguous bits of a given size. Some commonly found examples:
 <ul>
@@ -222,7 +222,7 @@ constexpr integral shlr(integral x, int s) noexcept;
 </code></pre>
 
 <ul>
-<li><em>Returns:</em> <code>x</code> with all of it's bits shifted right by <code>s</code> positions. The <code>s</code> high order bits of the result are reset.</li>
+<li><em>Returns:</em> <code>x</code> with all of its bits shifted right by <code>s</code> positions. The <code>s</code> high order bits of the result are reset.</li>
 <li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt; sizeof(x) * CHAR_BIT</code></li>
 </ul>
 
@@ -247,7 +247,7 @@ constexpr integral shar(integral x, int s) noexcept;
 </code></pre>
 
 <ul>
-<li><em>Returns:</em> <code>x</code> with all of it's bits shifted right by <code>s</code> positions. The <code>s</code> high order bits of the result are set to the value of most significant bit of <code>x</code>.</li>
+<li><em>Returns:</em> <code>x</code> with all of its bits shifted right by <code>s</code> positions. The <code>s</code> high order bits of the result are set to the value of most significant bit of <code>x</code>.</li>
 <li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt; sizeof(x) * CHAR_BIT</code></li>
 </ul>
 
@@ -259,7 +259,7 @@ constexpr integral rotl(integral x, int s) noexcept;
 </code></pre>
 
 <ul>
-<li><em>Returns:</em> <code>x</code> with all of it's bits shifted left by <code>s</code> positions.
+<li><em>Returns:</em> <code>x</code> with all of its bits shifted left by <code>s</code> positions.
 The <code>s</code> low order bits are set to the <code>s</code> high order bits of <code>x</code>.</li>
 <li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt; sizeof(x) * CHAR_BIT</code></li>
 </ul>
@@ -272,7 +272,7 @@ constexpr integral rotr(integral x, int s) noexcept;
 </code></pre>
 
 <ul>
-<li><em>Returns:</em> <code>x</code> with all of it's bits shifted right by <code>s</code> positions.
+<li><em>Returns:</em> <code>x</code> with all of its bits shifted right by <code>s</code> positions.
 The <code>s</code> high order bits are set to the <code>s</code> low order bits of <code>x</code>.</li>
 <li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt; sizeof(x) * CHAR_BIT</code></li>
 </ul>
@@ -413,7 +413,7 @@ constexpr integral rstls1b(integral x) noexcept;
 </code></pre>
 
 <ul>
-<li><em>Returns:</em> <code>x</code> with it's least significant 1 bit reset, or 0 if <code>x == 0</code>.</li>
+<li><em>Returns:</em> <code>x</code> with its least significant 1 bit reset, or 0 if <code>x == 0</code>.</li>
 <li><em>Implementation:</em> <code>x &amp; (x - 1)</code></li>
 </ul>
 
@@ -425,7 +425,7 @@ constexpr integral setls0b(integral x) noexcept;
 </code></pre>
 
 <ul>
-<li><em>Returns:</em> <code>x</code> with it's least significant 0 bit set, or <code>x</code> if <code>x == ~integral(0)</code>.</li>
+<li><em>Returns:</em> <code>x</code> with its least significant 0 bit set, or <code>x</code> if <code>x == ~integral(0)</code>.</li>
 <li><em>Implementation:</em> <code>x | (x + 1)</code></li>
 </ul>
 
@@ -1350,8 +1350,8 @@ following rules:</p>
 <ul>
 <li>t0: trailing 0s</li>
 <li>t1: trailing 1s</li>
-<li>l0: trailing 0s</li>
-<li>l1: trailing 1s</li>
+<li>l0: leading 0s</li>
+<li>l1: leading 1s</li>
 <li>ls1b: least significant 1 bit</li>
 <li>ms1b: most significant 0 bit</li>
 <li>ls0b: least significant 1 bit</li>

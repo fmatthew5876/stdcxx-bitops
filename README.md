@@ -1,7 +1,10 @@
-A constexpr bitwise operations library for C++
+N3864 - A constexpr bitwise operations library for C++
 ======
 
-For the current draft go here:
+This proposal has been submitted to the ISO C++ committee. 
+* http://open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3864.html
+
+For the latest working draft go here:
 * https://rawgithub.com/fmatthew5876/stdcxx-bitops/master/proposal/draft.md
 * https://rawgithub.com/fmatthew5876/stdcxx-bitops/master/proposal/draft.html
 

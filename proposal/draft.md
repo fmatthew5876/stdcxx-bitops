@@ -1,7 +1,7 @@
 A constexpr bitwise operations library for C++
 ==========================================
 
-* Document Number: NXXX=YY-ZZZZ
+* Document Number: N3864
 * Date: 2014-01-08
 * Programming Language C++, Numerics Working Group
 * Reply-to: Matthew Fioravante <fmatthew5876@gmail.com>
@@ -136,9 +136,9 @@ Glossary of Terms
 
 The following terminology is used in the remainder of this document to describe the technical aspects of this proposal.
 
-* *set*: If we say that a bit has been "set", we mean that we will change it's value to 1. We can also say "set the bit to x", which has the obvious meaning of changing the value to 0 or 1, depending on the value of x.
-* *reset*: To reset a bit is to change it's value to 0.
-* *flip*: To flip a bit is to invert it's value. That is set the bit if it is currently 0 and likewise reset the bit if it is currently 1.
+* *set*: If we say that a bit has been "set", we mean that we will change its value to 1. We can also say "set the bit to x", which has the obvious meaning of changing the value to 0 or 1, depending on the value of x.
+* *reset*: To reset a bit is to change its value to 0.
+* *flip*: To flip a bit is to invert its value. That is set the bit if it is currently 0 and likewise reset the bit if it is currently 1.
 * *test*: To test a bit is to return `true` if its value is 1, otherwise return `false`.
 * *subword*: A collection of contiguous bits of a given size. Some commonly found examples:
  * *nibble*: a subword of size 4
@@ -220,7 +220,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
     template <class integral>
     constexpr integral shlr(integral x, int s) noexcept;
 
-* *Returns:* `x` with all of it's bits shifted right by `s` positions. The `s` high order bits of the result are reset.
+* *Returns:* `x` with all of its bits shifted right by `s` positions. The `s` high order bits of the result are reset.
 * *Remarks:* result is undefined if `s < 0 || s > sizeof(x) * CHAR_BIT`
 
 <!-- -->
@@ -239,7 +239,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
     template <class integral>
     constexpr integral shar(integral x, int s) noexcept;
     
-* *Returns:* `x` with all of it's bits shifted right by `s` positions. The `s` high order bits of the result are set to the value of most significant bit of `x`.
+* *Returns:* `x` with all of its bits shifted right by `s` positions. The `s` high order bits of the result are set to the value of most significant bit of `x`.
 * *Remarks:* result is undefined if `s < 0 || s > sizeof(x) * CHAR_BIT`
 
 <!-- -->
@@ -248,7 +248,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
     template <class integral>
     constexpr integral rotl(integral x, int s) noexcept;
 
-* *Returns:* `x` with all of it's bits shifted left by `s` positions.
+* *Returns:* `x` with all of its bits shifted left by `s` positions.
     The `s` low order bits are set to the `s` high order bits of `x`.
 * *Remarks:* result is undefined if `s < 0 || s > sizeof(x) * CHAR_BIT`
 
@@ -258,7 +258,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
     template <class integral>
     constexpr integral rotr(integral x, int s) noexcept;
 
-* *Returns:* `x` with all of it's bits shifted right by `s` positions.
+* *Returns:* `x` with all of its bits shifted right by `s` positions.
     The `s` high order bits are set to the `s` low order bits of `x`.
 * *Remarks:* result is undefined if `s < 0 || s > sizeof(x) * CHAR_BIT`
 
@@ -376,7 +376,7 @@ and rely on the optimizer for hardware support if available.
     template <class integral>
     constexpr integral rstls1b(integral x) noexcept;
 
-* *Returns:* `x` with it's least significant 1 bit reset, or 0 if `x == 0`.
+* *Returns:* `x` with its least significant 1 bit reset, or 0 if `x == 0`.
 * *Implementation:* `x & (x - 1)`
     
 <!-- -->
@@ -385,7 +385,7 @@ and rely on the optimizer for hardware support if available.
     template <class integral>
     constexpr integral setls0b(integral x) noexcept;
 
-* *Returns:* `x` with it's least significant 0 bit set, or `x` if `x == ~integral(0)`.
+* *Returns:* `x` with its least significant 0 bit set, or `x` if `x == ~integral(0)`.
 * *Implementation:* `x | (x + 1)`
     
 <!-- -->
@@ -1088,8 +1088,8 @@ following rules:
 * Nouns can be abbreviated to one character per word, as long as they are reused consistently. We reuse the following nouns:
  * t0: trailing 0s
  * t1: trailing 1s
- * l0: trailing 0s
- * l1: trailing 1s
+ * l0: leading 0s
+ * l1: leading 1s
  * ls1b: least significant 1 bit
  * ms1b: most significant 0 bit
  * ls0b: least significant 1 bit
