@@ -35,13 +35,13 @@ which are used to implement higher level abstractions.
 We construct algorithms by combining these basic operations.
 Sometimes significant performance benefits can be gained by
 directly manipulating the binary quantities contained
-within the registers which make up this numerical abstraction.
+within the registers.
 Many online and print references including \[[Anderson01](#Anderson01)\],
 \[[Dietz01](#Dietz01)\], \[[Neumann01](#Neumann01)\], \[[Warren01](#Warren01)\], and \[[HACKMEM](#HACKMEM)\]
 are devoted to discovering these algorithms and implementing
 them efficiently.
 
-Hardware vendors have understood the importance of high performance
+Hardware vendors understand the importance of high performance
 bitwise manipulation routines. Many of them have provided
 additional hardware which can perform these bitwise operations directly with
 a single instruction. These instructions are often much more efficient than
@@ -68,42 +68,38 @@ Adding support for native instructions requires a nest of `#ifdef`s and
 deep knowledge of different processor architectures. This is a heavy cost
 in programmer time.
 
-Bitwise algorithms are general purpose tools which can be used in a wide
-variety of domains and are the key to unlocking high performance in many
-important algorithms. A bitwise operations library has been badly needed in 
-the C and C++ standard libraries for many years.
+Bitwise algorithms can be used in a wide variety of domains and are the key 
+to unlocking high performance in many important algorithms. A bitwise operations
+library has been badly needed in the C and C++ standard libraries for many years.
 
 We present a bitwise operations library which exposes these native instructions
-wherever possible and provides backup implementations in C++ if they do not exist.
-Because this library would be part of the standard, these commonly used routines
-could be implemented once and profiled on each platform. Finally, this library 
-offers an interface which takes full advantage of the latest processor features
-including ARMv8 and Intel BMI2.
+and provides backup implementations in C++ if they do not exist. Because this library
+would be part of the standard, these commonly used routines could be implemented once
+and profiled on each platform. Finally, this library offers an interface which takes 
+full advantage of the latest processor features including ARMv8 and Intel BMI2.
 
 Design Goals and Scope
 ========================
 
-There are seemingly endless ways one can manipulate binary quantities. How does one go
-about choosing which ones to include in a library and which ones to exclude? 
-How does one choose proper names for each function? Which algorithms can
+There are seemingly endless ways one can manipulate binary quantities. How does one choose which functions to include in a library? How does one choose proper names for each function? Which algorithms can
 be trivially converted into single instructions by the optimizer and which
-actually require the programmer to declare their use through a function call?
+require the programmer to declare their use through a function call?
 We will address these questions with the following design goals.
 
 Design Goal 1: Provide the programmer with better access to the machine
 ----------------------------
 
-In 1970, the Digital Equipment Corporation announced the PDP11. 
+Digital Equipment Corporation announced the PDP11 in 1970. 
 This 16 bit machine has 3 instructions of interest, `ROR` (rotate right), 
 `ROL` (rotate left), and `SWAB` (swap bytes).
 These operations along with their later 32 and 64 bit variants are provided 
-by many more modern machines as will be shown. As of 2013,
-the programmer still does not have direct access to these instructions in modern C and C++.
+by many modern architectures. As of 2013,
+programmers still do not have direct access to these instructions in modern C and C++.
 
-Therefore, the first and most important goal of this proposal is to provide the programmer with better
+Therefore, the first and most important goal of this proposal is to provide programmers with better
 access to the machine via a new set of primitives which go beyond simple arithmetic
 and logical operations. We will present new functions for the standard library which can be implemented
-using only few instructions if supported by the machine, using backup implementations
+using only a few instructions if supported by the machine, using backup implementations
 if no such support is provided by the hardware.
 
 Design Goal 2: Provide a reusable library of generic bitwise manipulation routines
@@ -111,7 +107,7 @@ Design Goal 2: Provide a reusable library of generic bitwise manipulation routin
 
 In designing this proposal, we wish not just to limit ourselves to operations which may have
 native machine instruction implementations on at least one platform. We would like to provide
-a standard library of primitives which are commonly found to be reimplemented time and time again in different code bases.
+a standard library of primitives which are frequently reimplemented in different code bases.
 The standard library already provides a rich set of generic containers and algorithms. What is missing is a 
 set of bitwise manipulation primitives.
 
@@ -136,26 +132,26 @@ Glossary of Terms
 
 The following terminology is used in the remainder of this document to describe the technical aspects of this proposal.
 
-* *set*: If we say that a bit has been "set", we mean that we will change its value to 1. We can also say "set the bit to x", which has the obvious meaning of changing the value to 0 or 1, depending on the value of x.
+* *set*: If we say that a bit has been "set", we mean that we will change its value to 1. We can also say "set the bit to x", which changes the value to 0 or 1, depending on the value of x.
 * *reset*: To reset a bit is to change its value to 0.
 * *flip*: To flip a bit is to invert its value. That is set the bit if it is currently 0 and likewise reset the bit if it is currently 1.
 * *test*: To test a bit is to return `true` if its value is 1, otherwise return `false`.
 * *subword*: A collection of contiguous bits of a given size. Some commonly found examples:
- * *nibble*: a subword of size 4
- * *byte*: a subword of size `CHAR_BIT`, usually 8
+ * *nibble*: a subword, usually 4 bits.
+ * *byte*: a subword of size `CHAR_BIT`, usually 8 bits.
  * *word*: Depending on the platform terminology, often a subword of size 16, 32 or 64. 
-* *most significant bit (msb)*: The high order bit in a binary quantity.
+* *most significant bit (msb)*: The highest order bit in a binary quantity.
 * *most significant X bit (msXb)*: The highest order bit in a binary quantity with a value of X.
-* *least significant bit (lsb)*: The low order bit in a binary quantity.
+* *least significant bit (lsb)*: The lowest order bit in a binary quantity.
 * *least significant X bit (lsXb)*: The lowest order bit in a binary quantity with a value of X.
-* `~T(0)`: This statement represents a quantity of type `T` where all of the bits are 1. We avoid the more commonly used `T(-1)` as it assumes 2's compliment signed integers and is a little less intuitive to the unitiated.
+* `~T(0)`: This statement represents a quantity of type `T` where all of the bits are 1. We avoid the more commonly used `T(-1)` as it assumes 2's complement signed integers and is somewhat less intuitive to the uninitiated.
 
 Technical Specification
 ====================
 
 We will now describe the additions to `<cmath>` and `<memory>`. This is a procedural library implemented
 entirely using `constexpr` templated free functions.
-In addition, each function has been qualified with `noexcept`. These
+All functions have been qualified with `noexcept`. These
 operations are most often used in highly optimized numerical code where the overhead of exception
 handling would be inappropriate. For functions which have pre-conditions on their inputs, we
 have opted for undefined return values if these pre-conditions are ever violated.
@@ -175,11 +171,9 @@ for all builtin integral types, signed and unsigned. Functions which take more t
 integral argument of different types will use a single letter suffix, for example
 `integrall` and `integralr` for left and right hand arguments.
 
-With regards to signed integers, this proposal does not require signed integers be
-implemented using 2's compliment. However, the design of this proposal considers
-the practical reality that almost all modern hardware does in fact use 2's compliment.
+This proposal does not require signed integers be implemented using 2's complement. However, the design of this proposal considers the practical reality that almost all modern architectures do in fact use 2's complement.
 All example code, including the reference implementation \[[BitOpsRef](#BitOpsRef)\]
-assume 2's compliment signed integers with undefined behavior on overflow and underflow.
+assume 2's complement signed integers with undefined behavior on overflow and underflow.
 Adding support for other signed representations is an exercise left for the reader.
 
 Each section will describe the full technical specifications of the functions in that group, noting their
@@ -198,8 +192,7 @@ The following sections describe the additions to the `<cmath>` header.
 Bit shifting is provided in C++ with `operator<<` and `operator>>` for integral types. It is
 a very simplistic abstraction with many deficiencies and some subtle caveats.
 
-First as noted earlier, there is no primitive for rotational shifts even though these shifts can be found in the instruction 
-set of almost every machine. Second, 
+First as noted earlier, there is no primitive for circular shifts even though these shifts can be found in the instruction set of most architectures. Second, 
 `operator>>` for signed types has implementation defined behavior with regards to filling in the high order bits, making
 it nearly useless when writing portable code.
 Writing a portable arithmetic right shift cumbersome at best and inefficient at worst. Finally, performing a logical right shift on a signed
@@ -265,8 +258,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
 ### Bit Counting Algorithms
 
 Bit counting is used to construct efficient implementations of other higher level algorithms.
-Many of these operations have native support on a wide variety of modern
-and antiquated hardware.
+Many of these functions have native support on a wide variety of architectures.
 Some example applications will be provided below.
 
 #### List of functions
@@ -462,8 +454,7 @@ and rely on the optimizer for hardware support if available.
     
 ### Single Bit Manipulation
 
-Most programmers have at some point in their career have needed to index and manipulate a single bit
-within a given integral quantity.
+Most programmers have at some point needed to index and manipulate a single bit within a given integral quantity.
 These functions are trivial to implement and are provided only for usability.
 
 #### List of Functions
@@ -839,7 +830,7 @@ This section describes the additions to the `<memory>` header.
 ### Alignment helpers
 
 These are primitives used for aligning objects in memory. They supplement use cases with which `std::align` is
-not designed to handle. These are very useful operations and all of them have trivial implementations.
+not designed to handle. These are useful operations and all of them have trivial implementations.
 They can often be found in operating system kernels and device drivers reimplemented time and time
 again as macros.
 
@@ -889,268 +880,11 @@ again as macros.
 
 We currently have `std::align` in the standard for doing alignment calculations.
 The function `std::align`
-has one very specific use case, that is to carve out an aligned buffer of a known size within a larger buffer.
+has one specific use case, that is to carve out an aligned buffer of a known size within a larger buffer.
 In order to use `std::align`, the user must a priori know the size of the aligned buffer
 they require. Unfortunately in some use cases, even calculating the size of this buffer
 as an input to `std::align` itself requires doing alignment calculations.
 Consider the following example of using aligned SIMD registers to process a memory buffer.
 The alignment calculations here cannot be done with `std::align`.
 
-    void process(char* b, char* e) {
-      char* pb = std::min((char*)std::align_up(b, sizeof(simd16)), e);
-      char* pe = (char*)std::align_down(e, sizeof(simd16));
-    
-      for(char* p = b; p < pb; ++p) {
-        process1(p);
-      }
-      for(char* p = pb; p < pe; p += sizeof(simd16)) {
-        simd16 x = simd16_aligned_load(p);
-        process16(x);
-        simd16_aligned_store(x, p);
-      }
-      for(char* p = pe; p < e; ++p) {
-        process1(p);
-      }
-    }
-
-We conclude that `std::align` is much too specific for general alignment calculations. It has a very narrow
-use case and should only be considered as a helper function for when that use case is needed.
-    
-Implementation
-===================
-
-## Guidelines for Implementors
-
-Those who wish to implement the functions provided by this proposal must consider the following guidelines:
-
-* Implementors must at a minimum provide support for 1, 2, 4, and 8 byte integral signed and unsigned types.
-* Implementors should use optimized hardware instructions wherever possible.
- * *Prefer* compiler intrinsics to inline assembly.
-    The former allows important optimizations while the later does not.
-    As a motivating example, consider the count trailing zeros algorithm.
-    On older Intel machines, this is implemented with a `bsf` instruction followed by a `cmov`
-    instruction to handle the case where the input is 0. In many contexts
-    the optimizer is able to prove that the input is never 0 and thus the
-    cmov instruction can be omitted. These optimizations are often impossible with inline assembly.
-* Implementors are encouraged to add support for wider integral types where it makes sense to do so.
-
-Survey of Hardware Support
------------------------------
-
-The following is a list of compiler intrinsics and native instructions which can be used to implement
-the proposal on various platforms. 
-Several machine architectures were surveyed for their instruction references.
-The purpose of this section is to demonstrate the current state
-of the art on many different machines. We have also noted when one operation is
-trivially implementable from another bitops proposal operation.
-
-* `cntt0(x)`
- * i386: `bsf`, `cmov`
- * x86\_64 w/ BMI1: `tzcnt`
- * alpha: `cttz`
- * gcc: `x == 0 ? sizeof(x) * CHAR_BIT : __builtin_ctz(x)`
- * bitops: `cntt1(~x)`
-
-* `cntl0(x)`
- * i386: `bsr`, `cmov`
- * x86\_64 w AMD SSE4a / Intel BMI1: `lzcnt`
- * ARMv5: `CLZ`
- * IA64: `clz`
- * PowerPC: `cntlzd`
- * MIPS: `CLZ`
- * gcc: `(x == 0 ? sizeof(x) * CHAR_BIT : __builtin_clz(x))`
- * bitops: `cntl1(~x)`
-
-* `cntt1(x)`
- * bitops: `cntt0(~x)`
-
-* `cntl1(x)`
- * ARMv8: `CLS`
- * Blackfin: `SIGNBITS`
- * C6X: `NORM`
- * Picochip: `SBC`
- * MIPS: `CLO`
- * bitops: `cntl0(~x)`
-
-* `popcount(x)`
- * x86\_64 SSE4: `popcnt`
- * IA64: `popcnt`
- * Alpha: `CTPOP`
- * PowerPC: `popcntb`
- * SparcV9: `POPC`
- * gcc: `__builtin_popcount(x)`
-
-* `parity(x)`
- * gcc: `__builtin_parity(x)`
- * bitops: `popcount(x) & 1`
-
-* `rstls1b(x)`
- * x86\_64 w/ BMI1: `BLSR`
-
-* `setls0b(x)`
- * x86\_64 w/ AMD TBM: `BLCS`
-
-* `isols0b(x)`
- * x86\_64 w/ AMD TBM: `BLCI`, `NOT`
- * x86\_64 w/ AMD TBM: `BLCIC`
-
-* `isols1b(x)`
- * x86\_64 w/ BMI1: `BLSI`
- * x86\_64 w/ AMD TBM: `BLSIC`, `NOT`
-
-* `rstt1(x)`
- * x86\_64 w/ AMD TBM: `BLCFILL`
-
-* `sett0(x)`
- * x86\_64 w/ AMD TBM: `BLSFILL`
-
-* `maskt0(x)`
- * x86\_64 w/ AMD TBM: `TZMSK`
-
-* `maskt1(x)`
- * x86\_64 w/ AMD TBM: `T1MSKC`, `NOT`
-
-* `maskt0ls1b(x)`
- * x86\_64 w/ BMI1: `BLSMSK`
-
-* `maskt1ls0b(x)`
- * x86\_64 w/ AMD TBM: `BLCMSK`
-
-* `rstbitsge(x, b)`
- * x86\_64 w/ BMI2: `BZHI`
-
-* `reverse_bits<uint32_t>(x)`
- * ARMv7: `RBIT`
- * EPIPHANY: `BITR`
-* `reverse_bits<uint64_t>(x)`
- * ARMv8: `RBIT`
-* `reverse_bits<uint8_t>(x, 4)`
- * AVR: `SWAP`
-* `reverse_bytes<uint16_t>(x)`
- * PDP11: `SWAB`
- * gcc: `__builtin_bswap16(x)`
-* `reverse_bytes<uint32_t>(x)`
- * i486: `bswap`
- * ARMv5: `REV`
- * gcc: `__builtin_bswap32(x)`
-* `reverse_bytes<uint64_t>(x)`
- * x86\_64: `bswap`
- * ARMv8: `REV`
- * gcc: `__builtin_bswap64(x)`
-* `reverse_bytes<uint32_t>(x, 1, 2)`
- * ARMv6: `REV16`
-* `reverse_bytes<uint64_t>(x, 1, 4)`
- * ARMv8: `REV16`
-* `reverse_bytes<uint64_t>(x, 1, 2)`
- * ARMv8: `REV32`
-* `reverse_bytes<uint32_t>(x, 2)`
- * MC68020: `SWAP`
-* `int32_t(reverse_bytes<int16_t>(x))`
- * ARMv5: `REVSH`
-* `int32_t(reverse_bytes<uint16_t>(x))`
- * ARMv5: `REVSH`
-* `deposit_bits_right(x)`
- * x86\_64 w/ BMI2: PDEP
-* `extract_bits_right(x)`
- * x86\_64 w/ BMI2: PEXT
-* `satadd(l, r)`
- * ARMv7: QADD
-* `satsub(l, r)`
- * ARMv7: QSUB
-    
-Open Questions
-=====================
-
-Naming
-----------------
-
-Naming is one of the most difficult problems in software development. 
-One one extreme are terse names such as `std::ctz()` for Count
-Trailing Zeroes. This naming style mimics assembler mnemonics and is also
-an artifact of the old days when programming languages had limits on the
-length of names of identifiers.
-
-These short names do have some merits. They reduce the amount of typing required by
-the programmer and more importantly they can be used within complex expressions.
-The downside is the ambiguity that can come with some short names. Consider
-a hypothetical *Count Leading Sign bits* function `std::cls()`. This name could
-be interpreted in other contexts such as *CLear Screen*.
-
-On the other extreme are verbose names such as `std::mask_least_significant_1_bit_and_trailing_zeroes()`. While these names
-remove all ambiguity they are very cumbersome to type. They also cannot be
-used easily in complex expressions with other operations.
-
-We have opted to make a compromise. The current naming scheme adheres to the
-following rules:
-
-* All functions start with a verb. Each verb can be abbreviated to at a minimum of 3 characters. That is instead of 'ctz', we would say 'cnttz'.
-* Use 0 and 1 for 0 and 1, not Z and O or some other combination of letters. While the z in `cnttz()` is pretty obviously zero, the o in `cntto()` is not so obviously meant to be 1. Therefore we stick to the numbers to remove all ambiguity.
-* Nouns can be abbreviated to one character per word, as long as they are reused consistently. We reuse the following nouns:
- * t0: trailing 0s
- * t1: trailing 1s
- * l0: leading 0s
- * l1: leading 1s
- * ls1b: least significant 1 bit
- * ms1b: most significant 0 bit
- * ls0b: least significant 1 bit
- * ms0b: most significant 0 bit
-
-As always, the naming question is continuously up for debate and reconsideration.
-Some other styles have been suggested on the std-proposals discussion forum.
-
-* `ctz()`
-* `ct0()`
-* `cntt0()`
-* `countt0()`
-* `count_t0()`
-* `count_trailing_zeroes()`
-* `count_trailing_0_bits()`
-* `count_trailing<bool>()`
-
-Support for std::bitset
-------------------------
-
-Many people have suggesting adding support for `std::bitset`. While this is certainly a good idea, we believe that is outside of the scope of
-this proposal. Once this proposal is finished and the interface is agreed upon, adding a follow up proposal for `std::bitset` would be easy to do.
-
-Support for C
------------------
-
-This library would also be very useful for the C community. Many of these bitwise operations
-are used by embedded developers and they often choose to implement in C.  While C compatibility is a noble goal, we
-do not want to make sacrifices to the C++ interface in the name of C compatibility. Particularly with regards to
-templates, overloading, and `constexpr`.
-This is first and foremost a C++ proposal which takes advantage of the latest C++ techniques
-to provide a modern procedural interface.
-
-If the C community shows interest we may consider a C interface that uses the generic macro feature. This
-may allow interoperability, using macros for C and templates for C++. The `constexpr` qualifier
-could be used in the C++ version while `inline` is used in the C version. If the C community shows interest,
-we will consider a joint C proposal and flesh out the technical details of the interface and compatibility.
-
-Acknowledgements
-====================
-
-Thank you to everyone on the std proposals forum for feedback and suggestions.
-
-References
-==================
-
-* <a name="BitOpsRef"></a>[BitOpsRef] *GitHub: BitOps Proposal and Reference Implementation*, (still under development) Available online at
-	<https://github.com/fmatthew5876/stdcxx>
-* <a name="Anderson01"></a>[Anderson01] Anderson, Sean Eron. *Bit Twiddling Hacks*, Available online at <http://graphics.stanford.edu/~seander/bithacks.html>
-* <a name="Dietz01"></a>[Dietz01] Deitz, Hendry Gordon. *The Aggregate Magic Algorithms*, University of Kentucky. 
-	Available online at <http://aggregate.org/MAGIC/>
-* <a name="Neumann01"></a>[Neumann01] Neumann, Jasper. *Bit permutations*, Available online at
-	<http://programming.sirrida.de/bit_perm.html>
-* <a name="Warren01"></a>[Warren01] Warren, Henry S. Jr. *Hacker's Delight Second Edition*,
-	Addison-Wesley, Oct 2012, ISBN 0-321-84268-5.
-* <a name="pdp11"></a>[pdp11] *pdp11/40 process handbook*, Digital Equipment Corporation, 1972.
-* <a name="Kostjuchenko01"></a>[Kostjuchenko01] Kostjuchenko, Dmitry. *SSE2 optimized strlen*, Available online at
-	<http://www.strchr.com/sse2_optimised_strlen>
-* <a name="N3646"></a>[N3646] Pratte, Robert. *Network Byte Order Conversion Document Number: N3646*.
-	Available online at <http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3646.pdf>
-* <a name="HACKMEM"></a>[HACKMEM] *HACKMEM, AI Memo 239*, Available online at <http://http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html>.
-* <a name="ChessProg"></a>[ChessProg] *Chess Programming WIKI*, Available online at <http://http://chessprogramming.wikispaces.com/>.
-* <a name="Hilewitz01"></a>[Hilewitz01] Hilewitz, Yedidya and Lee, Ruby B. *Fast Bit Compression and Expansion with Parallel Extract and Parallel Deposit Instructions*, 2006.
-* <a name="EmbedGuru01"></a>[EmbedGuru01] *Optimizing for the CPU / compiler / Stack Overflow*, Available online at <http://embeddedgurus.com/stack-overflow/2012/06/optimizing-for-the-cpu-compiler/>.
+    void process(
