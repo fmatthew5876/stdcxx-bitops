@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#109;&#97;&#x69;l&#x74;o:&#102;&#x6D;&#97;&#x74;&#x74;&#x68;&#101;&#x77;&#x35;&#x38;&#55;&#x36;&#64;&#x67;&#109;&#97;&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#109;">&#102;&#x6D;&#97;&#x74;&#x74;&#x68;&#101;&#x77;&#x35;&#x38;&#55;&#x36;&#64;&#x67;&#109;&#97;&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#109;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#x61;&#105;&#x6C;&#x74;&#x6F;:&#102;&#109;&#x61;&#x74;&#x74;&#104;&#101;&#119;&#x35;8&#x37;&#54;&#64;&#103;&#109;&#x61;&#x69;&#108;&#x2E;&#x63;&#111;&#109;">&#102;&#109;&#x61;&#x74;&#x74;&#104;&#101;&#119;&#x35;8&#x37;&#54;&#64;&#103;&#109;&#x61;&#x69;&#108;&#x2E;&#x63;&#111;&#109;</a></li>
 </ul>
 
 <h1>Introduction</h1>
@@ -116,7 +116,7 @@ other bitwise operations. A motivating example is checking whether a number is a
 <p>Consider the following implementations:</p>
 
 <pre><code>bool ispow2(unsigned x) { return popcount(x) == 1; }
-bool ispow2(unsigned x) { return x != 0 &amp;&amp; (x &amp; (x -1)) == 0; }
+bool ispow2(unsigned x) { return (x &amp; (x -1)) == 0 &amp;&amp; x != 0; }
 </code></pre>
 
 <p>In the above example, <code>popcount()</code> is the population count or number of 1 bits in <code>x</code>. 
@@ -498,7 +498,7 @@ constexpr integral maskt1(integral x) noexcept;
 
 <ul>
 <li><em>Returns:</em> a quantity where all of the bits corresponding to the trailing 1 bits of <code>x</code> are set, the remaining bits reset.</li>
-<li><em>Implementation:</em> <code>~((~x) | (x + 1))</code></li>
+<li><em>Implementation:</em> <code>x &amp; ~(x + 1)</code></li>
 </ul>
 
 <!-- -->
@@ -891,7 +891,7 @@ constexpr integral extract_bytes_left(integral x, integral mask, int subword_byt
 <p>The following table shows how some example 8 bit binary values would be permuted by each function.
 We use the C++14 binary literal syntax here. The bits of a given value are represented by
 letters to show how a generic value would be permuted.
-For a more detailed treatment of these operations, refer to [<a href="#Neumann01">Neumann01</a>]] and Chapter 7 of [<a href="#Warren01">Warren01</a>].</p>
+For a more detailed treatment of these operations, refer to [<a href="#Neumann01">Neumann01</a>] and Chapter 7 of [<a href="#Warren01">Warren01</a>].</p>
 
 <ul>
 <li><code>reverse_bits(ABCDEFGHb)</code> -> <code>GHFEDCBA</code></li>
@@ -1413,8 +1413,8 @@ Addison-Wesley, Oct 2012, ISBN 0-321-84268-5.</li>
 <a href="http://www.strchr.com/sse2_optimised_strlen">http://www.strchr.com/sse2_optimised_strlen</a></li>
 <li><a name="N3646"></a>[N3646] Pratte, Robert. <em>Network Byte Order Conversion Document Number: N3646</em>.
 Available online at <a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3646.pdf">http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3646.pdf</a></li>
-<li><a name="HACKMEM"></a>[HACKMEM] <em>HACKMEM, AI Memo 239</em>, Available online at <a href="http://http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html">http://http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html</a>.</li>
-<li><a name="ChessProg"></a>[ChessProg] <em>Chess Programming WIKI</em>, Available online at <a href="http://http://chessprogramming.wikispaces.com/">http://http://chessprogramming.wikispaces.com/</a>.</li>
+<li><a name="HACKMEM"></a>[HACKMEM] <em>HACKMEM, AI Memo 239</em>, Available online at <a href="http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html">http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html</a>.</li>
+<li><a name="ChessProg"></a>[ChessProg] <em>Chess Programming WIKI</em>, Available online at <a href="http://chessprogramming.wikispaces.com/">http://chessprogramming.wikispaces.com/</a>.</li>
 <li><a name="Hilewitz01"></a>[Hilewitz01] Hilewitz, Yedidya and Lee, Ruby B. <em>Fast Bit Compression and Expansion with Parallel Extract and Parallel Deposit Instructions</em>, 2006.</li>
 <li><a name="EmbedGuru01"></a>[EmbedGuru01] <em>Optimizing for the CPU / compiler / Stack Overflow</em>, Available online at <a href="http://embeddedgurus.com/stack-overflow/2012/06/optimizing-for-the-cpu-compiler/">http://embeddedgurus.com/stack-overflow/2012/06/optimizing-for-the-cpu-compiler/</a>.</li>
 </ul>

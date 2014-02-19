@@ -121,7 +121,7 @@ other bitwise operations. A motivating example is checking whether a number is a
 Consider the following implementations:
 
     bool ispow2(unsigned x) { return popcount(x) == 1; }
-    bool ispow2(unsigned x) { return x != 0 && (x & (x -1)) == 0; }
+    bool ispow2(unsigned x) { return (x & (x -1)) == 0 && x != 0; }
 
 In the above example, `popcount()` is the population count or number of 1 bits in `x`. 
 On a machine with a popcount instruction, the first implementation uses less instructions
@@ -440,7 +440,7 @@ and rely on the optimizer for hardware support if available.
     constexpr integral maskt1(integral x) noexcept;
 
 * *Returns:* a quantity where all of the bits corresponding to the trailing 1 bits of `x` are set, the remaining bits reset.
-* *Implementation:* `~((~x) | (x + 1))`
+* *Implementation:* `x & ~(x + 1)`
     
 <!-- -->
     
@@ -736,7 +736,7 @@ we perform the simple conversion: `subword_bits = subword_bytes * CHAR_BITS`.
 The following table shows how some example 8 bit binary values would be permuted by each function.
 We use the C++14 binary literal syntax here. The bits of a given value are represented by
 letters to show how a generic value would be permuted.
-For a more detailed treatment of these operations, refer to \[[Neumann01](#Neumann01)]\] and Chapter 7 of \[[Warren01](#Warren01)\].
+For a more detailed treatment of these operations, refer to \[[Neumann01](#Neumann01)\] and Chapter 7 of \[[Warren01](#Warren01)\].
 
 * `reverse_bits(ABCDEFGHb)` -> `GHFEDCBA`
 * `reverse_bits(ABCDEFGHb, 1, 2)` -> `DCBAHGFEb`
@@ -1150,7 +1150,7 @@ References
 	<http://www.strchr.com/sse2_optimised_strlen>
 * <a name="N3646"></a>[N3646] Pratte, Robert. *Network Byte Order Conversion Document Number: N3646*.
 	Available online at <http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3646.pdf>
-* <a name="HACKMEM"></a>[HACKMEM] *HACKMEM, AI Memo 239*, Available online at <http://http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html>.
-* <a name="ChessProg"></a>[ChessProg] *Chess Programming WIKI*, Available online at <http://http://chessprogramming.wikispaces.com/>.
+* <a name="HACKMEM"></a>[HACKMEM] *HACKMEM, AI Memo 239*, Available online at <http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html>.
+* <a name="ChessProg"></a>[ChessProg] *Chess Programming WIKI*, Available online at <http://chessprogramming.wikispaces.com/>.
 * <a name="Hilewitz01"></a>[Hilewitz01] Hilewitz, Yedidya and Lee, Ruby B. *Fast Bit Compression and Expansion with Parallel Extract and Parallel Deposit Instructions*, 2006.
 * <a name="EmbedGuru01"></a>[EmbedGuru01] *Optimizing for the CPU / compiler / Stack Overflow*, Available online at <http://embeddedgurus.com/stack-overflow/2012/06/optimizing-for-the-cpu-compiler/>.
