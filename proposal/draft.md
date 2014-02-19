@@ -950,7 +950,7 @@ trivially implementable from another bitops proposal operation.
 * `cntl0(x)`
  * i386: `bsr`, `cmov`
  * x86\_64 w AMD SSE4a / Intel BMI1: `lzcnt`
- * Alpha: `cttz`
+ * Alpha: `ctlz`
  * ARMv5: `CLZ`
  * IA64: `clz`
  * PowerPC: `cntlzd`
