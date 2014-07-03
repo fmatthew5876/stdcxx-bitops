@@ -55,10 +55,10 @@ These differences create an unreasonably large maintenance burden on the program
 who wishes to write efficient and portable code.
 
 As a motivating example, consider the various implementations of
-the count trailing zeroes algorithm presented in \[[Kostjuchenko01](#Kostjuchenko01)\].
+the count trailing zeros algorithm presented in \[[Kostjuchenko01](#Kostjuchenko01)\].
 In order to implement an SSE2 optimized `strlen()` function,
 the author had to implement, test, and profile many different versions of
-count trailing zeroes.  None of them take advantage of native instructions.
+count trailing zeros.  None of them take advantage of native instructions.
 
 One who wishes to exploit 
 the `bsf` or `tzcnt` instructions on Intel must rely on non-standard
@@ -91,7 +91,7 @@ We will address these questions with the following design goals.
 Design Goal 1: Provide the programmer with better access to the machine
 ----------------------------
 
-Digital Equipment Corporation announced the PDP11 in 1970. 
+Digital Equipment Corporation announced the PDP11 \[[pdp11](#pdp11)\] in 1970. 
 This 16 bit machine has 3 instructions of interest, `ROR` (rotate right), 
 `ROL` (rotate left), and `SWAB` (swap bytes).
 These operations along with their later 32 and 64 bit variants are provided 
@@ -126,7 +126,7 @@ On a machine with a popcount instruction, the first implementation uses less ins
 and no branches. Without a popcount instruction, the second version is the better choice
 as computing popcount requires much more than a few logical operations and comparisons 
 \[[Dietz01](#Dietz01)\]. In order to implement `ispow2()`, the programmer is faced with
-the same set of dilemnas as with the count trailing zeroes example from the [Motivation](#motivation)
+the same set of dilemmas as with the count trailing zeros example from the [Motivation](#motivation)
 section.
 
 Glossary of Terms
@@ -209,7 +209,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
     constexpr integral shll(integral x, int s) noexcept;
 
 * *Returns:* `x << s`
-* *Remarks:* result is undefined if `s < 0 || s > sizeof(x) * CHAR_BIT`
+* *Remarks:* result is undefined if `s < 0 || s >= sizeof(x) * CHAR_BIT`
 
 <!-- -->
 
@@ -218,7 +218,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
     constexpr integral shlr(integral x, int s) noexcept;
 
 * *Returns:* `x` with all of its bits shifted right by `s` positions. The `s` high order bits of the result are reset.
-* *Remarks:* result is undefined if `s < 0 || s > sizeof(x) * CHAR_BIT`
+* *Remarks:* result is undefined if `s < 0 || s >= sizeof(x) * CHAR_BIT`
 
 <!-- -->
 
@@ -227,7 +227,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
     constexpr integral shal(integral x, int s) noexcept;
 
 * *Returns:* `x << s`
-* *Remarks:* result is undefined if `s < 0 || s > sizeof(x) * CHAR_BIT`
+* *Remarks:* result is undefined if `s < 0 || s >= sizeof(x) * CHAR_BIT`
 * *Remarks:* This function is identical to `shll()` and is only provided for symmetry.
 
 <!-- -->
@@ -237,7 +237,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
     constexpr integral shar(integral x, int s) noexcept;
     
 * *Returns:* `x` with all of its bits shifted right by `s` positions. The `s` high order bits of the result are set to the value of most significant bit of `x`.
-* *Remarks:* result is undefined if `s < 0 || s > sizeof(x) * CHAR_BIT`
+* *Remarks:* result is undefined if `s < 0 || s >= sizeof(x) * CHAR_BIT`
 
 <!-- -->
 
@@ -247,7 +247,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
 
 * *Returns:* `x` with all of its bits shifted left by `s` positions.
     The `s` low order bits are set to the `s` high order bits of `x`.
-* *Remarks:* result is undefined if `s < 0 || s > sizeof(x) * CHAR_BIT`
+* *Remarks:* result is undefined if `s < 0 || s >= sizeof(x) * CHAR_BIT`
 
 <!-- -->
 
@@ -257,7 +257,7 @@ quantity is also cumbersome because it requires casts which obscure the meaning 
 
 * *Returns:* `x` with all of its bits shifted right by `s` positions.
     The `s` high order bits are set to the `s` low order bits of `x`.
-* *Remarks:* result is undefined if `s < 0 || s > sizeof(x) * CHAR_BIT`
+* *Remarks:* result is undefined if `s < 0 || s >= sizeof(x) * CHAR_BIT`
 
 ### Bit Counting Algorithms
 
@@ -1073,7 +1073,7 @@ The downside is that short names can be ambiguous. Consider
 a hypothetical *Count Leading Sign bits* function `std::cls()`. This name could
 be interpreted in other contexts such as *CLear Screen*.
 
-On the other extreme are verbose names such as `std::mask_least_significant_1_bit_and_trailing_zeroes()`. While these names
+On the other extreme are verbose names such as `std::mask_least_significant_1_bit_and_trailing_zeros()`. While these names
 remove all ambiguity they are cumbersome to type. They also cannot be
 used easily in complex expressions with other operations.
 
@@ -1100,7 +1100,7 @@ Some other styles have been suggested on the std-proposals discussion forum.
 * `cntt0()`
 * `countt0()`
 * `count_t0()`
-* `count_trailing_zeroes()`
+* `count_trailing_zeros()`
 * `count_trailing_0_bits()`
 * `count_trailing<bool>()`
 
@@ -1125,7 +1125,7 @@ may allow interoperability, using macros for C and templates for C++. The `const
 could be used in the C++ version while `inline` is used in the C version. If the C community shows interest,
 we will consider a joint C proposal and flesh out the technical details of the interface and compatibility.
 
-Acknowledgements
+Acknowledgments
 ====================
 
 Thank you to everyone on the std proposals forum for feedback and suggestions.
@@ -1136,13 +1136,13 @@ References
 * <a name="BitOpsRef"></a>[BitOpsRef] *GitHub: BitOps Proposal and Reference Implementation*, (still under development) Available online at
 	<https://github.com/fmatthew5876/stdcxx>
 * <a name="Anderson01"></a>[Anderson01] Anderson, Sean Eron. *Bit Twiddling Hacks*, Available online at <http://graphics.stanford.edu/~seander/bithacks.html>
-* <a name="Dietz01"></a>[Dietz01] Deitz, Hendry Gordon. *The Aggregate Magic Algorithms*, University of Kentucky. 
+* <a name="Dietz01"></a>[Dietz01] Dietz, Hendry Gordon. *The Aggregate Magic Algorithms*, University of Kentucky. 
 	Available online at <http://aggregate.org/MAGIC/>
 * <a name="Neumann01"></a>[Neumann01] Neumann, Jasper. *Bit permutations*, Available online at
 	<http://programming.sirrida.de/bit_perm.html>
 * <a name="Warren01"></a>[Warren01] Warren, Henry S. Jr. *Hacker's Delight Second Edition*,
 	Addison-Wesley, Oct 2012, ISBN 0-321-84268-5.
-* <a name="pdp11"></a>[pdp11] *pdp11/40 process handbook*, Digital Equipment Corporation, 1972.
+* <a name="pdp11"></a>[pdp11] *pdp11/40 processor handbook*, Digital Equipment Corporation, 1972. Available online at <http://pdos.csail.mit.edu/6.828/2005/readings/pdp11-40.pdf>
 * <a name="Kostjuchenko01"></a>[Kostjuchenko01] Kostjuchenko, Dmitry. *SSE2 optimized strlen*, Available online at
 	<http://www.strchr.com/sse2_optimised_strlen>
 * <a name="N3646"></a>[N3646] Pratte, Robert. *Network Byte Order Conversion Document Number: N3646*.
