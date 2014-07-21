@@ -1130,6 +1130,7 @@ Acknowledgments
 ====================
 
 Thank you to everyone on the std proposals forum for feedback and suggestions.
+Thank you to Jasper Neumann and Harold Aptroot for their valuable insight and experience in this field and feedback about the paper.
 
 References
 ==================
