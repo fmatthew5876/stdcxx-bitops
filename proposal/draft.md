@@ -322,8 +322,8 @@ Some example applications will be provided below.
 One application of `cntt0` is in computing the greatest common divisor of 2 numbers. Credit goes
 to Howard Hinnant for bringing this to our attention.
 
-    template <typename unsigned-integral>
-    unsigned-integral gcd(unsigned-integral x, unsigned-integral y) 
+    template <typename unsigned_integral>
+    unsigned_integral gcd(unsigned_integral x, unsigned_integral y)
     { 
         if (x == 0) 
             return y; 
@@ -1029,8 +1029,8 @@ trivially implementable from another bitops proposal operation.
 * `reverse_bytes<uint16_t>(x)`
  * PDP11: `SWAB`
  * gcc: `__builtin_bswap16(x)`
- * rotr<uint_16_t>(x, 8);
- * rotl<uint_16_t>(x, 8);
+ * bitops: rotr<uint_16_t>(x, 8);
+ * bitops: rotl<uint_16_t>(x, 8);
 * `reverse_bytes<uint32_t>(x)`
  * i486: `bswap`
  * ARMv5: `REV`

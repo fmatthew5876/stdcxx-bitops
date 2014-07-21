@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#97;&#x69;&#108;&#x74;&#111;:f&#109;&#x61;&#x74;&#x74;&#x68;e&#119;&#53;&#x38;&#55;&#54;&#64;&#103;&#109;&#x61;&#105;&#108;&#46;c&#111;m">f&#109;&#x61;&#x74;&#x74;&#x68;e&#119;&#53;&#x38;&#55;&#54;&#64;&#103;&#109;&#x61;&#105;&#108;&#46;c&#111;m</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#109;&#x61;&#x69;&#108;&#x74;&#x6F;:&#x66;m&#x61;&#x74;&#116;&#104;&#101;&#x77;&#53;&#56;&#x37;&#54;&#64;&#103;&#109;&#97;&#x69;&#x6C;.&#99;&#111;&#x6D;">&#x66;m&#x61;&#x74;&#116;&#104;&#101;&#x77;&#53;&#56;&#x37;&#54;&#64;&#103;&#109;&#97;&#x69;&#x6C;.&#99;&#111;&#x6D;</a></li>
 </ul>
 
 <p>The latest draft, reference header (incomplete), and links to past discussions on github: </p>
@@ -357,8 +357,8 @@ constexpr int parity(integral x) noexcept;
 <p>One application of <code>cntt0</code> is in computing the greatest common divisor of 2 numbers. Credit goes
 to Howard Hinnant for bringing this to our attention.</p>
 
-<pre><code>template &lt;typename unsigned-integral&gt;
-unsigned-integral gcd(unsigned-integral x, unsigned-integral y) 
+<pre><code>template &lt;typename unsigned_integral&gt;
+unsigned_integral gcd(unsigned_integral x, unsigned_integral y)
 { 
     if (x == 0) 
         return y; 
@@ -1265,8 +1265,8 @@ trivially implementable from another bitops proposal operation.
 <ul>
 <li>PDP11: <code>SWAB</code></li>
 <li>gcc: <code>__builtin_bswap16(x)</code></li>
-<li>rotr<uint_16_t>(x, 8);</li>
-<li>rotl<uint_16_t>(x, 8);</li>
+<li>bitops: rotr<uint_16_t>(x, 8);</li>
+<li>bitops: rotl<uint_16_t>(x, 8);</li>
 </ul></li>
 <li><code>reverse_bytes&lt;uint32_t&gt;(x)</code>
 <ul>
