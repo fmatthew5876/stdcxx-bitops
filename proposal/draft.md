@@ -6,6 +6,10 @@ A constexpr bitwise operations library for C++
 * Programming Language C++, Numerics Working Group
 * Reply-to: Matthew Fioravante <fmatthew5876@gmail.com>
 
+The latest draft, reference header (incomplete), and links to past discussions on github: 
+
+* https://github.com/fmatthew5876/stdcxx-bitops
+
 Introduction
 =============================
 
