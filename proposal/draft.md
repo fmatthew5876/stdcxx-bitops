@@ -319,7 +319,7 @@ One application of `cntt0` is in computing the greatest common divisor of 2 numb
 to Howard Hinnant for bringing this to our attention.
 
     template <typename unsigned-integral>
-    T gcd(T x, T y) 
+    unsigned-integral gcd(unsigned-integral x, unsigned-integral y) 
     { 
         if (x == 0) 
             return y; 
@@ -345,7 +345,7 @@ As mentioned earlier, we can use `popcount()` to detect whether or not an intege
 
     template <typename integral>
     bool ispow2(integral x) {
-      return x > 0 && popcount(x) == 1;
+      return x >= 0 && popcount(x) == 1;
     }
 
 ### Rightmost bit manipulation
@@ -500,7 +500,7 @@ These functions are trivial to implement and are provided only for usability.
 
 * *Returns:* Returns true if the bit at position `b` of `x` is set, otherwise 0.
 * *Remarks:* Result is undefined if `b < 0 || b >= sizeof(x) * CHAR_BIT`.
-* *Implementation:* `bool(x & (integral(1) << b))`
+* *Implementation:* `bool((x >> b) & 1) != 0)`
     
 ### Range of bits manipulation
 
@@ -939,7 +939,6 @@ Several machine architectures were surveyed for their instruction references.
 The purpose of this section is to demonstrate the current state
 of the art on many different machines. We have also noted when one operation is
 trivially implementable from another bitops proposal operation.
-
 * `cntt0(x)`
  * i386: `bsf`, `cmov`
  * x86\_64 w/ BMI1: `tzcnt`
@@ -1026,6 +1025,8 @@ trivially implementable from another bitops proposal operation.
 * `reverse_bytes<uint16_t>(x)`
  * PDP11: `SWAB`
  * gcc: `__builtin_bswap16(x)`
+ * rotr<uint_16_t>(x, 8);
+ * rotl<uint_16_t>(x, 8);
 * `reverse_bytes<uint32_t>(x)`
  * i486: `bswap`
  * ARMv5: `REV`

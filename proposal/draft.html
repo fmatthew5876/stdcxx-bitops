@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#x61;&#105;&#x6C;&#x74;&#x6F;:&#102;&#109;&#x61;&#x74;&#x74;&#104;&#101;&#119;&#x35;8&#x37;&#54;&#64;&#103;&#109;&#x61;&#x69;&#108;&#x2E;&#x63;&#111;&#109;">&#102;&#109;&#x61;&#x74;&#x74;&#104;&#101;&#119;&#x35;8&#x37;&#54;&#64;&#103;&#109;&#x61;&#x69;&#108;&#x2E;&#x63;&#111;&#109;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#97;i&#108;&#116;&#111;:&#102;&#109;&#x61;&#x74;t&#104;&#x65;w&#53;&#56;&#55;&#x36;&#64;&#103;&#x6D;&#x61;&#x69;&#x6C;&#46;&#99;&#x6F;&#x6D;">&#102;&#109;&#x61;&#x74;t&#104;&#x65;w&#53;&#56;&#55;&#x36;&#64;&#103;&#x6D;&#x61;&#x69;&#x6C;&#46;&#99;&#x6F;&#x6D;</a></li>
 </ul>
 
 <h1>Introduction</h1>
@@ -33,13 +33,13 @@ which are used to implement higher level abstractions.</p>
 <p>We construct algorithms by combining these basic operations.
 Sometimes significant performance benefits can be gained by
 directly manipulating the binary quantities contained
-within the registers which make up this numerical abstraction.
+within the registers.
 Many online and print references including [<a href="#Anderson01">Anderson01</a>],
-[<a href="#Dietz01">Dietz01</a>], [<a href="#Neumann01">Neumann01</a>], [<a href="#Warren01">Warren01</a>], and [<a href="#HACKMEM">HACKMEM</a>]
+[<a href="#Dietz01">Dietz01</a>], [<a href="#Neumann01">Neumann01</a>], [<a href="#Warren01">Warren01</a>], and [<a href="#HAKMEM">HAKMEM</a>]
 are devoted to discovering these algorithms and implementing
 them efficiently.</p>
 
-<p>Hardware vendors have understood the importance of high performance
+<p>Hardware vendors understand the importance of high performance
 bitwise manipulation routines. Many of them have provided
 additional hardware which can perform these bitwise operations directly with
 a single instruction. These instructions are often much more efficient than
@@ -53,10 +53,10 @@ These differences create an unreasonably large maintenance burden on the program
 who wishes to write efficient and portable code.</p>
 
 <p>As a motivating example, consider the various implementations of
-the count trailing zeroes algorithm presented in [<a href="#Kostjuchenko01">Kostjuchenko01</a>].
+the count trailing zeros algorithm presented in [<a href="#Kostjuchenko01">Kostjuchenko01</a>].
 In order to implement an SSE2 optimized <code>strlen()</code> function,
 the author had to implement, test, and profile many different versions of
-count trailing zeroes.  None of them take advantage of native instructions.</p>
+count trailing zeros.  None of them take advantage of native instructions.</p>
 
 <p>One who wishes to exploit 
 the <code>bsf</code> or <code>tzcnt</code> instructions on Intel must rely on non-standard
@@ -66,13 +66,12 @@ Adding support for native instructions requires a nest of <code>#ifdef</code>s a
 deep knowledge of different processor architectures. This is a heavy cost
 in programmer time.</p>
 
-<p>Bitwise algorithms are general purpose tools which can be used in a wide
-variety of domains and are the key to unlocking high performance in many
-important algorithms. A bitwise operations library has been badly needed in 
-the C and C++ standard libraries for many years.</p>
+<p>Bitwise algorithms can be used in a wide variety of domains and are the key
+to unlocking high performance in many important algorithms. A bitwise operations 
+library has been badly needed in the C and C++ standard libraries for many years.</p>
 
 <p>We present a bitwise operations library which exposes these native instructions
-wherever possible and provides backup implementations in C++ if they do not exist.
+and provides backup implementations in C++ if they do not exist.
 Because this library would be part of the standard, these commonly used routines
 could be implemented once and profiled on each platform. Finally, this library 
 offers an interface which takes full advantage of the latest processor features
@@ -80,33 +79,32 @@ including ARMv8 and Intel BMI2.</p>
 
 <h1>Design Goals and Scope</h1>
 
-<p>There are seemingly endless ways one can manipulate binary quantities. How does one go
-about choosing which ones to include in a library and which ones to exclude? 
+<p>There are seemingly endless ways one can manipulate binary quantities. How does one 
+choose which functions to include in a library? 
 How does one choose proper names for each function? Which algorithms can
-be trivially converted into single instructions by the optimizer and which
-actually require the programmer to declare their use through a function call?
+require the programmer to declare their use through a function call?
 We will address these questions with the following design goals.</p>
 
 <h2>Design Goal 1: Provide the programmer with better access to the machine</h2>
 
-<p>In 1970, the Digital Equipment Corporation announced the PDP11. 
+<p>Digital Equipment Corporation announced the PDP11 [<a href="#pdp11">pdp11</a>] in 1970. 
 This 16 bit machine has 3 instructions of interest, <code>ROR</code> (rotate right), 
 <code>ROL</code> (rotate left), and <code>SWAB</code> (swap bytes).
 These operations along with their later 32 and 64 bit variants are provided 
-by many more modern machines as will be shown. As of 2013,
-the programmer still does not have direct access to these instructions in modern C and C++.</p>
+by many modern architectures. As of 2013,
+programmers still do not have direct access to these instructions in modern C and C++.</p>
 
-<p>Therefore, the first and most important goal of this proposal is to provide the programmer with better
+<p>Therefore, the first and most important goal of this proposal is to provide programmers with better
 access to the machine via a new set of primitives which go beyond simple arithmetic
 and logical operations. We will present new functions for the standard library which can be implemented
-using only few instructions if supported by the machine, using backup implementations
+using only a few instructions if supported by the machine, using backup implementations
 if no such support is provided by the hardware.</p>
 
 <h2>Design Goal 2: Provide a reusable library of generic bitwise manipulation routines</h2>
 
 <p>In designing this proposal, we wish not just to limit ourselves to operations which may have
 native machine instruction implementations on at least one platform. We would like to provide
-a standard library of primitives which are commonly found to be reimplemented time and time again in different code bases.
+a standard library of primitives which are frequently reimplemented in different code bases.
 The standard library already provides a rich set of generic containers and algorithms. What is missing is a 
 set of bitwise manipulation primitives.</p>
 
@@ -124,7 +122,7 @@ On a machine with a popcount instruction, the first implementation uses less ins
 and no branches. Without a popcount instruction, the second version is the better choice
 as computing popcount requires much more than a few logical operations and comparisons 
 [<a href="#Dietz01">Dietz01</a>]. In order to implement <code>ispow2()</code>, the programmer is faced with
-the same set of dilemnas as with the count trailing zeroes example from the <a href="#motivation">Motivation</a>
+the same set of dilemmas as with the count trailing zeros example from the <a href="#motivation">Motivation</a>
 section.</p>
 
 <h1>Glossary of Terms</h1>
@@ -132,28 +130,28 @@ section.</p>
 <p>The following terminology is used in the remainder of this document to describe the technical aspects of this proposal.</p>
 
 <ul>
-<li><em>set</em>: If we say that a bit has been "set", we mean that we will change its value to 1. We can also say "set the bit to x", which has the obvious meaning of changing the value to 0 or 1, depending on the value of x.</li>
+<li><em>set</em>: If we say that a bit has been "set", we mean that we will change its value to 1. We can also say "set the bit to x", which changes the value to 0 or 1, depending on the value of x.</li>
 <li><em>reset</em>: To reset a bit is to change its value to 0.</li>
 <li><em>flip</em>: To flip a bit is to invert its value. That is set the bit if it is currently 0 and likewise reset the bit if it is currently 1.</li>
 <li><em>test</em>: To test a bit is to return <code>true</code> if its value is 1, otherwise return <code>false</code>.</li>
 <li><em>subword</em>: A collection of contiguous bits of a given size. Some commonly found examples:
 <ul>
-<li><em>nibble</em>: a subword of size 4</li>
-<li><em>byte</em>: a subword of size <code>CHAR_BIT</code>, usually 8</li>
+<li><em>nibble</em>: a subword, usually 4 bits.</li>
+<li><em>byte</em>: a subword of size <code>CHAR_BIT</code>, usually 8 bits.</li>
 <li><em>word</em>: Depending on the platform terminology, often a subword of size 16, 32 or 64. </li>
 </ul></li>
-<li><em>most significant bit (msb)</em>: The high order bit in a binary quantity.</li>
+<li><em>most significant bit (msb)</em>: The highest order bit in a binary quantity.</li>
 <li><em>most significant X bit (msXb)</em>: The highest order bit in a binary quantity with a value of X.</li>
-<li><em>least significant bit (lsb)</em>: The low order bit in a binary quantity.</li>
+<li><em>least significant bit (lsb)</em>: The lowest order bit in a binary quantity.</li>
 <li><em>least significant X bit (lsXb)</em>: The lowest order bit in a binary quantity with a value of X.</li>
-<li><code>~T(0)</code>: This statement represents a quantity of type <code>T</code> where all of the bits are 1. We avoid the more commonly used <code>T(-1)</code> as it assumes 2's compliment signed integers and is a little less intuitive to the unitiated.</li>
+<li><code>~T(0)</code>: This statement represents a quantity of type <code>T</code> where all of the bits are 1. We avoid the more commonly used <code>T(-1)</code> as it assumes 2's complement signed integers and is somewhat less intuitive to the uninitiated.</li>
 </ul>
 
 <h1>Technical Specification</h1>
 
 <p>We will now describe the additions to <code>&lt;cmath&gt;</code> and <code>&lt;memory&gt;</code>. This is a procedural library implemented
 entirely using <code>constexpr</code> templated free functions.
-In addition, each function has been qualified with <code>noexcept</code>. These
+All functions have been qualified with <code>noexcept</code>. These
 operations are most often used in highly optimized numerical code where the overhead of exception
 handling would be inappropriate. For functions which have pre-conditions on their inputs, we
 have opted for undefined return values if these pre-conditions are ever violated.
@@ -173,11 +171,10 @@ for all builtin integral types, signed and unsigned. Functions which take more t
 integral argument of different types will use a single letter suffix, for example
 <code>integrall</code> and <code>integralr</code> for left and right hand arguments.</p>
 
-<p>With regards to signed integers, this proposal does not require signed integers be
-implemented using 2's compliment. However, the design of this proposal considers
-the practical reality that almost all modern hardware does in fact use 2's compliment.
+<p>This proposal does not require signed integers be implemented using 2's complement. However, the design of this proposal considers
+the practical reality that almost all modern hardware does in fact use 2's complement.
 All example code, including the reference implementation [<a href="#BitOpsRef">BitOpsRef</a>]
-assume 2's compliment signed integers with undefined behavior on overflow and underflow.
+assume 2's complement signed integers with undefined behavior on overflow and underflow.
 Adding support for other signed representations is an exercise left for the reader.</p>
 
 <p>Each section will describe the full technical specifications of the functions in that group, noting their
@@ -195,11 +192,11 @@ help illustrate how they work.</p>
 <p>Bit shifting is provided in C++ with <code>operator&lt;&lt;</code> and <code>operator&gt;&gt;</code> for integral types. It is
 a very simplistic abstraction with many deficiencies and some subtle caveats.</p>
 
-<p>First as noted earlier, there is no primitive for rotational shifts even though these shifts can be found in the instruction 
-set of almost every machine. Second, 
+<p>First as noted earlier, there is no primitive for circular shifts even though these shifts can be found in the instruction 
+sets of most architectures. Second, 
 <code>operator&gt;&gt;</code> for signed types has implementation defined behavior with regards to filling in the high order bits, making
 it nearly useless when writing portable code.
-Writing a portable arithmetic right shift cumbersome at best and inefficient at worst. Finally, performing a logical right shift on a signed
+Writing a portable arithmetic right shift is cumbersome at best and inefficient at worst. Finally, performing a logical right shift on a signed
 quantity is also cumbersome because it requires casts which obscure the meaning of the code.</p>
 
 <h4>List of Functions</h4>
@@ -211,7 +208,7 @@ constexpr integral shll(integral x, int s) noexcept;
 
 <ul>
 <li><em>Returns:</em> <code>x &lt;&lt; s</code></li>
-<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt; sizeof(x) * CHAR_BIT</code></li>
+<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt;= sizeof(x) * CHAR_BIT</code></li>
 </ul>
 
 <!-- -->
@@ -223,7 +220,7 @@ constexpr integral shlr(integral x, int s) noexcept;
 
 <ul>
 <li><em>Returns:</em> <code>x</code> with all of its bits shifted right by <code>s</code> positions. The <code>s</code> high order bits of the result are reset.</li>
-<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt; sizeof(x) * CHAR_BIT</code></li>
+<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt;= sizeof(x) * CHAR_BIT</code></li>
 </ul>
 
 <!-- -->
@@ -235,7 +232,7 @@ constexpr integral shal(integral x, int s) noexcept;
 
 <ul>
 <li><em>Returns:</em> <code>x &lt;&lt; s</code></li>
-<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt; sizeof(x) * CHAR_BIT</code></li>
+<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt;= sizeof(x) * CHAR_BIT</code></li>
 <li><em>Remarks:</em> This function is identical to <code>shll()</code> and is only provided for symmetry.</li>
 </ul>
 
@@ -248,7 +245,7 @@ constexpr integral shar(integral x, int s) noexcept;
 
 <ul>
 <li><em>Returns:</em> <code>x</code> with all of its bits shifted right by <code>s</code> positions. The <code>s</code> high order bits of the result are set to the value of most significant bit of <code>x</code>.</li>
-<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt; sizeof(x) * CHAR_BIT</code></li>
+<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt;= sizeof(x) * CHAR_BIT</code></li>
 </ul>
 
 <!-- -->
@@ -261,7 +258,7 @@ constexpr integral rotl(integral x, int s) noexcept;
 <ul>
 <li><em>Returns:</em> <code>x</code> with all of its bits shifted left by <code>s</code> positions.
 The <code>s</code> low order bits are set to the <code>s</code> high order bits of <code>x</code>.</li>
-<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt; sizeof(x) * CHAR_BIT</code></li>
+<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt;= sizeof(x) * CHAR_BIT</code></li>
 </ul>
 
 <!-- -->
@@ -274,14 +271,13 @@ constexpr integral rotr(integral x, int s) noexcept;
 <ul>
 <li><em>Returns:</em> <code>x</code> with all of its bits shifted right by <code>s</code> positions.
 The <code>s</code> high order bits are set to the <code>s</code> low order bits of <code>x</code>.</li>
-<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt; sizeof(x) * CHAR_BIT</code></li>
+<li><em>Remarks:</em> result is undefined if <code>s &lt; 0 || s &gt;= sizeof(x) * CHAR_BIT</code></li>
 </ul>
 
 <h3>Bit Counting Algorithms</h3>
 
 <p>Bit counting is used to construct efficient implementations of other higher level algorithms.
-Many of these operations have native support on a wide variety of modern
-and antiquated hardware.
+Many of these functions have native support on a wide variety of architectures.
 Some example applications will be provided below.</p>
 
 <h4>List of functions</h4>
@@ -356,7 +352,7 @@ constexpr int parity(integral x) noexcept;
 to Howard Hinnant for bringing this to our attention.</p>
 
 <pre><code>template &lt;typename unsigned-integral&gt;
-T gcd(T x, T y) 
+unsigned-integral gcd(unsigned-integral x, unsigned-integral y) 
 { 
     if (x == 0) 
         return y; 
@@ -383,7 +379,7 @@ T gcd(T x, T y)
 
 <pre><code>template &lt;typename integral&gt;
 bool ispow2(integral x) {
-  return x &gt; 0 &amp;&amp; popcount(x) == 1;
+  return x &gt;= 0 &amp;&amp; popcount(x) == 1;
 }
 </code></pre>
 
@@ -527,8 +523,8 @@ constexpr integral maskt1ls0b(integral x) noexcept;
 
 <h3>Single Bit Manipulation</h3>
 
-<p>Most programmers have at some point in their career have needed to index and manipulate a single bit
-within a given integral quantity.
+<p>Most programmers at some point have needed to index and manipulate a single bit
+within a word.
 These functions are trivial to implement and are provided only for usability.</p>
 
 <h4>List of Functions</h4>
@@ -580,12 +576,12 @@ constexpr bool testbit(integral x, int b) noexcept;
 <ul>
 <li><em>Returns:</em> Returns true if the bit at position <code>b</code> of <code>x</code> is set, otherwise 0.</li>
 <li><em>Remarks:</em> Result is undefined if <code>b &lt; 0 || b &gt;= sizeof(x) * CHAR_BIT</code>.</li>
-<li><em>Implementation:</em> <code>bool(x &amp; (integral(1) &lt;&lt; b))</code></li>
+<li><em>Implementation:</em> <code>bool((x &gt;&gt; b) &amp; 1) != 0)</code></li>
 </ul>
 
 <h3>Range of bits manipulation</h3>
 
-<p>The following operations manipulate ranges of bits above or below a given index.
+<p>The following functions manipulate ranges of bits above or below a given index.
 One of them is implemented in hardware
 (see <a href="#survey-of-hardware-support">Survey of Hardware Support</a>),
 the rest are provided for usability and completeness.</p>
@@ -1010,8 +1006,8 @@ constexpr auto satsub(integral_l l, integral_r r) noexcept -&amp;gt; decltype(l 
 
 <h3>Alignment helpers</h3>
 
-<p>These are primitives used for aligning objects in memory. They supplement use cases with which <code>std::align</code> is
-not designed to handle. These are very useful operations and all of them have trivial implementations.
+<p>These functions are used for aligning objects in memory. They supplement use cases with which <code>std::align</code> is
+not designed to handle. These are useful operations and all of them have trivial implementations.
 They can often be found in operating system kernels and device drivers reimplemented time and time
 again as macros.</p>
 
@@ -1079,7 +1075,7 @@ constexpr integral align_down(integral x, size_t align) noexcept;
 
 <p>We currently have <code>std::align</code> in the standard for doing alignment calculations.
 The function <code>std::align</code>
-has one very specific use case, that is to carve out an aligned buffer of a known size within a larger buffer.
+has one specific use case, that is to carve out an aligned buffer of a known size within a larger buffer.
 In order to use <code>std::align</code>, the user must a priori know the size of the aligned buffer
 they require. Unfortunately in some use cases, even calculating the size of this buffer
 as an input to <code>std::align</code> itself requires doing alignment calculations.
@@ -1104,7 +1100,7 @@ The alignment calculations here cannot be done with <code>std::align</code>.</p>
 }
 </code></pre>
 
-<p>We conclude that <code>std::align</code> is much too specific for general alignment calculations. It has a very narrow
+<p>We conclude that <code>std::align</code> is much too specific for general alignment calculations. It has a narrow
 use case and should only be considered as a helper function for when that use case is needed.</p>
 
 <h1>Implementation</h1>
@@ -1131,27 +1127,25 @@ cmov instruction can be omitted. These optimizations are often impossible with i
 <h2>Survey of Hardware Support</h2>
 
 <p>The following is a list of compiler intrinsics and native instructions which can be used to implement
-the proposal on various platforms. 
+this proposal on various platforms. 
 Several machine architectures were surveyed for their instruction references.
 The purpose of this section is to demonstrate the current state
 of the art on many different machines. We have also noted when one operation is
-trivially implementable from another bitops proposal operation.</p>
+trivially implementable from another bitops proposal operation.
+* <code>cntt0(x)</code>
+ * i386: <code>bsf</code>, <code>cmov</code>
+ * x86_64 w/ BMI1: <code>tzcnt</code>
+ * Alpha: <code>cttz</code>
+ * gcc: <code>x == 0 ? sizeof(x) * CHAR_BIT : __builtin_ctz(x)</code>
+ * bitops: <code>cntt1(~x)</code></p>
 
 <ul>
-<li><p><code>cntt0(x)</code></p>
-
-<ul>
-<li>i386: <code>bsf</code>, <code>cmov</code></li>
-<li>x86_64 w/ BMI1: <code>tzcnt</code></li>
-<li>alpha: <code>cttz</code></li>
-<li>gcc: <code>x == 0 ? sizeof(x) * CHAR_BIT : __builtin_ctz(x)</code></li>
-<li>bitops: <code>cntt1(~x)</code></li>
-</ul></li>
 <li><p><code>cntl0(x)</code></p>
 
 <ul>
 <li>i386: <code>bsr</code>, <code>cmov</code></li>
 <li>x86_64 w AMD SSE4a / Intel BMI1: <code>lzcnt</code></li>
+<li>Alpha: <code>ctlz</code></li>
 <li>ARMv5: <code>CLZ</code></li>
 <li>IA64: <code>clz</code></li>
 <li>PowerPC: <code>cntlzd</code></li>
@@ -1179,7 +1173,7 @@ trivially implementable from another bitops proposal operation.</p>
 <ul>
 <li>x86_64 SSE4: <code>popcnt</code></li>
 <li>IA64: <code>popcnt</code></li>
-<li>Alpha: <code>CTPOP</code></li>
+<li>Alpha: <code>ctpop</code></li>
 <li>PowerPC: <code>popcntb</code></li>
 <li>SparcV9: <code>POPC</code></li>
 <li>gcc: <code>__builtin_popcount(x)</code></li>
@@ -1265,6 +1259,8 @@ trivially implementable from another bitops proposal operation.</p>
 <ul>
 <li>PDP11: <code>SWAB</code></li>
 <li>gcc: <code>__builtin_bswap16(x)</code></li>
+<li>rotr<uint_16_t>(x, 8);</li>
+<li>rotl<uint_16_t>(x, 8);</li>
 </ul></li>
 <li><code>reverse_bytes&lt;uint32_t&gt;(x)</code>
 <ul>
@@ -1325,19 +1321,19 @@ trivially implementable from another bitops proposal operation.</p>
 <h2>Naming</h2>
 
 <p>Naming is one of the most difficult problems in software development. 
-One one extreme are terse names such as <code>std::ctz()</code> for Count
+On one extreme are terse names such as <code>std::ctz()</code> for Count
 Trailing Zeroes. This naming style mimics assembler mnemonics and is also
 an artifact of the old days when programming languages had limits on the
 length of names of identifiers.</p>
 
 <p>These short names do have some merits. They reduce the amount of typing required by
 the programmer and more importantly they can be used within complex expressions.
-The downside is the ambiguity that can come with some short names. Consider
+The downside is that short names can be ambiguous. Consider
 a hypothetical <em>Count Leading Sign bits</em> function <code>std::cls()</code>. This name could
 be interpreted in other contexts such as <em>CLear Screen</em>.</p>
 
-<p>On the other extreme are verbose names such as <code>std::mask_least_significant_1_bit_and_trailing_zeroes()</code>. While these names
-remove all ambiguity they are very cumbersome to type. They also cannot be
+<p>On the other extreme are verbose names such as <code>std::mask_least_significant_1_bit_and_trailing_zeros()</code>. While these names
+remove all ambiguity they are cumbersome to type. They also cannot be
 used easily in complex expressions with other operations.</p>
 
 <p>We have opted to make a compromise. The current naming scheme adheres to the
@@ -1368,7 +1364,7 @@ Some other styles have been suggested on the std-proposals discussion forum.</p>
 <li><code>cntt0()</code></li>
 <li><code>countt0()</code></li>
 <li><code>count_t0()</code></li>
-<li><code>count_trailing_zeroes()</code></li>
+<li><code>count_trailing_zeros()</code></li>
 <li><code>count_trailing_0_bits()</code></li>
 <li><code>count_trailing&lt;bool&gt;()</code></li>
 </ul>
@@ -1380,7 +1376,7 @@ this proposal. Once this proposal is finished and the interface is agreed upon, 
 
 <h2>Support for C</h2>
 
-<p>This library would also be very useful for the C community. Many of these bitwise operations
+<p>This library would also be useful for the C community. Many of these bitwise operations
 are used by embedded developers and they often choose to implement in C.  While C compatibility is a noble goal, we
 do not want to make sacrifices to the C++ interface in the name of C compatibility. Particularly with regards to
 templates, overloading, and <code>constexpr</code>.
@@ -1392,7 +1388,7 @@ may allow interoperability, using macros for C and templates for C++. The <code>
 could be used in the C++ version while <code>inline</code> is used in the C version. If the C community shows interest,
 we will consider a joint C proposal and flesh out the technical details of the interface and compatibility.</p>
 
-<h1>Acknowledgements</h1>
+<h1>Acknowledgments</h1>
 
 <p>Thank you to everyone on the std proposals forum for feedback and suggestions.</p>
 
@@ -1402,18 +1398,18 @@ we will consider a joint C proposal and flesh out the technical details of the i
 <li><a name="BitOpsRef"></a>[BitOpsRef] <em>GitHub: BitOps Proposal and Reference Implementation</em>, (still under development) Available online at
 <a href="https://github.com/fmatthew5876/stdcxx">https://github.com/fmatthew5876/stdcxx</a></li>
 <li><a name="Anderson01"></a>[Anderson01] Anderson, Sean Eron. <em>Bit Twiddling Hacks</em>, Available online at <a href="http://graphics.stanford.edu/~seander/bithacks.html">http://graphics.stanford.edu/~seander/bithacks.html</a></li>
-<li><a name="Dietz01"></a>[Dietz01] Deitz, Hendry Gordon. <em>The Aggregate Magic Algorithms</em>, University of Kentucky. 
+<li><a name="Dietz01"></a>[Dietz01] Dietz, Hendry Gordon. <em>The Aggregate Magic Algorithms</em>, University of Kentucky. 
 Available online at <a href="http://aggregate.org/MAGIC/">http://aggregate.org/MAGIC/</a></li>
 <li><a name="Neumann01"></a>[Neumann01] Neumann, Jasper. <em>Bit permutations</em>, Available online at
 <a href="http://programming.sirrida.de/bit_perm.html">http://programming.sirrida.de/bit_perm.html</a></li>
 <li><a name="Warren01"></a>[Warren01] Warren, Henry S. Jr. <em>Hacker's Delight Second Edition</em>,
 Addison-Wesley, Oct 2012, ISBN 0-321-84268-5.</li>
-<li><a name="pdp11"></a>[pdp11] <em>pdp11/40 process handbook</em>, Digital Equipment Corporation, 1972.</li>
+<li><a name="pdp11"></a>[pdp11] <em>pdp11/40 processor handbook</em>, Digital Equipment Corporation, 1972. Available online at <a href="http://pdos.csail.mit.edu/6.828/2005/readings/pdp11-40.pdf">http://pdos.csail.mit.edu/6.828/2005/readings/pdp11-40.pdf</a></li>
 <li><a name="Kostjuchenko01"></a>[Kostjuchenko01] Kostjuchenko, Dmitry. <em>SSE2 optimized strlen</em>, Available online at
 <a href="http://www.strchr.com/sse2_optimised_strlen">http://www.strchr.com/sse2_optimised_strlen</a></li>
 <li><a name="N3646"></a>[N3646] Pratte, Robert. <em>Network Byte Order Conversion Document Number: N3646</em>.
 Available online at <a href="http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3646.pdf">http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3646.pdf</a></li>
-<li><a name="HACKMEM"></a>[HACKMEM] <em>HACKMEM, AI Memo 239</em>, Available online at <a href="http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html">http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html</a>.</li>
+<li><a name="HAKMEM"></a>[HAKMEM] <em>HAKMEM, AI Memo 239</em>, Available online at <a href="http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html">http://www.inwap.com/pdp10/hbaker/hakmem/hakmem.html</a>.</li>
 <li><a name="ChessProg"></a>[ChessProg] <em>Chess Programming WIKI</em>, Available online at <a href="http://chessprogramming.wikispaces.com/">http://chessprogramming.wikispaces.com/</a>.</li>
 <li><a name="Hilewitz01"></a>[Hilewitz01] Hilewitz, Yedidya and Lee, Ruby B. <em>Fast Bit Compression and Expansion with Parallel Extract and Parallel Deposit Instructions</em>, 2006.</li>
 <li><a name="EmbedGuru01"></a>[EmbedGuru01] <em>Optimizing for the CPU / compiler / Stack Overflow</em>, Available online at <a href="http://embeddedgurus.com/stack-overflow/2012/06/optimizing-for-the-cpu-compiler/">http://embeddedgurus.com/stack-overflow/2012/06/optimizing-for-the-cpu-compiler/</a>.</li>
