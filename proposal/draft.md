@@ -775,6 +775,7 @@ For a more detailed treatment of these operations, refer to \[[Neumann01](#Neuma
 * Network topology definitions and routing.
 * Bioinformatics, image processing, steganography, cryptanalysis, and coding \[[Hilewitz01](#Hilewitz01)\]
 * Chess Board Programming \[[ChessProg](#ChessProg)\]
+* `reverse_bits` is useful for implementing ZIP codes on ARM (thanks for Andy Thomason).
 * Computing Morton Numbers which is "used all over the place in graphics [programming]" \[[Barczak01](#Barczak01)\].
 
 ### Power of 2 manipulation
