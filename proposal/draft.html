@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#109;&#x61;i&#108;&#116;&#x6F;:&#x66;&#x6D;&#x61;&#x74;&#x74;&#x68;&#x65;&#119;&#53;&#56;7&#54;&#64;&#x67;ma&#105;&#108;&#46;c&#111;&#109;">&#x66;&#x6D;&#x61;&#x74;&#x74;&#x68;&#x65;&#119;&#53;&#56;7&#54;&#64;&#x67;ma&#105;&#108;&#46;c&#111;&#109;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#97;&#105;&#x6C;&#x74;&#x6F;:&#x66;&#109;&#97;&#x74;&#116;&#104;&#x65;&#x77;&#53;&#56;&#x37;&#54;&#64;g&#x6D;&#x61;&#x69;&#x6C;&#46;&#x63;&#x6F;&#x6D;">&#x66;&#109;&#97;&#x74;&#116;&#104;&#x65;&#x77;&#53;&#56;&#x37;&#54;&#64;g&#x6D;&#x61;&#x69;&#x6C;&#46;&#x63;&#x6F;&#x6D;</a></li>
 </ul>
 
 <p>The latest draft, reference header (incomplete), and links to past discussions on github: </p>
@@ -1210,7 +1210,7 @@ constexpr bool is_aligned(integral x, size_t align) noexcept;
 
 <!-- -->
 
-<pre><code>bool is_aligned(void* val, size_t align) noexcept;
+<pre><code>bool is_aligned(const void* val, size_t align) noexcept;
 </code></pre>
 
 <ul>
@@ -1230,15 +1230,6 @@ constexpr integral align_up(integral x, size_t align) noexcept;
 
 <!-- -->
 
-<pre><code>void* align_up(void* val, size_t align) noexcept;
-</code></pre>
-
-<ul>
-<li><em>Returns:</em> <code>(void*)align_up(uintptr_t(val), align)</code>.</li>
-</ul>
-
-<!-- -->
-
 <pre><code>template &lt;class integral&gt;
 constexpr integral align_down(integral x, size_t align) noexcept;
 </code></pre>
@@ -1246,15 +1237,6 @@ constexpr integral align_down(integral x, size_t align) noexcept;
 <ul>
 <li><em>Returns:</em> The unique value <code>n</code> such that <code>is_aligned(n, align) &amp;&amp; n &lt;= x</code>.</li>
 <li><em>Implementation:</em> <code>x &amp; (-a)</code></li>
-</ul>
-
-<!-- -->
-
-<pre><code>void* align_down(void* val, size_t align) noexcept;
-</code></pre>
-
-<ul>
-<li><em>Returns:</em> <code>(void*)align_down(uintptr_t(val), align)</code>.</li>
 </ul>
 
 <h4>Applications and std::align</h4>

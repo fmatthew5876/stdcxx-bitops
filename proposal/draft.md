@@ -991,7 +991,7 @@ again as macros.
     
 <!-- -->
 
-    bool is_aligned(void* val, size_t align) noexcept;
+    bool is_aligned(const void* val, size_t align) noexcept;
 
 * *Returns:* `is_aligned(uintptr_t(val), align)`.
     
@@ -1004,12 +1004,6 @@ again as macros.
 * *Implementation:* `(x + (a - 1)) & -a`
     
 <!-- -->
-
-    void* align_up(void* val, size_t align) noexcept;
-
-* *Returns:* `(void*)align_up(uintptr_t(val), align)`.
-    
-<!-- -->
     
     template <class integral>
     constexpr integral align_down(integral x, size_t align) noexcept;
@@ -1017,12 +1011,6 @@ again as macros.
 * *Returns:* The unique value `n` such that `is_aligned(n, align) && n <= x`.
 * *Implementation:* `x & (-a)`
     
-<!-- -->
-
-    void* align_down(void* val, size_t align) noexcept;
-
-* *Returns:* `(void*)align_down(uintptr_t(val), align)`.
-
 #### Applications and std::align
 
 These alignment helpers are immensely useful. The author has used them in almost every major codebase
