@@ -355,7 +355,7 @@ This is used by graphics programmers to determine how many mip levels will be us
 Furthermore, given this efficient computation of `floor_log2()`, we can trivially compute `floorp2(x)`, that is the greatest power of 
 2 less than or equal to x.
 
-    uint32_t floor2(uint32_t x) {
+    uint32_t floorp2(uint32_t x) {
       return 1 << (31 - cntl0(x));
     }
  
@@ -906,7 +906,7 @@ The following functions detect and compute powers of 2.
     template <class integral>
     constexpr integral ceilp2(integral x) noexcept;
 
-* *Returns:* Returns the unique quantity `n` where `ispow2(n) && n >= x`.
+* *Returns:* Returns the smallest value `n` where `ispow2(n) && n >= x`.
 * *Remarks:* Result is undefined if the value of `n` is too large to be represented by type `integral`.
     
 <!-- -->
@@ -915,7 +915,7 @@ The following functions detect and compute powers of 2.
     template <class integral>
     constexpr integral floorp2(integral x) noexcept;
 
-* *Returns:* Returns the unique quantity `n` where `ispow2(n) && N <= x`.
+* *Returns:* Returns the largest value `n` where `ispow2(n) && N <= x`.
 * *Remarks:* Result is undefined if `x <= 0`.
 
 <!-- -->
@@ -951,13 +951,13 @@ The following functions detect and compute powers of 2.
 
 Saturated arithmetic is useful in digital signal processing applications \[[EmbedGuru01](#EmbedGuru01)\].
 It is also provided as a hardware instruction
-on some machines. In our efforts to better expose hardware features, we have included saturated addition and subtraction functions in this proposal.
+on some machines. In our efforts to better expose hardware features, we have included basic saturated arithmetic functions in this proposal.
 
 #### List of Functions
     
     //SATurated ADDition
     template <class integral_l, class integral_r>
-    constexpr auto satadd(integral_l l, integral_r r) noexcept -&gt; decltype(l + r);
+    constexpr auto satadd(integral_l l, integral_r r) noexcept -> decltype(l + r);
 
 * *Returns:* `l + r`
 * *Remarks:* On overflow, will return `std::numeric_limits<decltype(l + r)>::max()`
@@ -967,7 +967,7 @@ on some machines. In our efforts to better expose hardware features, we have inc
     
     //SATurated SUBtraction
     template <class integral_l, class integral_r>
-    constexpr auto satsub(integral_l l, integral_r r) noexcept -&gt; decltype(l - r);
+    constexpr auto satsub(integral_l l, integral_r r) noexcept -> decltype(l - r);
 
 * *Returns:* `l - r`
 * *Remarks:* On overflow, will return `std::numeric_limits<decltype(l + r)>::max()`
@@ -978,7 +978,7 @@ on some machines. In our efforts to better expose hardware features, we have inc
     
     //SATurated MULtiplication
     template <class integral_l, class integral_r>
-    constexpr auto satmul(integral_l l, integral_r r) noexcept -&gt; decltype(l - r);
+    constexpr auto satmul(integral_l l, integral_r r) noexcept -> decltype(l * r);
 
 * *Returns:* `l * r`
 * *Remarks:* On overflow, will return `std::numeric_limits<decltype(l * r)>::max()`
@@ -1006,12 +1006,6 @@ again as macros.
     
 <!-- -->
 
-    bool is_aligned(const void* val, size_t align) noexcept;
-
-* *Returns:* `is_aligned(uintptr_t(val), align)`.
-    
-<!-- -->
-
     template <class integral>
     constexpr integral align_up(integral x, size_t align) noexcept;
 
@@ -1026,7 +1020,7 @@ again as macros.
 * *Returns:* The unique value `n` such that `is_aligned(n, align) && n <= x`.
 * *Implementation:* `x & (-a)`
     
-#### Applications and std::align
+#### Applications
 
 These alignment helpers are immensely useful. The author has used them in almost every major codebase
 he has worked on.
@@ -1038,9 +1032,11 @@ Use cases include:
 * Device drivers
 * Operating system kernels
 
+#### Regarding std::align
+
 We currently have `std::align` in the standard for doing alignment calculations.
 The function `std::align`
-has one specific use case, that is to carve out an aligned buffer of a known size within a larger buffer.
+has one specific use case, that is to carve out an aligned sub-buffer of a known size within a larger buffer.
 In order to use `std::align`, the user must a priori know the size of the aligned buffer 
 they require. Unfortunately in some use cases, even calculating the size of this buffer
 as an input to `std::align` itself requires doing alignment calculations. Many times we also

@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#x6D;ai&#x6C;&#x74;&#x6F;:&#102;&#109;&#97;&#116;&#x74;&#x68;&#101;&#119;&#x35;&#x38;&#x37;&#54;&#64;&#x67;m&#97;&#x69;&#108;&#x2E;&#99;&#x6F;&#x6D;">&#102;&#109;&#97;&#116;&#x74;&#x68;&#101;&#119;&#x35;&#x38;&#x37;&#54;&#64;&#x67;m&#97;&#x69;&#108;&#x2E;&#99;&#x6F;&#x6D;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#x61;&#105;&#108;&#116;&#x6F;:&#x66;&#109;&#x61;&#116;&#116;&#x68;&#x65;&#x77;&#53;&#56;&#55;&#x36;&#64;&#103;&#x6D;&#x61;&#x69;&#x6C;&#46;c&#x6F;&#109;">&#x66;&#109;&#x61;&#116;&#116;&#x68;&#x65;&#x77;&#53;&#56;&#55;&#x36;&#64;&#103;&#x6D;&#x61;&#x69;&#x6C;&#46;c&#x6F;&#109;</a></li>
 </ul>
 
 <p>The latest draft, reference header (incomplete), and links to past discussions on github: </p>
@@ -392,7 +392,7 @@ This is used by graphics programmers to determine how many mip levels will be us
 <p>Furthermore, given this efficient computation of <code>floor_log2()</code>, we can trivially compute <code>floorp2(x)</code>, that is the greatest power of 
 2 less than or equal to x.</p>
 
-<pre><code>uint32_t floor2(uint32_t x) {
+<pre><code>uint32_t floorp2(uint32_t x) {
   return 1 &lt;&lt; (31 - cntl0(x));
 }
 </code></pre>
@@ -1107,7 +1107,7 @@ constexpr integral ceilp2(integral x) noexcept;
 </code></pre>
 
 <ul>
-<li><em>Returns:</em> Returns the unique quantity <code>n</code> where <code>ispow2(n) &amp;&amp; n &gt;= x</code>.</li>
+<li><em>Returns:</em> Returns the smallest value <code>n</code> where <code>ispow2(n) &amp;&amp; n &gt;= x</code>.</li>
 <li><em>Remarks:</em> Result is undefined if the value of <code>n</code> is too large to be represented by type <code>integral</code>.</li>
 </ul>
 
@@ -1119,7 +1119,7 @@ constexpr integral floorp2(integral x) noexcept;
 </code></pre>
 
 <ul>
-<li><em>Returns:</em> Returns the unique quantity <code>n</code> where <code>ispow2(n) &amp;&amp; N &lt;= x</code>.</li>
+<li><em>Returns:</em> Returns the largest value <code>n</code> where <code>ispow2(n) &amp;&amp; N &lt;= x</code>.</li>
 <li><em>Remarks:</em> Result is undefined if <code>x &lt;= 0</code>.</li>
 </ul>
 
@@ -1166,13 +1166,13 @@ constexpr integral iexp2(integral x) noexcept;
 
 <p>Saturated arithmetic is useful in digital signal processing applications [<a href="#EmbedGuru01">EmbedGuru01</a>].
 It is also provided as a hardware instruction
-on some machines. In our efforts to better expose hardware features, we have included saturated addition and subtraction functions in this proposal.</p>
+on some machines. In our efforts to better expose hardware features, we have included basic saturated arithmetic functions in this proposal.</p>
 
 <h4>List of Functions</h4>
 
 <pre><code>//SATurated ADDition
 template &lt;class integral_l, class integral_r&gt;
-constexpr auto satadd(integral_l l, integral_r r) noexcept -&amp;gt; decltype(l + r);
+constexpr auto satadd(integral_l l, integral_r r) noexcept -&gt; decltype(l + r);
 </code></pre>
 
 <ul>
@@ -1185,7 +1185,7 @@ constexpr auto satadd(integral_l l, integral_r r) noexcept -&amp;gt; decltype(l 
 
 <pre><code>//SATurated SUBtraction
 template &lt;class integral_l, class integral_r&gt;
-constexpr auto satsub(integral_l l, integral_r r) noexcept -&amp;gt; decltype(l - r);
+constexpr auto satsub(integral_l l, integral_r r) noexcept -&gt; decltype(l - r);
 </code></pre>
 
 <ul>
@@ -1198,7 +1198,7 @@ constexpr auto satsub(integral_l l, integral_r r) noexcept -&amp;gt; decltype(l 
 
 <pre><code>//SATurated MULtiplication
 template &lt;class integral_l, class integral_r&gt;
-constexpr auto satmul(integral_l l, integral_r r) noexcept -&amp;gt; decltype(l - r);
+constexpr auto satmul(integral_l l, integral_r r) noexcept -&gt; decltype(l * r);
 </code></pre>
 
 <ul>
@@ -1231,15 +1231,6 @@ constexpr bool is_aligned(integral x, size_t align) noexcept;
 
 <!-- -->
 
-<pre><code>bool is_aligned(const void* val, size_t align) noexcept;
-</code></pre>
-
-<ul>
-<li><em>Returns:</em> <code>is_aligned(uintptr_t(val), align)</code>.</li>
-</ul>
-
-<!-- -->
-
 <pre><code>template &lt;class integral&gt;
 constexpr integral align_up(integral x, size_t align) noexcept;
 </code></pre>
@@ -1260,7 +1251,7 @@ constexpr integral align_down(integral x, size_t align) noexcept;
 <li><em>Implementation:</em> <code>x &amp; (-a)</code></li>
 </ul>
 
-<h4>Applications and std::align</h4>
+<h4>Applications</h4>
 
 <p>These alignment helpers are immensely useful. The author has used them in almost every major codebase
 he has worked on.</p>
@@ -1274,9 +1265,11 @@ he has worked on.</p>
 <li>Operating system kernels</li>
 </ul>
 
+<h4>Regarding std::align</h4>
+
 <p>We currently have <code>std::align</code> in the standard for doing alignment calculations.
 The function <code>std::align</code>
-has one specific use case, that is to carve out an aligned buffer of a known size within a larger buffer.
+has one specific use case, that is to carve out an aligned sub-buffer of a known size within a larger buffer.
 In order to use <code>std::align</code>, the user must a priori know the size of the aligned buffer 
 they require. Unfortunately in some use cases, even calculating the size of this buffer
 as an input to <code>std::align</code> itself requires doing alignment calculations. Many times we also
