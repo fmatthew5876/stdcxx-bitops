@@ -344,6 +344,13 @@ to Howard Hinnant for bringing this to our attention.
         } 
         return x << cf2; 
     } 
+
+\[[Barczak01](#Barczak01)\] shows how 'cntl0' can be used to efficiently compute the floor of the base two log of a number.
+This is used by graphics programmers to determine how many mip levels will be used for a texturing.
+
+    uint32_t log2(uint32_t x) {
+      31 - cntl0(x);
+    }
  
 As mentioned earlier, we can use `popcount()` to detect whether or not an integer (signed or unsigned) is a power of 2.
 
@@ -738,7 +745,7 @@ We use the C++14 binary literal syntax here. The bits of a given value are repre
 letters to show how a generic value would be permuted.
 For a more detailed treatment of these operations, refer to \[[Neumann01](#Neumann01)\] and Chapter 7 of \[[Warren01](#Warren01)\].
 
-* `reverse_bits(ABCDEFGHb)` -> `GHFEDCBA`
+* `reverse_bits(ABCDEFGHb)` -> `HGFEDCBA`
 * `reverse_bits(ABCDEFGHb, 1, 2)` -> `DCBAHGFEb`
 * `reverse_bits(ABCDEFGHb, 1, 4)` -> `BADCFEHGb`
 * `reverse_bits(ABCDEFGHb, 2)` -> `GHEFCDABb`
@@ -768,6 +775,7 @@ For a more detailed treatment of these operations, refer to \[[Neumann01](#Neuma
 * Network topology definitions and routing.
 * Bioinformatics, image processing, steganography, cryptanalysis, and coding \[[Hilewitz01](#Hilewitz01)\]
 * Chess Board Programming \[[ChessProg](#ChessProg)\]
+* Computing Morton Numbers which is "used all over the place in graphics [programming]" \[[Barczak01](#Barczak01)\].
 
 ### Power of 2 manipulation
 
@@ -1142,6 +1150,7 @@ References
 * <a name="BitOpsRef"></a>[BitOpsRef] *GitHub: BitOps Proposal and Reference Implementation*, (still under development) Available online at
 	<https://github.com/fmatthew5876/stdcxx>
 * <a name="Anderson01"></a>[Anderson01] Anderson, Sean Eron. *Bit Twiddling Hacks*, Available online at <http://graphics.stanford.edu/~seander/bithacks.html>
+* <a name="Barczak01"></a>[Barczak01] Barczak, Joshua. *Bits and Kibbles*. The Burning Basis Vector, Available online at <http://www.joshbarczak.com/blog/?p=454>
 * <a name="Dietz01"></a>[Dietz01] Dietz, Hendry Gordon. *The Aggregate Magic Algorithms*, University of Kentucky. 
 	Available online at <http://aggregate.org/MAGIC/>
 * <a name="Neumann01"></a>[Neumann01] Neumann, Jasper. *Bit permutations*, Available online at
