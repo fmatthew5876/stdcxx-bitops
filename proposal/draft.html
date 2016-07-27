@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#97;&#105;&#x6C;&#x74;&#x6F;:&#x66;&#109;&#97;&#x74;&#116;&#104;&#x65;&#x77;&#53;&#56;&#x37;&#54;&#64;g&#x6D;&#x61;&#x69;&#x6C;&#46;&#x63;&#x6F;&#x6D;">&#x66;&#109;&#97;&#x74;&#116;&#104;&#x65;&#x77;&#53;&#56;&#x37;&#54;&#64;g&#x6D;&#x61;&#x69;&#x6C;&#46;&#x63;&#x6F;&#x6D;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#x6D;ai&#x6C;&#x74;&#x6F;:&#102;&#109;&#97;&#116;&#x74;&#x68;&#101;&#119;&#x35;&#x38;&#x37;&#54;&#64;&#x67;m&#97;&#x69;&#108;&#x2E;&#99;&#x6F;&#x6D;">&#102;&#109;&#97;&#116;&#x74;&#x68;&#101;&#119;&#x35;&#x38;&#x37;&#54;&#64;&#x67;m&#97;&#x69;&#108;&#x2E;&#99;&#x6F;&#x6D;</a></li>
 </ul>
 
 <p>The latest draft, reference header (incomplete), and links to past discussions on github: </p>
@@ -384,12 +384,12 @@ unsigned_integral gcd(unsigned_integral x, unsigned_integral y)
 <p>[<a href="#Barczak01">Barczak01</a>] shows how 'cntl0' can be used to efficiently compute the floor of the base two log of a number.
 This is used by graphics programmers to determine how many mip levels will be used for a texturing.</p>
 
-<pre><code>uint32_t log2(uint32_t x) {
+<pre><code>uint32_t floor_log2(uint32_t x) {
   31 - cntl0(x);
 }
 </code></pre>
 
-<p>Furthermore, given this efficient computation of log2(), we can trivially compute floorp2(x), that is the greatest power of 
+<p>Furthermore, given this efficient computation of <code>floor_log2()</code>, we can trivially compute <code>floorp2(x)</code>, that is the greatest power of 
 2 less than or equal to x.</p>
 
 <pre><code>uint32_t floor2(uint32_t x) {
@@ -1126,12 +1126,33 @@ constexpr integral floorp2(integral x) noexcept;
 <!-- -->
 
 <pre><code>template &lt;class integral&gt;
-constexpr integral log2(integral x) noexcept;
+constexpr integral floor_log2(integral x) noexcept;
 </code></pre>
 
 <ul>
 <li><em>Returns:</em> Returns floor of the log base 2 of x.</li>
-<li><em>Remarks:</em> Result is undefined if <code>x &lt;= 0</code>.</li>
+<li><em>Remarks:</em> Result is undefined if <code>x &lt; 0</code>.</li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral ceil_log2(integral x) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Returns ceiling of the log base 2 of x.</li>
+<li><em>Remarks:</em> Result is undefined if <code>x &lt; 0</code>.</li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral iexp2(integral x) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Returns 2 to the power x, i.e. <code>1 &lt;&lt; x</code></li>
 </ul>
 
 <h4>Applications</h4>
@@ -1437,15 +1458,25 @@ trivially implementable from another bitops proposal operation.
 <ul>
 <li>bitops: <code>popcount(x) == 1</code></li>
 </ul></li>
-<li><p><code>log2(x)</code></p>
+<li><p><code>floor_log2(unsigned x)</code></p>
 
 <ul>
 <li>bitops: <code>(sizeof(x) * CHAR_BIT -1) - cntl0(x)</code></li>
 </ul></li>
+<li><p><code>ceil_log2(unsigned x)</code></p>
+
+<ul>
+<li>bitops: <code>(x &gt; 0) ? (1 + floor_log2(x-1)) : 1</code></li>
+</ul></li>
 <li><p><code>floorp2(x)</code></p>
 
 <ul>
-<li>bitops: <code>1 &lt;&lt; log2(x)</code></li>
+<li>bitops: <code>1 &lt;&lt; floor_log2(x)</code></li>
+</ul></li>
+<li><p><code>ceilp2(x)</code></p>
+
+<ul>
+<li>bitops: <code>1 &lt;&lt; ceil_log2(x)</code></li>
 </ul></li>
 <li><p><code>reverse_bits&lt;uint32_t&gt;(x)</code></p>
 

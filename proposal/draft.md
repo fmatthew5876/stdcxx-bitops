@@ -348,11 +348,11 @@ to Howard Hinnant for bringing this to our attention.
 \[[Barczak01](#Barczak01)\] shows how 'cntl0' can be used to efficiently compute the floor of the base two log of a number.
 This is used by graphics programmers to determine how many mip levels will be used for a texturing.
 
-    uint32_t log2(uint32_t x) {
+    uint32_t floor_log2(uint32_t x) {
       31 - cntl0(x);
     }
 
-Furthermore, given this efficient computation of log2(), we can trivially compute floorp2(x), that is the greatest power of 
+Furthermore, given this efficient computation of `floor_log2()`, we can trivially compute `floorp2(x)`, that is the greatest power of 
 2 less than or equal to x.
 
     uint32_t floor2(uint32_t x) {
@@ -921,10 +921,25 @@ The following functions detect and compute powers of 2.
 <!-- -->
     
     template <class integral>
-    constexpr integral log2(integral x) noexcept;
+    constexpr integral floor_log2(integral x) noexcept;
 
 * *Returns:* Returns floor of the log base 2 of x.
-* *Remarks:* Result is undefined if `x <= 0`.
+* *Remarks:* Result is undefined if `x < 0`.
+
+<!-- -->
+    
+    template <class integral>
+    constexpr integral ceil_log2(integral x) noexcept;
+
+* *Returns:* Returns ceiling of the log base 2 of x.
+* *Remarks:* Result is undefined if `x < 0`.
+
+<!-- -->
+    
+    template <class integral>
+    constexpr integral iexp2(integral x) noexcept;
+
+* *Returns:* Returns 2 to the power x, i.e. `1 << x`
 
 #### Applications
 
@@ -1168,11 +1183,17 @@ trivially implementable from another bitops proposal operation.
 * `ispow2(x)`
  * bitops: `popcount(x) == 1`
 
-* `log2(x)`
+* `floor_log2(unsigned x)`
  * bitops: `(sizeof(x) * CHAR_BIT -1) - cntl0(x)`
 
+* `ceil_log2(unsigned x)`
+ * bitops: `(x > 0) ? (1 + floor_log2(x-1)) : 1`
+
 * `floorp2(x)`
- * bitops: `1 << log2(x)`
+ * bitops: `1 << floor_log2(x)`
+
+* `ceilp2(x)`
+ * bitops: `1 << ceil_log2(x)`
 
 * `reverse_bits<uint32_t>(x)`
  * ARMv7: `RBIT`
