@@ -911,6 +911,14 @@ The following functions detect and compute powers of 2.
 * *Returns:* Returns the unique quantity `n` where `ispow2(n) && N <= x`.
 * *Remarks:* Result is undefined if `x <= 0`.
 
+<!-- -->
+    
+    template <class integral>
+    constexpr integral log2(integral x) noexcept;
+
+* *Returns:* Returns floor of the log base 2 of x.
+* *Remarks:* Result is undefined if `x <= 0`.
+
 #### Applications
 
 * Data structures whose capacity must be a power of 2 (example: circular queue).
@@ -1150,6 +1158,12 @@ trivially implementable from another bitops proposal operation.
 
 * `rstbitsge(x, b)`
  * x86\_64 w/ BMI2: `BZHI`
+
+* `ispow2(x)`
+ * bitops: `popcount(x) == 1`
+
+* `log2(x)`
+ * bitops: `(sizeof(x) * CHAR_BIT -1) - cntl0(x)`
 
 * `reverse_bits<uint32_t>(x)`
  * ARMv7: `RBIT`

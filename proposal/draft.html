@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#109;&#97;&#105;&#108;&#x74;&#111;:&#x66;m&#97;&#x74;&#x74;&#x68;&#x65;&#119;&#53;&#x38;&#x37;&#54;&#64;&#x67;&#x6D;a&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#x6D;">&#x66;m&#97;&#x74;&#x74;&#x68;&#x65;&#119;&#53;&#x38;&#x37;&#54;&#64;&#x67;&#x6D;a&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#x6D;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#97;&#x69;&#108;&#x74;&#111;:&#x66;&#109;&#97;t&#x74;&#x68;&#101;&#x77;&#53;&#x38;&#55;&#54;&#64;g&#x6D;a&#105;&#x6C;&#46;&#x63;&#x6F;&#109;">&#x66;&#109;&#97;t&#x74;&#x68;&#101;&#x77;&#53;&#x38;&#55;&#54;&#64;g&#x6D;a&#105;&#x6C;&#46;&#x63;&#x6F;&#109;</a></li>
 </ul>
 
 <p>The latest draft, reference header (incomplete), and links to past discussions on github: </p>
@@ -1115,6 +1115,17 @@ constexpr integral floorp2(integral x) noexcept;
 <li><em>Remarks:</em> Result is undefined if <code>x &lt;= 0</code>.</li>
 </ul>
 
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral log2(integral x) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Returns floor of the log base 2 of x.</li>
+<li><em>Remarks:</em> Result is undefined if <code>x &lt;= 0</code>.</li>
+</ul>
+
 <h4>Applications</h4>
 
 <ul>
@@ -1417,6 +1428,16 @@ trivially implementable from another bitops proposal operation.
 
 <ul>
 <li>x86_64 w/ BMI2: <code>BZHI</code></li>
+</ul></li>
+<li><p><code>ispow2(x)</code></p>
+
+<ul>
+<li>bitops: <code>popcount(x) == 1</code></li>
+</ul></li>
+<li><p><code>log2(x)</code></p>
+
+<ul>
+<li>bitops: <code>(sizeof(x) * CHAR_BIT -1) - cntl0(x)</code></li>
 </ul></li>
 <li><p><code>reverse_bits&lt;uint32_t&gt;(x)</code></p>
 
