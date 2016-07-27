@@ -351,6 +351,13 @@ This is used by graphics programmers to determine how many mip levels will be us
     uint32_t log2(uint32_t x) {
       31 - cntl0(x);
     }
+
+Furthermore, given this efficient computation of log2(), we can trivially compute floorp2(x), that is the greatest power of 
+2 less than or equal to x.
+
+    uint32_t floor2(uint32_t x) {
+      return 1 << (31 - cntl0(x));
+    }
  
 As mentioned earlier, we can use `popcount()` to detect whether or not an integer (signed or unsigned) is a power of 2.
 
@@ -1164,6 +1171,9 @@ trivially implementable from another bitops proposal operation.
 
 * `log2(x)`
  * bitops: `(sizeof(x) * CHAR_BIT -1) - cntl0(x)`
+
+* `floorp2(x)`
+ * bitops: `1 << log2(x)`
 
 * `reverse_bits<uint32_t>(x)`
  * ARMv7: `RBIT`

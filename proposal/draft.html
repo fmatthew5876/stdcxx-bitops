@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#97;&#x69;&#108;&#x74;&#111;:&#x66;&#109;&#97;t&#x74;&#x68;&#101;&#x77;&#53;&#x38;&#55;&#54;&#64;g&#x6D;a&#105;&#x6C;&#46;&#x63;&#x6F;&#109;">&#x66;&#109;&#97;t&#x74;&#x68;&#101;&#x77;&#53;&#x38;&#55;&#54;&#64;g&#x6D;a&#105;&#x6C;&#46;&#x63;&#x6F;&#109;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#97;&#105;&#x6C;&#116;&#111;:&#102;&#109;&#97;&#x74;&#116;&#x68;&#x65;&#x77;&#53;8&#x37;&#x36;&#64;&#x67;&#x6D;&#x61;&#105;&#108;&#46;&#x63;&#111;&#x6D;">&#102;&#109;&#97;&#x74;&#116;&#x68;&#x65;&#x77;&#53;8&#x37;&#x36;&#64;&#x67;&#x6D;&#x61;&#105;&#108;&#46;&#x63;&#111;&#x6D;</a></li>
 </ul>
 
 <p>The latest draft, reference header (incomplete), and links to past discussions on github: </p>
@@ -386,6 +386,14 @@ This is used by graphics programmers to determine how many mip levels will be us
 
 <pre><code>uint32_t log2(uint32_t x) {
   31 - cntl0(x);
+}
+</code></pre>
+
+<p>Furthermore, given this efficient computation of log2(), we can trivially compute floorp2(x), that is the greatest power of 
+2 less than or equal to x.</p>
+
+<pre><code>uint32_t floor2(uint32_t x) {
+  return 1 &lt;&lt; (31 - cntl0(x));
 }
 </code></pre>
 
@@ -1438,6 +1446,11 @@ trivially implementable from another bitops proposal operation.
 
 <ul>
 <li>bitops: <code>(sizeof(x) * CHAR_BIT -1) - cntl0(x)</code></li>
+</ul></li>
+<li><p><code>floorp2(x)</code></p>
+
+<ul>
+<li>bitops: <code>1 &lt;&lt; log2(x)</code></li>
 </ul></li>
 <li><p><code>reverse_bits&lt;uint32_t&gt;(x)</code></p>
 
