@@ -847,8 +847,8 @@ This section describes the additions to the `<memory>` header.
 
 ### Alignment helpers
 
-These functions are used for aligning objects in memory. They supplement use cases with which `std::align` is
-not designed to handle. These are useful operations and all of them have trivial implementations.
+These functions are used for aligning pointers and offsets. They supplement use cases with which `std::align` is
+not designed to handle or is too complex and clumsy for a simple calculation. These are useful operations and all of them have trivial implementations.
 They can often be found in operating system kernels and device drivers reimplemented time and time
 again as macros.
 
@@ -896,12 +896,23 @@ again as macros.
 
 #### Applications and std::align
 
+These alignment helpers are immensely useful. The author has used them in almost every major codebase
+he has worked on.
+
+Use cases include:
+
+* Writing memory allocators and untyped buffers which will store objects.
+* Simd loads and stores.
+* Device drivers
+* Operating system kernels
+
 We currently have `std::align` in the standard for doing alignment calculations.
 The function `std::align`
 has one specific use case, that is to carve out an aligned buffer of a known size within a larger buffer.
-In order to use `std::align`, the user must a priori know the size of the aligned buffer
+In order to use `std::align`, the user must a priori know the size of the aligned buffer 
 they require. Unfortunately in some use cases, even calculating the size of this buffer
-as an input to `std::align` itself requires doing alignment calculations.
+as an input to `std::align` itself requires doing alignment calculations. Many times we also
+want to do alignment calculations and we don't even have a buffer or a pointer to begin with.
 Consider the following example of using aligned SIMD registers to process a memory buffer.
 The alignment calculations here cannot be done with `std::align`.
 
@@ -922,8 +933,17 @@ The alignment calculations here cannot be done with `std::align`.
       }
     }
 
+Another very simple scenario where `std::align` fails is when we simply want to increase a requested allocation size to add alignment padding.
+
+    template <typename T>
+      AvxAllocator::allocate(size_t n) {
+        //Pad the allocation so that the buffer size is always a multiple of simd size.
+        n = std::align_up(n, alignof(__m256));
+        return ::aligned_alloc(alignof(__m256), n);
+      }
+
 We conclude that `std::align` is much too specific for general alignment calculations. It has a narrow
-use case and should only be considered as a helper function for when that use case is needed.
+use case and should only be considered as a helper function for when that exact use case is needed.
     
 Implementation
 ===================

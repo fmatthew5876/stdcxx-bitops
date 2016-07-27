@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#109;&#97;&#105;&#108;&#x74;&#x6F;:&#102;&#x6D;&#97;&#x74;&#x74;&#104;e&#x77;&#x35;&#56;&#x37;&#x36;&#64;&#103;&#109;&#97;&#105;&#108;&#x2E;&#x63;&#x6F;&#x6D;">&#102;&#x6D;&#97;&#x74;&#x74;&#104;e&#x77;&#x35;&#56;&#x37;&#x36;&#64;&#103;&#109;&#97;&#105;&#108;&#x2E;&#x63;&#x6F;&#x6D;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#109;&#x61;&#x69;l&#116;&#x6F;:&#102;&#x6D;&#x61;t&#116;&#104;&#101;w&#53;&#56;&#55;&#54;&#64;&#103;&#x6D;&#x61;&#x69;&#108;&#46;&#99;&#x6F;&#x6D;">&#102;&#x6D;&#x61;t&#116;&#104;&#101;w&#53;&#56;&#55;&#54;&#64;&#103;&#x6D;&#x61;&#x69;&#108;&#46;&#99;&#x6F;&#x6D;</a></li>
 </ul>
 
 <p>The latest draft, reference header (incomplete), and links to past discussions on github: </p>
@@ -1022,8 +1022,8 @@ constexpr auto satsub(integral_l l, integral_r r) noexcept -&amp;gt; decltype(l 
 
 <h3>Alignment helpers</h3>
 
-<p>These functions are used for aligning objects in memory. They supplement use cases with which <code>std::align</code> is
-not designed to handle. These are useful operations and all of them have trivial implementations.
+<p>These functions are used for aligning pointers and offsets. They supplement use cases with which <code>std::align</code> is
+not designed to handle or is too complex and clumsy for a simple calculation. These are useful operations and all of them have trivial implementations.
 They can often be found in operating system kernels and device drivers reimplemented time and time
 again as macros.</p>
 
@@ -1089,12 +1089,25 @@ constexpr integral align_down(integral x, size_t align) noexcept;
 
 <h4>Applications and std::align</h4>
 
+<p>These alignment helpers are immensely useful. The author has used them in almost every major codebase
+he has worked on.</p>
+
+<p>Use cases include:</p>
+
+<ul>
+<li>Writing memory allocators and untyped buffers which will store objects.</li>
+<li>Simd loads and stores.</li>
+<li>Device drivers</li>
+<li>Operating system kernels</li>
+</ul>
+
 <p>We currently have <code>std::align</code> in the standard for doing alignment calculations.
 The function <code>std::align</code>
 has one specific use case, that is to carve out an aligned buffer of a known size within a larger buffer.
-In order to use <code>std::align</code>, the user must a priori know the size of the aligned buffer
+In order to use <code>std::align</code>, the user must a priori know the size of the aligned buffer 
 they require. Unfortunately in some use cases, even calculating the size of this buffer
-as an input to <code>std::align</code> itself requires doing alignment calculations.
+as an input to <code>std::align</code> itself requires doing alignment calculations. Many times we also
+want to do alignment calculations and we don't even have a buffer or a pointer to begin with.
 Consider the following example of using aligned SIMD registers to process a memory buffer.
 The alignment calculations here cannot be done with <code>std::align</code>.</p>
 
@@ -1116,8 +1129,18 @@ The alignment calculations here cannot be done with <code>std::align</code>.</p>
 }
 </code></pre>
 
+<p>Another very simple scenario where <code>std::align</code> fails is when we simply want to increase a requested allocation size to add alignment padding.</p>
+
+<pre><code>template &lt;typename T&gt;
+  AvxAllocator::allocate(size_t n) {
+    //Pad the allocation so that the buffer size is always a multiple of simd size.
+    n = std::align_up(n, alignof(__m256));
+    return ::aligned_alloc(alignof(__m256), n);
+  }
+</code></pre>
+
 <p>We conclude that <code>std::align</code> is much too specific for general alignment calculations. It has a narrow
-use case and should only be considered as a helper function for when that use case is needed.</p>
+use case and should only be considered as a helper function for when that exact use case is needed.</p>
 
 <h1>Implementation</h1>
 
