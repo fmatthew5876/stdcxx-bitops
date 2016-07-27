@@ -614,6 +614,102 @@ we perform the simple conversion: `subword_bits = subword_bytes * CHAR_BITS`.
     
 <!-- -->
 
+    template <class integral
+    constexpr integral left_shift_bits0(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently left shift the subwords of size `subword_bits` bits in each word by `count` positions, filling the `count` low order bits with 0.
+* *Remarks:* result is undefined if `count < 0 || count >= (sizeof(x) * CHAR_BIT) / num_swar_words`
+
+<!-- -->
+
+    template <class integral
+    constexpr integral left_shift_bytes0(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently left shift the subwords of size `subword_bytes` bytes in each word by `count` positions, filling the `count` low order bytes with 0.
+* *Remarks:* result is undefined if `count < 0 || count >= sizeof(x) / num_swar_words`
+
+<!-- -->
+
+    template <class integral>
+    constexpr integral left_shift_bits1(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently left shift the subwords of size `subword_bits` bits in each word by `count` positions, filling the `count` low order bits with 1.
+* *Remarks:* result is undefined if `count < 0 || count >= (sizeof(x) * CHAR_BIT) / num_swar_words`
+
+<!-- -->
+
+    template <class integral>
+    constexpr integral left_shift_bytes1(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently left shift the subwords of size `subword_bytes` bytes in each word by `count` positions, filling the `count` low order bytes with 1.
+* *Remarks:* result is undefined if `count < 0 || count >= sizeof(x) / num_swar_words`
+
+<!-- -->
+
+    template <class integral>
+    constexpr integral right_shift_bits0(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently right shift the subwords of size `subword_bits` bits in each word by `count` positions, filling the `count` high order bits with 0.
+* *Remarks:* result is undefined if `count < 0 || count >= (sizeof(x) * CHAR_BIT) / num_swar_words`
+
+<!-- -->
+
+    template <class integral>
+    constexpr integral right_shift_bytes0(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently right shift the subwords of size `subword_bytes` bytes in each word by `count` positions, filling the `count` high order bytes with 0.
+* *Remarks:* result is undefined if `count < 0 || count >= sizeof(x) / num_swar_words`
+
+<!-- -->
+
+    template <class integral>
+    constexpr integral right_shift_bits1(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently right shift the subwords of size `subword_bits` bits in each word by `count` positions, filling the `count` high order bits with 1.
+* *Remarks:* result is undefined if `count < 0 || count >= (sizeof(x) * CHAR_BIT) / num_swar_words`
+
+<!-- -->
+
+    template <class integral>
+    constexpr integral right_shift_bytes1(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently right shift the subwords of size `subword_bytes` bytes in each word by `count` positions, filling the `count` high order bytes with 1.
+* *Remarks:* result is undefined if `count < 0 || count >= sizeof(x) / num_swar_words`
+
+<!-- -->
+
+    template <class integral>
+    constexpr integral left_rotate_bits(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently left rotate the subwords of size `subword_bits` bits in each word by `count` positions, filling the `count` low order bits with the shifted out high order bits.
+* *Remarks:* result is undefined if `count < 0 || count >= (sizeof(x) * CHAR_BIT) / num_swar_words`
+
+<!-- -->
+
+    template <class integral>
+    constexpr integral left_rotate_bytes(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently left rotate the subwords of size `subword_bytes` bytes in each word by `count` positions, filling the `count` low order bytes with the shifted out high order bytes.
+* *Remarks:* result is undefined if `count < 0 || count >= sizeof(x) / num_swar_words`
+
+<!-- -->
+
+    template <class integral>
+    constexpr integral right_rotate_bits(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently right rotate the subwords of size `subword_bits` bits in each word by `count` positions, filling the `count` high order bits with the shifted out low order bits.
+* *Remarks:* result is undefined if `count < 0 || count >= (sizeof(x) * CHAR_BIT) / num_swar_words`
+
+<!-- -->
+
+    template <class integral>
+    constexpr integral right_rotate_bytes(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+
+* *Returns:* Split `x` into `num_swar_words` "words" of equal size and then independently right rotate the subwords of size `subword_bytes` bytes in each word by `count` positions, filling the `count` high order bytes with the shifted out low order bytes.
+* *Remarks:* result is undefined if `count < 0 || count >= sizeof(x) / num_swar_words`
+
+<!-- -->
+
     template <class integral>
     constexpr integral reverse_bits(integral x, int subword_bits=1, int num_swar_words=1) noexcept;
 
@@ -745,28 +841,35 @@ We use the C++14 binary literal syntax here. The bits of a given value are repre
 letters to show how a generic value would be permuted.
 For a more detailed treatment of these operations, refer to \[[Neumann01](#Neumann01)\] and Chapter 7 of \[[Warren01](#Warren01)\].
 
-* `reverse_bits(ABCDEFGHb)` -> `HGFEDCBA`
-* `reverse_bits(ABCDEFGHb, 1, 2)` -> `DCBAHGFEb`
-* `reverse_bits(ABCDEFGHb, 1, 4)` -> `BADCFEHGb`
-* `reverse_bits(ABCDEFGHb, 2)` -> `GHEFCDABb`
-* `reverse_bits(ABCDEFGHb, 2, 2)` -> `CDABGHEFb`
-* `reverse_bits(ABCDEFGHb, 4)` -> `EFGHABCDb`
+* `left_shift_bits0(0bABCDEFGH, 1)` -> `0bBCDEFGH0`
+* `left_shift_bits1(0bABCDEFGH, 4)` -> `0bEFGH1111`
+* `right_shift_bits0(0bABCDEFGH, 2)` -> `0b00ABCDEF`
+* `right_shift_bits1(0bABCDEFGH, 7)` -> `0b1111111A`
+* `left_rotate_bits(0bABCDEFGH, 4)` -> `0bEFGHABCD`
+* `right_rotate_bits(0bABCDEFGH, 3)` -> `0bFGHABCDE`
 
-* `outer_perfect_shuffle(ABCDEFGHb)` -> `EAFBGCHDb`
-* `inner_perfect_shuffle(ABCDEFGHb)` -> `AEBFCGEHb`
-* `outer_perfect_unshuffle(ABCDEFGHb)` -> `BDFHACEGb`
-* `inner_perfect_unshuffle(ABCDEFGHb)` -> `ACEGBDFHb`
+* `reverse_bits(0bABCDEFGH)` -> `0bHGFEDCBA`
+* `reverse_bits(0bABCDEFGH, 1, 2)` -> `0bDCBAHGFE`
+* `reverse_bits(0bABCDEFGH, 1, 4)` -> `0bBADCFEHG`
+* `reverse_bits(0bABCDEFGH, 2)` -> `0bGHEFCDAB`
+* `reverse_bits(0bABCDEFGH, 2, 2)` -> `0bCDABGHEF`
+* `reverse_bits(0bABCDEFGH, 4)` -> `0bEFGHABCD`
+
+* `outer_perfect_shuffle(0bABCDEFGH)` -> `0bEAFBGCHD`
+* `inner_perfect_shuffle(0bABCDEFGH)` -> `0bAEBFCGEH`
+* `outer_perfect_unshuffle(0bABCDEFGH)` -> `0bBDFHACEG`
+* `inner_perfect_unshuffle(0bABCDEFGH)` -> `0bACEGBDFH`
 * `outer_perfect_unshuffle(outer_perfect_shuffle(x))` -> `x`
 * `inner_perfect_unshuffle(inner_perfect_shuffle(x))` -> `x`
 
-* `deposit_bits_right(ABCDEFGHb, 01110110b)` -> `0000CDFGb`
-* `deposit_bits_right(ABCDEFGHb, 10001000b)` -> `000000AEb`
-* `deposit_bits_left(ABCDEFGHb, 00010110b)` -> `DEF00000b`
-* `deposit_bits_left(ABCDEFGHb, 10111000b)` -> `ACDE0000b`
-* `extract_bits_right(ABCDEFGHb, 11000110b)` -> `EF000GH0b`
-* `extract_bits_right(ABCDEFGHb, 10101010b)` -> `E0F0G0H0b`
-* `extract_bits_left(ABCDEFGHb, 00110110b)` -> `00AB0CD0b`
-* `extract_bits_left(ABCDEFGHb, 11111001b)` -> `ABCDE00Fb`
+* `deposit_bits_right(0bABCDEFGH, 0b01110110)` -> `0b0000CDFG`
+* `deposit_bits_right(0bABCDEFGH, 0b10001000)` -> `0b000000AE`
+* `deposit_bits_left(0bABCDEFGH, 0b00010110)` -> `0bDEF00000`
+* `deposit_bits_left(0bABCDEFGH, 0b10111000)` -> `0bACDE0000`
+* `extract_bits_right(0bABCDEFGH, 0b11000110)` -> `0bEF000GH0`
+* `extract_bits_right(0bABCDEFGH, 0b10101010)` -> `0bE0F0G0H0`
+* `extract_bits_left(0bABCDEFGH, 0b00110110)` -> `0b00AB0CD0`
+* `extract_bits_left(0bABCDEFGH, 0b11111001)` -> `0bABCDE00F`
 
 #### Applications
 

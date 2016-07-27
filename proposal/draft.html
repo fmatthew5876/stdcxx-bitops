@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#109;&#x61;&#x69;l&#116;&#x6F;:&#102;&#x6D;&#x61;t&#116;&#104;&#101;w&#53;&#56;&#55;&#54;&#64;&#103;&#x6D;&#x61;&#x69;&#108;&#46;&#99;&#x6F;&#x6D;">&#102;&#x6D;&#x61;t&#116;&#104;&#101;w&#53;&#56;&#55;&#54;&#64;&#103;&#x6D;&#x61;&#x69;&#108;&#46;&#99;&#x6F;&#x6D;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#109;&#97;&#105;&#108;&#x74;&#111;:&#x66;m&#97;&#x74;&#x74;&#x68;&#x65;&#119;&#53;&#x38;&#x37;&#54;&#64;&#x67;&#x6D;a&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#x6D;">&#x66;m&#97;&#x74;&#x74;&#x68;&#x65;&#119;&#53;&#x38;&#x37;&#54;&#64;&#x67;&#x6D;a&#x69;&#x6C;&#x2E;&#x63;&#x6F;&#x6D;</a></li>
 </ul>
 
 <p>The latest draft, reference header (incomplete), and links to past discussions on github: </p>
@@ -718,6 +718,138 @@ we perform the simple conversion: <code>subword_bits = subword_bytes * CHAR_BITS
 
 <!-- -->
 
+<pre><code>template &lt;class integral
+constexpr integral left_shift_bits0(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently left shift the subwords of size <code>subword_bits</code> bits in each word by <code>count</code> positions, filling the <code>count</code> low order bits with 0.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= (sizeof(x) * CHAR_BIT) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral
+constexpr integral left_shift_bytes0(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently left shift the subwords of size <code>subword_bytes</code> bytes in each word by <code>count</code> positions, filling the <code>count</code> low order bytes with 0.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= sizeof(x) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral left_shift_bits1(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently left shift the subwords of size <code>subword_bits</code> bits in each word by <code>count</code> positions, filling the <code>count</code> low order bits with 1.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= (sizeof(x) * CHAR_BIT) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral left_shift_bytes1(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently left shift the subwords of size <code>subword_bytes</code> bytes in each word by <code>count</code> positions, filling the <code>count</code> low order bytes with 1.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= sizeof(x) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral right_shift_bits0(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently right shift the subwords of size <code>subword_bits</code> bits in each word by <code>count</code> positions, filling the <code>count</code> high order bits with 0.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= (sizeof(x) * CHAR_BIT) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral right_shift_bytes0(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently right shift the subwords of size <code>subword_bytes</code> bytes in each word by <code>count</code> positions, filling the <code>count</code> high order bytes with 0.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= sizeof(x) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral right_shift_bits1(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently right shift the subwords of size <code>subword_bits</code> bits in each word by <code>count</code> positions, filling the <code>count</code> high order bits with 1.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= (sizeof(x) * CHAR_BIT) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral right_shift_bytes1(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently right shift the subwords of size <code>subword_bytes</code> bytes in each word by <code>count</code> positions, filling the <code>count</code> high order bytes with 1.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= sizeof(x) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral left_rotate_bits(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently left rotate the subwords of size <code>subword_bits</code> bits in each word by <code>count</code> positions, filling the <code>count</code> low order bits with the shifted out high order bits.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= (sizeof(x) * CHAR_BIT) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral left_rotate_bytes(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently left rotate the subwords of size <code>subword_bytes</code> bytes in each word by <code>count</code> positions, filling the <code>count</code> low order bytes with the shifted out high order bytes.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= sizeof(x) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral right_rotate_bits(integral x, int count, int subword_bits=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently right rotate the subwords of size <code>subword_bits</code> bits in each word by <code>count</code> positions, filling the <code>count</code> high order bits with the shifted out low order bits.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= (sizeof(x) * CHAR_BIT) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>template &lt;class integral&gt;
+constexpr integral right_rotate_bytes(integral x, int count, int subword_bytes=1, int num_swar_words=1) noexcept;
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> Split <code>x</code> into <code>num_swar_words</code> "words" of equal size and then independently right rotate the subwords of size <code>subword_bytes</code> bytes in each word by <code>count</code> positions, filling the <code>count</code> high order bytes with the shifted out low order bytes.</li>
+<li><em>Remarks:</em> result is undefined if <code>count &lt; 0 || count &gt;= sizeof(x) / num_swar_words</code></li>
+</ul>
+
+<!-- -->
+
 <pre><code>template &lt;class integral&gt;
 constexpr integral reverse_bits(integral x, int subword_bits=1, int num_swar_words=1) noexcept;
 </code></pre>
@@ -904,26 +1036,32 @@ letters to show how a generic value would be permuted.
 For a more detailed treatment of these operations, refer to [<a href="#Neumann01">Neumann01</a>] and Chapter 7 of [<a href="#Warren01">Warren01</a>].</p>
 
 <ul>
-<li><code>reverse_bits(ABCDEFGHb)</code> -> <code>HGFEDCBA</code></li>
-<li><code>reverse_bits(ABCDEFGHb, 1, 2)</code> -> <code>DCBAHGFEb</code></li>
-<li><code>reverse_bits(ABCDEFGHb, 1, 4)</code> -> <code>BADCFEHGb</code></li>
-<li><code>reverse_bits(ABCDEFGHb, 2)</code> -> <code>GHEFCDABb</code></li>
-<li><code>reverse_bits(ABCDEFGHb, 2, 2)</code> -> <code>CDABGHEFb</code></li>
-<li><p><code>reverse_bits(ABCDEFGHb, 4)</code> -> <code>EFGHABCDb</code></p></li>
-<li><p><code>outer_perfect_shuffle(ABCDEFGHb)</code> -> <code>EAFBGCHDb</code></p></li>
-<li><code>inner_perfect_shuffle(ABCDEFGHb)</code> -> <code>AEBFCGEHb</code></li>
-<li><code>outer_perfect_unshuffle(ABCDEFGHb)</code> -> <code>BDFHACEGb</code></li>
-<li><code>inner_perfect_unshuffle(ABCDEFGHb)</code> -> <code>ACEGBDFHb</code></li>
+<li><code>left_shift_bits0(0bABCDEFGH, 1)</code> -> <code>0bBCDEFGH0</code></li>
+<li><code>left_shift_bits1(0bABCDEFGH, 4)</code> -> <code>0bEFGH1111</code></li>
+<li><code>right_shift_bits0(0bABCDEFGH, 2)</code> -> <code>0b00ABCDEF</code></li>
+<li><code>right_shift_bits1(0bABCDEFGH, 7)</code> -> <code>0b1111111A</code></li>
+<li><code>left_rotate_bits(0bABCDEFGH, 4)</code> -> <code>0bEFGHABCD</code></li>
+<li><p><code>right_rotate_bits(0bABCDEFGH, 3)</code> -> <code>0bFGHABCDE</code></p></li>
+<li><p><code>reverse_bits(0bABCDEFGH)</code> -> <code>0bHGFEDCBA</code></p></li>
+<li><code>reverse_bits(0bABCDEFGH, 1, 2)</code> -> <code>0bDCBAHGFE</code></li>
+<li><code>reverse_bits(0bABCDEFGH, 1, 4)</code> -> <code>0bBADCFEHG</code></li>
+<li><code>reverse_bits(0bABCDEFGH, 2)</code> -> <code>0bGHEFCDAB</code></li>
+<li><code>reverse_bits(0bABCDEFGH, 2, 2)</code> -> <code>0bCDABGHEF</code></li>
+<li><p><code>reverse_bits(0bABCDEFGH, 4)</code> -> <code>0bEFGHABCD</code></p></li>
+<li><p><code>outer_perfect_shuffle(0bABCDEFGH)</code> -> <code>0bEAFBGCHD</code></p></li>
+<li><code>inner_perfect_shuffle(0bABCDEFGH)</code> -> <code>0bAEBFCGEH</code></li>
+<li><code>outer_perfect_unshuffle(0bABCDEFGH)</code> -> <code>0bBDFHACEG</code></li>
+<li><code>inner_perfect_unshuffle(0bABCDEFGH)</code> -> <code>0bACEGBDFH</code></li>
 <li><code>outer_perfect_unshuffle(outer_perfect_shuffle(x))</code> -> <code>x</code></li>
 <li><p><code>inner_perfect_unshuffle(inner_perfect_shuffle(x))</code> -> <code>x</code></p></li>
-<li><p><code>deposit_bits_right(ABCDEFGHb, 01110110b)</code> -> <code>0000CDFGb</code></p></li>
-<li><code>deposit_bits_right(ABCDEFGHb, 10001000b)</code> -> <code>000000AEb</code></li>
-<li><code>deposit_bits_left(ABCDEFGHb, 00010110b)</code> -> <code>DEF00000b</code></li>
-<li><code>deposit_bits_left(ABCDEFGHb, 10111000b)</code> -> <code>ACDE0000b</code></li>
-<li><code>extract_bits_right(ABCDEFGHb, 11000110b)</code> -> <code>EF000GH0b</code></li>
-<li><code>extract_bits_right(ABCDEFGHb, 10101010b)</code> -> <code>E0F0G0H0b</code></li>
-<li><code>extract_bits_left(ABCDEFGHb, 00110110b)</code> -> <code>00AB0CD0b</code></li>
-<li><code>extract_bits_left(ABCDEFGHb, 11111001b)</code> -> <code>ABCDE00Fb</code></li>
+<li><p><code>deposit_bits_right(0bABCDEFGH, 0b01110110)</code> -> <code>0b0000CDFG</code></p></li>
+<li><code>deposit_bits_right(0bABCDEFGH, 0b10001000)</code> -> <code>0b000000AE</code></li>
+<li><code>deposit_bits_left(0bABCDEFGH, 0b00010110)</code> -> <code>0bDEF00000</code></li>
+<li><code>deposit_bits_left(0bABCDEFGH, 0b10111000)</code> -> <code>0bACDE0000</code></li>
+<li><code>extract_bits_right(0bABCDEFGH, 0b11000110)</code> -> <code>0bEF000GH0</code></li>
+<li><code>extract_bits_right(0bABCDEFGH, 0b10101010)</code> -> <code>0bE0F0G0H0</code></li>
+<li><code>extract_bits_left(0bABCDEFGH, 0b00110110)</code> -> <code>0b00AB0CD0</code></li>
+<li><code>extract_bits_left(0bABCDEFGH, 0b11111001)</code> -> <code>0bABCDE00F</code></li>
 </ul>
 
 <h4>Applications</h4>
