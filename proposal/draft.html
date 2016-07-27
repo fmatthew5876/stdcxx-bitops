@@ -4,7 +4,7 @@
 <li>Document Number: N3864</li>
 <li>Date: 2014-01-08</li>
 <li>Programming Language C++, Numerics Working Group</li>
-<li>Reply-to: Matthew Fioravante <a href="&#x6D;&#97;&#105;&#x6C;&#116;&#111;:&#102;&#109;&#97;&#x74;&#116;&#x68;&#x65;&#x77;&#53;8&#x37;&#x36;&#64;&#x67;&#x6D;&#x61;&#105;&#108;&#46;&#x63;&#111;&#x6D;">&#102;&#109;&#97;&#x74;&#116;&#x68;&#x65;&#x77;&#53;8&#x37;&#x36;&#64;&#x67;&#x6D;&#x61;&#105;&#108;&#46;&#x63;&#111;&#x6D;</a></li>
+<li>Reply-to: Matthew Fioravante <a href="&#109;&#x61;i&#108;&#116;&#x6F;:&#x66;&#x6D;&#x61;&#x74;&#x74;&#x68;&#x65;&#119;&#53;&#56;7&#54;&#64;&#x67;ma&#105;&#108;&#46;c&#111;&#109;">&#x66;&#x6D;&#x61;&#x74;&#x74;&#x68;&#x65;&#119;&#53;&#56;7&#54;&#64;&#x67;ma&#105;&#108;&#46;c&#111;&#109;</a></li>
 </ul>
 
 <p>The latest draft, reference header (incomplete), and links to past discussions on github: </p>
@@ -1171,6 +1171,19 @@ constexpr auto satsub(integral_l l, integral_r r) noexcept -&amp;gt; decltype(l 
 <li><em>Returns:</em> <code>l - r</code></li>
 <li><em>Remarks:</em> On overflow, will return <code>std::numeric_limits&lt;decltype(l + r)&gt;::max()</code></li>
 <li><em>Remarks:</em> On underflow, will return <code>std::numeric_limits&lt;decltype(l + r)&gt;::min()</code></li>
+</ul>
+
+<!-- -->
+
+<pre><code>//SATurated MULtiplication
+template &lt;class integral_l, class integral_r&gt;
+constexpr auto satmul(integral_l l, integral_r r) noexcept -&amp;gt; decltype(l - r);
+</code></pre>
+
+<ul>
+<li><em>Returns:</em> <code>l * r</code></li>
+<li><em>Remarks:</em> On overflow, will return <code>std::numeric_limits&lt;decltype(l * r)&gt;::max()</code></li>
+<li><em>Remarks:</em> On underflow, will return <code>std::numeric_limits&lt;decltype(l * r)&gt;::min()</code></li>
 </ul>
 
 <h2>memory Header Additions</h2>

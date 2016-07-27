@@ -958,6 +958,17 @@ on some machines. In our efforts to better expose hardware features, we have inc
 * *Remarks:* On overflow, will return `std::numeric_limits<decltype(l + r)>::max()`
 * *Remarks:* On underflow, will return `std::numeric_limits<decltype(l + r)>::min()`
     
+
+<!-- -->
+    
+    //SATurated MULtiplication
+    template <class integral_l, class integral_r>
+    constexpr auto satmul(integral_l l, integral_r r) noexcept -&gt; decltype(l - r);
+
+* *Returns:* `l * r`
+* *Remarks:* On overflow, will return `std::numeric_limits<decltype(l * r)>::max()`
+* *Remarks:* On underflow, will return `std::numeric_limits<decltype(l * r)>::min()`
+
 memory Header Additions
 ------------------------
 
@@ -1285,6 +1296,8 @@ If the C community shows interest we may consider a C interface that uses the ge
 may allow interoperability, using macros for C and templates for C++. The `constexpr` qualifier
 could be used in the C++ version while `inline` is used in the C version. If the C community shows interest,
 we will consider a joint C proposal and flesh out the technical details of the interface and compatibility.
+
+
 
 Acknowledgments
 ====================
