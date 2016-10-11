@@ -10,6 +10,7 @@ Introduction
 =============================
 
 This proposal adds support for explicit bit shift operations to the standard library.
+This proposal is adapted from \[[N3864](#N3864)\].
 
 Impact on the standard
 =============================
@@ -17,13 +18,15 @@ Impact on the standard
 This proposal is a pure library extension. 
 It does not require any changes in the core language and does not depend on any other library extensions.
 The proposal is composed entirely of free functions. The proposed functions are added to the `<cmath>` header. No new headers are introduced.
+Implementation of this proposal may require platform specific support from the compiler via intrinsics.
 
 Motivation
 ================
 
-The C and C++ languages provide an abstraction over many machines.
+The C++ language provides an abstraction over many machines.
 One of the most fundamental instructions available is the bit shift operation. One virtually every machine ever to run a C or C++ program,
 bit shifts are provided as native instructions and are very fast.
+They are used in many numeric algorithms. Bit shifts are also heavily used in hashing and cryptography.
 
 Signed integers can be represented using majority of schemes including sign bit representation, 1's complement, and 2's complement.
 In an attempt to be generic and support as many hardware platforms as
@@ -34,28 +37,29 @@ that all modern machines have been using 2's complement for decades now.
 Supporting multiple signed integer representations has resulted in a technicality with respect
 to operator>>() for signed integral types. In particular, right shifting a negative signed integer
 has an implementation defined result.
-Every platform known to the author uses 2's complement arithemetic, and happens to define
+Every modern platform known to the author uses 2's complement arithemetic, and happens to define
 operator>>() to do an arithmetic right shift. In addition, most software packages in use today
 have accepted this practicality and casually use operator>>() on signed integers, expecting
 arithmetic shift behaviors. Despite this scenario, careful programmers with knowledge of the
-standard still feel uneasy using operator>>() in what is intended to be portable code.
+standard still feel uneasy using operator>>() in what is intended to be portable code. They
+would prefer to use something more explicit with a guarantee for portability.
 
 Integer representational issues aside, sometimes we still want to be explicit with which kind of
 shift we would like to perform on a variable regardless of its signedness. We may want to
-perform an arithmetic shift on an unsigned value or a logical shift on an unsigned value.
+perform an arithmetic shift on an unsigned value or a logical shift on a signed value.
 operator>>() changes its behavior depending on the signedness of its operand. If we want to be explicit
-and avoid a silent change of semantics if the type of the variable changes, we need a way to 
+and avoid a silent change of behavior if the type of the variable changes, we need a way to 
 explicitly say which kind of shift we want.
 
-Finally, the rotational shift has been available as a native cpu instruction on almost
-every machine since the PDP11 \[[pdp11](#pdp11)\] in 1970. It's been 46 years since 
-1970 and neither C nor C++ has provided the programmer with the ability to efficiently
+Finally, the rotational shift has been available as a native cpu instruction on many
+machines since the PDP11 \[[pdp11](#pdp11)\] was introduced in 1970. It's been 46 years since 
+then and still neither C nor C++ has provided the programmer with the ability to efficiently
 invoke a rotational shift on a native integer type.
 
 To resolve all of these concerns, I propose a simple set of free functions to
 explicitly expose shift operations to the programmer. These can be thought of standard
 names for what would usually be implemented as compiler intrinsics or wrappers
-around platform dependent calls to operator>>() and operator<<().
+around platform dependent calls to operator>>().
 
 Technical Specification
 ====================
@@ -96,7 +100,7 @@ Each function is defined with the 'Integral' concept, which represents both sign
     template <Integral T>
     constexpr T shar(T x, int s) noexcept;
     
-* *Returns:* Shift `x` by `s` positions to the right, filling the high order bits with with the value of the most significant bit of `x`.
+* *Returns:* Shift `x` by `s` positions to the right, filling the high order bits with with the value of the original most significant bit of `x`.
 * *Remarks:* result is undefined if `s < 0 || s >= sizeof(x) * CHAR_BIT`
 
 <!-- -->
@@ -172,5 +176,5 @@ Thank you to everyone on the std proposals forum for feedback and suggestions.
 References
 ==================
 
-* <a name="Fioravante01"></a>[Fioravante01] Fioravante, Matthew. *A constexpr bitwise operations library for C++* Available online at <http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3864.html>
+* <a name="N3864"></a>[N3864] Fioravante, Matthew. *A constexpr bitwise operations library for C++* Available online at <http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3864.html>
 * <a name="pdp11"></a>[pdp11] *pdp11/40 processor handbook*, Digital Equipment Corporation, 1972. Available online at <http://pdos.csail.mit.edu/6.828/2005/readings/pdp11-40.pdf>

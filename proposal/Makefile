@@ -1,2 +1,5 @@
-draft.html: draft.md
+all: draft.html shift.html
+
+%.html: %.md
 	markdown $^ > $@
+
