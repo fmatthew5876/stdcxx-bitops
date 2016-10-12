@@ -18,7 +18,7 @@ Impact on the standard
 This proposal is a pure library extension. 
 It does not require any changes in the core language and does not depend on any other library extensions.
 The proposal is composed entirely of free functions. The proposed functions are added to the `<cmath>` header. No new headers are introduced.
-Implementation of this proposal may require platform specific support from the compiler via intrinsics.
+Implementation of this proposal may require platform specific support from the compiler via intrinsics or inline assembly.
 
 Motivation
 ================
@@ -30,7 +30,7 @@ They are used in many numeric algorithms. Bit shifts are also heavily used in ha
 
 Signed integers can be represented using majority of schemes including sign bit representation, 1's complement, and 2's complement.
 In an attempt to be generic and support as many hardware platforms as
-possible, both C and C++ technically have support for all 3 of these
+possible, both C and C++ technically have some measure of support for all of these
 representations. This is so even in the face of the practical reality
 that all modern machines have been using 2's complement for decades now.
 
@@ -42,24 +42,29 @@ operator>>() to do an arithmetic right shift. In addition, most software package
 have accepted this practicality and casually use operator>>() on signed integers, expecting
 arithmetic shift behaviors. Despite this scenario, careful programmers with knowledge of the
 standard still feel uneasy using operator>>() in what is intended to be portable code. They
-would prefer to use something more explicit with a guarantee for portability.
+would prefer to use something more explicit with a guarantee of portability.
 
-Integer representational issues aside, sometimes we still want to be explicit with which kind of
+In addition the issues with operator>>(), sometimes we still want to be explicit with which kind of
 shift we would like to perform on a variable regardless of its signedness. We may want to
 perform an arithmetic shift on an unsigned value or a logical shift on a signed value.
-operator>>() changes its behavior depending on the signedness of its operand. If we want to be explicit
+operator>>() has different behavior depending on the signedness of its operand. This means that if
+we change the signedness of a variable and don't carefully check if any shifts are performed
+on it we could introduce a bug that cannot be detected at compile time. If we want to be explicit
 and avoid a silent change of behavior if the type of the variable changes, we need a way to 
 explicitly say which kind of shift we want.
 
 Finally, the rotational shift has been available as a native cpu instruction on many
 machines since the PDP11 \[[pdp11](#pdp11)\] was introduced in 1970. It's been 46 years since 
-then and still neither C nor C++ has provided the programmer with the ability to efficiently
-invoke a rotational shift on a native integer type.
+then and both C and C++ have yet to provide the programmer with the ability to efficiently
+and easily invoke a rotational shift on a native integer type. Implementing such an operation yourself
+is tricky \[[Stack](#Stack)\] and comes with no guarantee the compiler will be able to successfully
+detect and optimize it into a rotate instruction.
 
 To resolve all of these concerns, I propose a simple set of free functions to
 explicitly expose shift operations to the programmer. These can be thought of standard
 names for what would usually be implemented as compiler intrinsics or wrappers
-around platform dependent calls to operator>>().
+around platform dependent calls to operator>>(). This api is dead simple and obvious.
+Such an API should have been part of the C standard library 30 years ago.
 
 Technical Specification
 ====================
@@ -74,7 +79,8 @@ cmath Header Additions
 -------------------------
 
 The following sections describe the additions to the `<cmath>` header.
-Each function is defined with the 'Integral' concept, which represents both signed and unsigned integers.
+Each function is defined with the `Integral` concept, which represents both signed and unsigned 
+native integer types.
 
 ### List of Functions
 
@@ -168,6 +174,15 @@ Several machine architectures were surveyed for their instruction references.
  * i386: `rol`
  * powerpc: `rotlwi`
 
+Naming Strategy
+====================
+
+Each of these functions is essentially a portable wrapper around native assembly instructions. They are intended to be
+low level tools with a narrow contract for maximal efficiency. To match their intended semantics, a terse C style
+naming scheme was used. Not only do these names match the intended semantics and style of the API, but short
+names are also easier to compose within more complex mathematical expressions. This naming scheme also matches
+the style and spirit of the other mathematical functions in `<cmath>` such as `sqrt()` and `hypot()`.
+
 Acknowledgments
 ====================
 
@@ -178,3 +193,4 @@ References
 
 * <a name="N3864"></a>[N3864] Fioravante, Matthew. *A constexpr bitwise operations library for C++* Available online at <http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3864.html>
 * <a name="pdp11"></a>[pdp11] *pdp11/40 processor handbook*, Digital Equipment Corporation, 1972. Available online at <http://pdos.csail.mit.edu/6.828/2005/readings/pdp11-40.pdf>
+* <a name="Stack"></a>[Stack] *Stack Overflow: Best practices for circular shift (rotate) operations in C++* Available online at <http://stackoverflow.com/questions/776508/best-practices-for-circular-shift-rotate-operations-in-c>
