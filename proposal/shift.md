@@ -49,13 +49,12 @@ shift we would like to perform on a variable regardless of its signedness. We ma
 perform an arithmetic shift on an unsigned value or a logical shift on a signed value.
 operator>>() has different behavior depending on the signedness of its operand. This means that if
 we change the signedness of a variable and don't carefully check if any shifts are performed
-on it we could introduce a bug that cannot be detected at compile time. If we want to be explicit
-and avoid a silent change of behavior if the type of the variable changes, we need a way to 
-explicitly say which kind of shift we want.
+on it we could introduce a bug that cannot be detected at compile time.
+What is needed a way to explicitly say which kind of shift we want regardless of the underlying type.
 
 Finally, the rotational shift has been available as a native cpu instruction on many
 machines since the PDP11 \[[pdp11](#pdp11)\] was introduced in 1970. It's been 46 years since 
-then and both C and C++ have yet to provide the programmer with the ability to efficiently
+then and both C and C++ still have yet to provide the programmer with the ability to efficiently
 and easily invoke a rotational shift on a native integer type. Implementing such an operation yourself
 is tricky \[[Stack](#Stack)\] and comes with no guarantee the compiler will be able to successfully
 detect and optimize it into a rotate instruction.
@@ -84,27 +83,27 @@ native integer types.
 
 ### List of Functions
 
-    //SHift Logical Left
+    //SHift Left
     template <Integral T>
-    constexpr T shll(T x, int s) noexcept;
+    constexpr T shl(T x, int s) noexcept;
 
 * *Returns:* Shift `x` by `s` positions to the left, filling the low order bits with 0.
 * *Remarks:* result is undefined if `s < 0 || s >= sizeof(x) * CHAR_BIT`
 
 <!-- -->
 
-    //SHift Logical Right
+    //SHift Right Logical
     template <Integral T>
-    constexpr T shlr(T x, int s) noexcept;
+    constexpr T shrl(T x, int s) noexcept;
 
 * *Returns:* Shift `x` by `s` positions to the right, filling the high order bits with 0.
 * *Remarks:* result is undefined if `s < 0 || s >= sizeof(x) * CHAR_BIT`
 
 <!-- -->
 
-    //SHift Arithmetic Right
+    //SHift Right Arithmetic
     template <Integral T>
-    constexpr T shar(T x, int s) noexcept;
+    constexpr T shra(T x, int s) noexcept;
     
 * *Returns:* Shift `x` by `s` positions to the right, filling the high order bits with with the value of the original most significant bit of `x`.
 * *Remarks:* result is undefined if `s < 0 || s >= sizeof(x) * CHAR_BIT`
@@ -136,7 +135,7 @@ The following is a list of compiler intrinsics and native instructions which can
 this proposal on various platforms. 
 Several machine architectures were surveyed for their instruction references.
 
-* `shll(x)`
+* `shl(x)`
  * PDP11: `ASL`
  * i386: `shl`
  * powerpc: `slw`
@@ -145,7 +144,7 @@ Several machine architectures were surveyed for their instruction references.
  * MIPS: `SLL`
  * Sparc: `SLL`
 
-* `shlr(x)`
+* `shrl(x)`
  * i386: `shr`
  * powerpc: `srw`
  * ARM: `LSR`
@@ -153,7 +152,7 @@ Several machine architectures were surveyed for their instruction references.
  * MIPS: `SRL`
  * Sparc: `SRL`
 
-* `shar(x)`
+* `shra(x)`
  * PDP11: `ASR`
  * i386: `sar`
  * powerpc: `sraw`
