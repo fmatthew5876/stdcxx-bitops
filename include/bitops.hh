@@ -17,7 +17,6 @@
 #include <limits>
 #include <type_traits>
 #include <algorithm>
-#include <iostream>
 
 namespace std {
 
@@ -303,7 +302,6 @@ template <typename Integral>
   noexcept -> typename std::enable_if<std::is_unsigned<Integral>::value, Integral>::type {
     int group_sz = int(sizeof(Integral) * CHAR_BIT) / group_subwords;
     int k = group_sz - subword_bits;
-    cout << "K IS " << k << std::endl;
     if(k & 1) x = shll(x & Integral(0x5555555555555555UL), 1) | shlr(x & Integral(0xAAAAAAAAAAAAAAAAUL), 1);
     if(k & 2) x = shll(x & Integral(0x3333333333333333UL), 2) | shlr(x & Integral(0xCCCCCCCCCCCCCCCCUL), 2);
     if(k & 4) x = shll(x & Integral(0x0F0F0F0F0F0F0F0FUL), 4) | shlr(x & Integral(0xF0F0F0F0F0F0F0F0UL), 4);
@@ -320,16 +318,16 @@ template <typename Integral>
       int subword_bits = 1,
       int group_subwords = 1)
   noexcept -> typename std::enable_if<std::is_signed<Integral>::value, Integral>::type {
-    return Integral(reverse_bits(typename std::make_unsigned<Integral>::type(x), bits_per_block, blocks_per_group));
+    return Integral(reverse_bits(typename std::make_unsigned<Integral>::type(x), subword_bits, group_subwords));
   }
 
 
-//Byte reversal, simple wrapper around revbits
+//Byte reversal, simple wrapper around reverse_bits
 template <typename Integral>
-  constexpr14 Integral revbytes(Integral x,
+  constexpr14 Integral reverse_bytes(Integral x,
       int bytes_per_block=1,
       int blocks_per_group = sizeof(Integral)) noexcept {
-    return revbits(x, CHAR_BIT * bytes_per_block, blocks_per_group);
+    return reverse_bits(x, CHAR_BIT * bytes_per_block, blocks_per_group);
   }
 
 ////////////////////////////////////
@@ -557,12 +555,12 @@ constexpr14 Integral outer_punshuffle(Integral x) noexcept {
 
 template <typename Integral>
 constexpr14 Integral inner_pshuffle(Integral x) noexcept {
-  return outer_pshuffle(revbits(x, sizeof(x)*CHAR_BIT/2, 2));
+  return outer_pshuffle(reverse_bits(x, sizeof(x)*CHAR_BIT/2, 2));
 }
 
 template <typename Integral>
 constexpr14 Integral inner_punshuffle(Integral x) noexcept {
-  return revbits(outer_punshuffle(x), sizeof(x)*CHAR_BIT/2, 2);
+  return reverse_bits(outer_punshuffle(x), sizeof(x)*CHAR_BIT/2, 2);
 }
 
 ///////////////////////////////////

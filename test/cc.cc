@@ -80,8 +80,8 @@ INST(maskt0);
 INST(maskt1);
 INST(maskt0ls1b);
 INST(maskt1ls0b);
-INST(revbits, int, int);
-INST(revbytes, int, int);
+INST(reverse_bits, int, int);
+INST(reverse_bytes, int, int);
 
 INST(setbit, int);
 INST(rstbit, int);
