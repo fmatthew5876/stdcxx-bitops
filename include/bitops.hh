@@ -1,11 +1,7 @@
 #ifndef BITOPS_HH
 #define BITOPS_HH
 
-#ifndef HAS_CXX14_CONSTEXPR
-#define HAS_CXX14_CONSTEXPR 0
-#endif
-
-#if HAS_CXX14_CONSTEXPR
+#if defined(__cpp_constexpr) && __cpp_constexpr >= 201304
 #define constexpr14 constexpr
 #else
 #define constexpr14
